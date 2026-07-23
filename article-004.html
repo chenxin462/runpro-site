@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>沈阳太原街夜行5km | 运动数据定制案例</title>
+  <style>
+    /* 保持和首页一致的样式，不改动外壳 */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #fafafa; color: #333; line-height: 1.6; }
+    header { background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: fixed; top: 0; left: 0; right: 0; z-index: 100; }
+    .header-inner { max-width: 1200px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; height: 60px; }
+    .logo { font-size: 1.4rem; font-weight: bold; color: #2c3e50; text-decoration: none; }
+    nav a { margin-left: 20px; color: #666; text-decoration: none; font-size: 0.95rem; }
+    nav a:hover { color: #007bff; }
+    
+    main { max-width: 800px; margin: 80px auto 40px; background: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); }
+    
+    .meta { color: #888; font-size: 0.9rem; margin-bottom: 1.5rem; display: block; }
+    
+    /* 图片不管大小，直接放，保持原样 */
+    .article-image { 
+      width: 100%; 
+      height: auto; 
+      border-radius: 8px; 
+      margin-bottom: 1.5rem; 
+      display: block; 
+      /* 不加 max-width 限制，让它原图显示，想大就大 */
+    }
+    
+    h1 { font-size: 1.8rem; margin-bottom: 1rem; color: #2c3e50; }
+    p { margin-bottom: 1.2rem; font-size: 1rem; }
+    strong { color: #222; }
+    
+    .data-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin: 2rem 0;
+      text-align: center;
+    }
+    .data-item { background: #f8f9fa; padding: 1rem; border-radius: 8px; }
+    .data-num { font-size: 1.5rem; font-weight: bold; color: #007bff; }
+    .data-num small { font-size: 0.85rem; color: #666; font-weight: normal; }
+    .data-label { font-size: 0.85rem; color: #666; margin-top: 0.3rem; }
+    
+    .tag-list { margin: 2rem 0; display: flex; flex-wrap: wrap; gap: 8px; }
+    .tag { background: #e9ecef; color: #495057; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem; }
+    
+    .highlight-box {
+      background: #e7f4ff;
+      border-left: 4px solid #007bff;
+      padding: 1rem;
+      margin: 1.5rem 0;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.95rem;
+    }
+    
+    footer { text-align: center; padding: 2rem 0; color: #888; font-size: 0.9rem; background: #fff; border-top: 1px solid #eee; }
+    .footer-links { margin-bottom: 0.5rem; }
+    .footer-links a { color: #666; margin: 0 10px; text-decoration: none; }
+    .footer-links a:hover { color: #007bff; }
+    
+    .back-top {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 40px;
+      height: 40px;
+      background: #007bff;
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      transition: opacity 0.3s;
+      box-shadow: 0 2px 10px rgba(0,123,255,0.3);
+    }
+    .back-top.show { opacity: 1; }
+    .back-top:hover { background: #0056b3; }
+    
+    @media (max-width: 768px) {
+      .header-inner { padding: 0 15px; }
+      main { margin: 70px 15px 30px; padding: 20px; }
+      .data-grid { grid-template-columns: 1fr; }
+      h1 { font-size: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <header id="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">RUN PRO</a>
+      <nav>
+        <a href="index.html">首页</a>
+        <a href="index.html#features">服务</a>
+        <a href="index.html#cases">案例</a>
+        <a href="index.html#contact">联系</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <span class="meta">咕咚户外行走 · 5.03km · 夜间散步 · 数据可视化定制服务</span>
+    
+    <!-- 图片路径：请确保 images 文件夹里有这张图，命名为 walk-shenyang-5km.jpg -->
+    <img src="images/walk-shenyang-5km.jpg" alt="沈阳太原街夜间行走5.03km轨迹截图" class="article-image">
+
+    本次数据定制覆盖<strong>沈阳太原街、民主广场、中国医科大学</strong>周边区域，全程 <strong>5.03公里</strong>，训练时长 <strong>58分40秒</strong>，消耗 <strong>334千卡</strong>，总步数 <strong>6899步</strong>。
+
+    轨迹全程围绕<strong>太原街商圈</strong>核心地带，经过<strong>金杯商务酒店、辽宁出版大厦、力创大厦</strong>等真实地标，夜间行走路线自然流畅，无任何漂移或异常点，完美适配咕咚平台算法审核。
+
+    行走节奏平稳，数据符合<strong>夜间休闲散步</strong>的运动特征，配速自然，步频合理，可直接用于个人记录或案例展示。
+
+    <div class="data-grid">
+      <div class="data-item"><div class="data-num">5.03<small>km</small></div><div class="data-label">总距离</div></div>
+      <div class="data-item"><div class="data-num">58'40"<small></small></div><div class="data-label">训练时长</div></div>
+      <div class="data-item"><div class="data-num">334<small>kcal</small></div><div class="data-label">消耗热量</div></div>
+    </div>
+
+    <div class="data-grid">
+      <div class="data-item"><div class="data-num">6899<small>步</small></div><div class="data-label">总步数</div></div>
+      <div class="data-item"><div class="data-num">21:40<small></small></div><div class="data-label">开始时间</div></div>
+      <div class="data-item"><div class="data-num">22:39<small></small></div><div class="data-label">结束时间</div></div>
+    </div>
+
+    <div class="tag-list">
+      <span class="tag">📍 沈阳太原街</span>
+      <span class="tag">🚶 户外行走</span>
+      <span class="tag">📏 5.03公里</span>
+      <span class="tag">⏱️ 58分钟</span>
+      <span class="tag">🔥 334千卡</span>
+      <span class="tag">🌙 夜间散步</span>
+      <span class="tag">📅 可指定日期</span>
+    </div>
+
+    <div class="highlight-box">
+      ✅ <strong>轨迹真实</strong> · 基于沈阳太原街真实道路数据生成，无穿模、无直线漂移
+    </div>
+    <div class="highlight-box" style="margin-top:.8rem; background: #f0fff4; border-left-color: #28a745;">
+      ✅ <strong>数据自然</strong> · 夜间散步节奏匹配，步频、步幅符合休闲行走特征
+    </div>
+    <div class="highlight-box" style="margin-top:.8rem; background: #fff8e1; border-left-color: #ffc107;">
+      ✅ <strong>支持定制</strong> · 可指定城市、地点、时间、距离，满足个性化需求
+    </div>
+
+  </main>
+
+  <footer>
+    <div class="footer-links">
+      <a href="index.html">首页</a>
+      <a href="index.html#features">服务优势</a>
+      <a href="index.html#cases">案例展示</a>
+      <a href="index.html#process">定制流程</a>
+      <a href="index.html#faq">常见问题</a>
+      <a href="index.html#contact">联系我们</a>
+    </div>
+    <p style="margin-top:.5rem;">© 2025 RUN PRO · 专注运动数据定制 · 微信：278715464
+  </footer>
+
+  <div class="back-top" id="backTop">↑</div>
+
+  <script>
+    window.addEventListener('scroll',()=>{
+      document.getElementById('header').classList.toggle('scrolled',window.scrollY>50);
+      document.getElementById('backTop').classList.toggle('show',window.scrollY>500);
+    });
+    document.getElementById('backTop').onclick=()=>window.scrollTo({top:0,behavior:'smooth'});
+  </script>
+</body>
+</html>

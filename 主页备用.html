@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RunBN —— 跑步数据可视化与科学复盘工具</title>
+<meta name="description" content="RunBN 专注跑步运动数据深度分析，提供 GPS 轨迹解析、配速曲线、心率区间、跑量趋势等多维可视化与复盘服务。">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI','Microsoft YaHei',sans-serif;}
+body{
+  background:#0a2e1a;
+  color:#fff;
+  line-height:1.6;
+  overflow-x:hidden;
+  position:relative;
+}
+
+/* ===== 跑步背景图 ===== */
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background:
+    linear-gradient(135deg,rgba(10,46,26,0.85),rgba(10,46,26,0.78)),
+    url('https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=1920&q=80') center/cover no-repeat fixed;
+  z-index:-1;
+}
+
+/* ===== 导航 ===== */
+header{
+  position:sticky;top:0;z-index:100;
+  background:rgba(10,46,26,0.92);
+  backdrop-filter:blur(10px);
+  display:flex;justify-content:space-between;align-items:center;
+  padding:1rem 5%;
+  transition:.3s;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+header.scrolled{padding:.5rem 5%;box-shadow:0 4px 20px rgba(0,0,0,.4);}
+.logo{font-size:1.8rem;font-weight:bold;color:#00e676;letter-spacing:2px;}
+.logo span{color:#fff;}
+nav a{color:rgba(255,255,255,.85);text-decoration:none;margin-left:1.8rem;font-size:.95rem;transition:color .3s;}
+nav a:hover{color:#00e676;}
+
+/* ===== 通用区块 ===== */
+section{padding:4rem 5%;position:relative;}
+section h2{
+  text-align:center;font-size:2rem;margin-bottom:.5rem;color:#fff;
+  text-shadow:0 2px 8px rgba(0,0,0,.3);
+}
+section .subtitle{text-align:center;color:rgba(255,255,255,.7);margin-bottom:2.5rem;font-size:1rem;}
+
+/* 白色卡片 */
+.card{
+  background:rgba(255,255,255,.95);
+  border-radius:16px;
+  padding:2rem 1.5rem;
+  text-align:center;
+  transition:transform .3s,box-shadow .3s;
+  box-shadow:0 4px 20px rgba(0,0,0,.15);
+}
+.card:hover{
+  transform:translateY(-8px);
+  box-shadow:0 12px 40px rgba(0,230,118,.2);
+}
+.card h3,.card h4{color:#0a2e1a;margin:.8rem 0 .5rem;}
+.card p{color:#444;font-size:.9rem;line-height:1.6;}
+
+/* 绿色小标签 */
+.tag{
+  display:inline-block;
+  background:rgba(0,230,118,.15);
+  color:#00a85c;
+  padding:.2rem .7rem;
+  border-radius:20px;
+  font-size:.78rem;
+  font-weight:600;
+  margin-top:.5rem;
+}
+
+/* 步骤编号 */
+.step-num{
+  width:48px;height:48px;border-radius:50%;
+  background:linear-gradient(135deg,#00e676,#00a85c);
+  color:#fff;font-size:1.3rem;font-weight:bold;
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto .8rem;
+}
+
+/* ===== Hero ===== */
+.hero{
+  padding:5rem 5% 4rem;
+  text-align:center;
+  position:relative;
+}
+.hero-badge{
+  display:inline-block;
+  background:rgba(0,230,118,.2);
+  color:#00e676;
+  padding:.4rem 1rem;border-radius:20px;
+  font-size:.85rem;font-weight:600;
+  margin-bottom:1.2rem;
+  border:1px solid rgba(0,230,118,.3);
+}
+.hero h1{
+  font-size:3rem;margin-bottom:1rem;
+  text-shadow:0 2px 15px rgba(0,0,0,.5);
+  line-height:1.3;
+}
+.hero h1 .highlight{color:#00e676;}
+.hero p{
+  max-width:700px;margin:0 auto 1.5rem;
+  color:rgba(255,255,255,.85);font-size:1.15rem;
+}
+.btn{
+  display:inline-block;padding:.85rem 2.2rem;border-radius:50px;
+  font-weight:bold;text-decoration:none;font-size:1rem;cursor:pointer;
+  transition:all .3s;
+}
+.btn-primary{
+  background:linear-gradient(135deg,#00e676,#00a85c);
+  color:#fff;box-shadow:0 4px 15px rgba(0,230,118,.4);
+}
+.btn-primary:hover{transform:translateY(-3px);box-shadow:0 6px 25px rgba(0,230,118,.5);}
+
+/* ===== 统计数据 ===== */
+.stats-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;
+}
+.stat-item{
+  background:rgba(255,255,255,.95);border-radius:14px;padding:1.8rem 1rem;text-align:center;
+  box-shadow:0 4px 15px rgba(0,0,0,.1);
+}
+.stat-num{font-size:2.5rem;font-weight:bold;color:#00a85c;}
+.stat-label{color:#555;margin-top:.3rem;font-size:.9rem;}
+
+/* ===== 四栏通用 ===== */
+.grid-4{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.5rem;}
+
+/* ===== 案例卡片 ===== */
+.case-card{
+  background:rgba(255,255,255,.95);border-radius:14px;overflow:hidden;
+  box-shadow:0 4px 15px rgba(0,0,0,.1);transition:transform .3s;
+}
+.case-card:hover{transform:translateY(-6px);}
+.case-img{
+  height:160px;background:#0a2e1a;display:flex;align-items:center;justify-content:center;
+  color:rgba(255,255,255,.3);font-size:3rem;
+}
+.case-body{padding:1.2rem;}
+.case-body h4{color:#0a2e1a;margin-bottom:.5rem;}
+.case-body p{color:#555;font-size:.85rem;}
+.case-tag{
+  display:inline-block;background:rgba(0,230,118,.15);color:#00a85c;
+  padding:.15rem .6rem;border-radius:12px;font-size:.75rem;font-weight:600;margin-top:.5rem;
+}
+
+/* ===== 流程 ===== */
+.flow-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;position:relative;
+}
+.flow-item{text-align:center;position:relative;}
+.flow-item::after{
+  content:'';position:absolute;top:24px;right:-50%;width:100%;height:2px;
+  background:linear-gradient(90deg,#00e676,transparent);z-index:0;
+}
+.flow-item:last-child::after{display:none;}
+.flow-arrow{display:none;}
+
+/* ===== 场景 ===== */
+.scene-card{
+  background:rgba(255,255,255,.95);border-radius:14px;padding:1.5rem;text-align:center;
+  box-shadow:0 4px 15px rgba(0,0,0,.1);transition:transform .3s;
+}
+.scene-card:hover{transform:translateY(-6px);}
+.scene-icon{
+  width:64px;height:64px;border-radius:50%;margin:0 auto .8rem;
+  background:linear-gradient(135deg,#00e676,#00a85c);
+  display:flex;align-items:center;justify-content:center;font-size:1.8rem;
+}
+.scene-card h4{color:#0a2e1a;margin-bottom:.4rem;}
+.scene-card p{color:#555;font-size:.85rem;}
+
+/* ===== 购买须知 ===== */
+.notice-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.5rem;
+}
+.notice-card{
+  background:rgba(255,255,255,.95);border-radius:14px;padding:1.5rem;
+  box-shadow:0 4px 15px rgba(0,0,0,.1);position:relative;overflow:hidden;
+}
+.notice-card::before{
+  content:'';position:absolute;top:0;left:0;width:4px;height:100%;
+  background:linear-gradient(180deg,#00e676,#00a85c);
+}
+.notice-card h4{color:#0a2e1a;margin-bottom:.4rem;padding-left:.5rem;}
+.notice-card p{color:#555;font-size:.85rem;padding-left:.5rem;}
+
+/* ===== 保障栏 ===== */
+.guarantee-bar{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;
+}
+.guarantee-item{
+  background:rgba(255,255,255,.95);border-radius:14px;padding:1.5rem;text-align:center;
+  box-shadow:0 4px 15px rgba(0,0,0,.1);transition:transform .3s;
+}
+.guarantee-item:hover{transform:translateY(-5px);}
+.guarantee-icon{
+  width:56px;height:56px;border-radius:50%;margin:0 auto .8rem;
+  background:linear-gradient(135deg,rgba(0,230,118,.15),rgba(0,168,92,.15));
+  display:flex;align-items:center;justify-content:center;font-size:1.5rem;
+}
+.guarantee-item h4{color:#0a2e1a;margin-bottom:.3rem;}
+.guarantee-item p{color:#555;font-size:.85rem;}
+
+/* ===== 联系区 ===== */
+.contact{
+  text-align:center;
+  background:linear-gradient(180deg,rgba(10,46,26,.6),rgba(10,46,26,.8));
+  padding:4rem 5%;
+}
+.contact h2{color:#fff;margin-bottom:1rem;}
+.contact p{color:rgba(255,255,255,.8);margin-bottom:1.5rem;}
+.wechat-box{
+  display:inline-block;
+  background:rgba(255,255,255,.95);border-radius:16px;padding:2rem 3rem;
+  box-shadow:0 4px 20px rgba(0,0,0,.2);
+}
+.wechat-label{color:#888;font-size:.9rem;margin-bottom:.3rem;}
+.wechat-number{font-size:2.2rem;font-weight:bold;color:#00a85c;letter-spacing:2px;}
+.wechat-btn{
+  display:inline-block;margin-top:1rem;
+  background:linear-gradient(135deg,#00e676,#00a85c);
+  color:#fff;padding:.7rem 2rem;border-radius:50px;font-weight:bold;
+  text-decoration:none;transition:all .3s;
+}
+.wechat-btn:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,230,118,.4);}
+
+/* ===== FAQ ===== */
+.faq-list{max-width:800px;margin:0 auto;}
+.faq-item{
+  background:rgba(255,255,255,.95);border-radius:12px;margin-bottom:1rem;
+  overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.08);
+}
+.faq-q{
+  padding:1.2rem 1.5rem;cursor:pointer;display:flex;justify-content:space-between;
+  align-items:center;font-weight:bold;color:#0a2e1a;font-size:1rem;
+}
+.faq-q .arrow{transition:transform .3s;color:#00a85c;font-size:.9rem;}
+.faq-item.open .faq-q .arrow{transform:rotate(180deg);}
+.faq-a{
+  max-height:0;overflow:hidden;padding:0 1.5rem;color:#555;font-size:.9rem;transition:.35s;
+}
+.faq-item.open .faq-a{padding:0 1.5rem 1.2rem;max-height:200px;}
+
+/* ===== 页脚 ===== */
+footer{
+  background:rgba(5,20,12,.95);padding:2rem 5%;text-align:center;color:rgba(255,255,255,.5);font-size:.82rem;
+}
+.footer-links{display:flex;flex-wrap:wrap;justify-content:center;gap:1rem;margin-bottom:1rem;}
+.footer-links a{color:rgba(255,255,255,.6);text-decoration:none;font-size:.85rem;transition:color .3s;}
+.footer-links a:hover{color:#00e676;}
+
+/* ===== 回到顶部 ===== */
+.back-top{
+  position:fixed;right:20px;bottom:20px;
+  width:48px;height:48px;border-radius:50%;
+  background:linear-gradient(135deg,#00e676,#00a85c);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;opacity:0;visibility:hidden;transition:.3s;z-index:1000;
+  font-size:1.3rem;color:#fff;box-shadow:0 4px 15px rgba(0,230,118,.3);
+}
+.back-top.show{opacity:1;visibility:visible;}
+.back-top:hover{transform:translateY(-4px);}
+
+/* ===== 响应式 ===== */
+@media(max-width:768px){
+  .hero h1{font-size:2rem;}
+  .hero p{font-size:1rem;}
+  nav a{margin-left:1rem;font-size:.85rem;}
+  .wechat-number{font-size:1.6rem;}
+  .flow-item::after{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- 导航 -->
+<header id="header">
+  <div class="logo">Run<span>BN</span></div>
+  <nav>
+    <a href="#home">首页</a>
+    <a href="#features">功能优势</a>
+    <a href="#cases">案例展示</a>
+    <a href="#process">使用流程</a>
+    <a href="#faq">常见问题</a>
+    <a href="#contact">联系我们</a>
+  </nav>
+</header>
+
+<!-- Hero -->
+<section class="hero" id="home">
+  <div class="hero-badge">🏃 RunBN · 跑步数据可视化分析平台</div>
+  <h1>每一公里，<span class="highlight">都经得起推敲</span></h1>
+  <p>RunBN 专注于跑步运动数据的深度解析与可视化呈现。支持 Keep / 咕咚 / 悦跑圈 / 悦动圈 GPX/TCX 数据导入，提供轨迹渲染、配速曲线、心率区间与跑量趋势的多维复盘，让每一次奔跑都沉淀为可信赖的数据资产。</p>
+  <a href="#contact" class="btn btn-primary">微信咨询：278715464</a>
+</section>
+
+<!-- 统计数据 -->
+<section id="stats" style="background:linear-gradient(180deg,rgba(10,46,26,.5),transparent);">
+  <div class="stats-grid">
+    <div class="stat-item">
+      <div class="stat-num">3000+</div>
+      <div class="stat-label">服务跑友</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">5000+</div>
+      <div class="stat-label">分析记录</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">99.2%</div>
+      <div class="stat-label">数据准确率</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">24h</div>
+      <div class="stat-label">极速响应</div>
+    </div>
+  </div>
+</section>
+
+<!-- 功能优势 -->
+<section id="features">
+  <h2>选择 RunBN 的理由</h2>
+  <p class="subtitle">以数据基石（Base Node）为核心理念，让每一次奔跑都有据可依</p>
+  <div class="grid-4">
+    <div class="card">
+      <div class="step-num">🗺️</div>
+      <h3>轨迹解析</h3>
+      <p>基于多源 GPS 数据融合算法，还原真实运动轨迹，支持高程、坡度与转弯半径的可视化呈现，误差 &lt; 0.1%</p>
+      <div class="tag">核心功能</div>
+    </div>
+    <div class="card">
+      <div class="step-num">📊</div>
+      <h3>指标校准</h3>
+      <p>自动识别异常漂移点与静默段，提供配速、步频、心率的平滑校准与区间统计分析</p>
+      <div class="tag">精准分析</div>
+    </div>
+    <div class="card">
+      <div class="step-num">📈</div>
+      <h3>多维复盘</h3>
+      <p>生成配速曲线图、心率热力图与跑量趋势图，支持按日/周/月/年维度的训练负荷复盘</p>
+      <div class="tag">可视化报告</div>
+    </div>
+    <div class="card">
+      <div class="step-num">🔒</div>
+      <h3>数据安全</h3>
+      <p>全流程本地化数据处理，不留存用户账号信息，仅用于本次分析与可视化渲染</p>
+      <div class="tag">隐私保护</div>
+    </div>
+  </div>
+</section>
+
+<!-- 核心卖点 -->
+<section id="selling" style="background:linear-gradient(180deg,transparent,rgba(10,46,26,.4));">
+  <h2>核心卖点</h2>
+  <p class="subtitle">每一个细节都为你的数据安全和分析体验考虑</p>
+  <div class="grid-4">
+    <div class="card">
+      <div class="step-num">🎯</div>
+      <h4>精准轨迹</h4>
+      <p>支持任意日期、任意地点的 GPX/TCX 数据导入，轨迹平滑流畅，适配多平台导出</p>
+    </div>
+    <div class="card">
+      <div class="step-num">⚡</div>
+      <h4>极速渲染</h4>
+      <p>上传数据后 30 分钟内生成可视化图表，支持 PNG/SVG 高清导出</p>
+    </div>
+    <div class="card">
+      <div class="step-num">🔐</div>
+      <h4>隐私保护</h4>
+      <p>绝不泄露你的账号信息，全程不索要密码，分析完成后可删除源数据</p>
+    </div>
+    <div class="card">
+      <div class="step-num">💡</div>
+      <h4>智能建议</h4>
+      <p>基于历史数据自动生成训练负荷评估与恢复建议，助力科学训练</p>
+    </div>
+  </div>
+</section>
+
+<!-- 案例展示 -->
+<section id="cases">
+  <h2>数据分析案例</h2>
+  <p class="subtitle">真实跑步数据，专业可视化呈现</p>
+  <div class="grid-4">
+    <div class="case-card">
+      <div class="case-img">🏃‍♂️</div>
+      <div class="case-body">
+        <h4>复盘案例 · 5.0km 晨跑</h4>
+        <p>某跑者导入 Keep 原始 GPX 数据，经 RunBN 解析后生成配速曲线与心率区间图，轨迹平滑自然，数据可用于个人训练复盘。</p>
+        <div class="case-tag">Keep 数据可视化</div>
+      </div>
+    </div>
+    <div class="case-card">
+      <div class="case-img">🌙</div>
+      <div class="case-body">
+        <h4>复盘案例 · 7.0km 夜跑</h4>
+        <p>某跑者上传咕咚 TCX 文件，RunBN 自动校准漂移点，生成完整的夜跑轨迹渲染图与消耗分析报告。</p>
+        <div class="case-tag">咕咚数据复盘</div>
+      </div>
+    </div>
+    <div class="case-card">
+      <div class="case-img">🏅</div>
+      <div class="case-body">
+        <h4>复盘案例 · 10km 路跑</h4>
+        <p>悦跑圈 GPX 数据导入 RunBN，步频稳定在 170，配速区间分布合理，完整呈现城市路跑轨迹。</p>
+        <div class="case-tag">悦跑圈可视化</div>
+      </div>
+    </div>
+    <div class="case-card">
+      <div class="case-img">🎽</div>
+      <div class="case-body">
+        <h4>复盘案例 · 21km 半马</h4>
+        <p>悦动圈原始数据经 RunBN 解析，生成半马全程轨迹渲染与分段配速分析，助力跑者赛后复盘。</p>
+        <div class="case-tag">悦动圈数据解析</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 使用流程 -->
+<section id="process" style="background:linear-gradient(180deg,rgba(10,46,26,.4),transparent);">
+  <h2>四步完成数据分析</h2>
+  <p class="subtitle">简单四步，轻松拿到你的跑步可视化报告</p>
+  <div class="flow-grid">
+    <div class="flow-item">
+      <div class="step-num">01</div>
+      <h4>上传数据</h4>
+      <p style="color:#444;font-size:.9rem;">提供 GPX/TCX 格式跑步文件，支持多平台数据导入</p>
+    </div>
+    <div class="flow-item">
+      <div class="step-num">02</div>
+      <h4>解析渲染</h4>
+      <p style="color:#444;font-size:.9rem;">系统自动解析轨迹点，生成可视化图表与指标报告</p>
+    </div>
+    <div class="flow-item">
+      <div class="step-num">03</div>
+      <h4>校准优化</h4>
+      <p style="color:#444;font-size:.9rem;">人工辅助校准异常数据段，确保图表真实反映运动状态</p>
+    </div>
+    <div class="flow-item">
+      <div class="step-num">04</div>
+      <h4>导出分享</h4>
+      <p style="color:#444;font-size:.9rem;">生成高清复盘报告，支持导出 PNG/SVG 或直接分享至社交平台</p>
+    </div>
+  </div>
+</section>
+
+<!-- 适用场景 -->
+<section id="scenes">
+  <h2>适用场景</h2>
+  <p class="subtitle">无论什么需求，我们都能帮你搞定</p>
+  <div class="grid-4">
+    <div class="scene-card">
+      <div class="scene-icon">✅</div>
+      <h4>训练复盘</h4>
+      <p>科学分析每次训练的强度与效果，优化后续训练计划</p>
+    </div>
+    <div class="scene-card">
+      <div class="scene-icon">🏁</div>
+      <h4>赛事回顾</h4>
+      <p>对已完成赛事进行全维度数据复盘，提炼成功经验</p>
+    </div>
+    <div class="scene-card">
+      <div class="scene-icon">📱</div>
+      <h4>社交分享</h4>
+      <p>生成高颜值数据图表，用于朋友圈、跑团社群的健康分享</p>
+    </div>
+    <div class="scene-card">
+      <div class="scene-icon">📂</div>
+      <h4>档案归档</h4>
+      <p>长期归档跑步数据，形成个人运动生涯的数字档案</p>
+    </div>
+  </div>
+</section>
+
+<!-- 使用须知 -->
+<section id="notices" style="background:linear-gradient(180deg,transparent,rgba(10,46,26,.3));">
+  <h2>使用须知</h2>
+  <p class="subtitle">使用前请仔细阅读，让你放心使用</p>
+  <div class="notice-grid">
+    <div class="notice-card">
+      <h4>关于数据导入</h4>
+      <p>支持 Keep、咕咚、悦跑圈、悦动圈全平台的 GPX/TCX 数据导入，日期、地点、距离全覆盖。</p>
+    </div>
+    <div class="notice-card">
+      <h4>关于处理时间</h4>
+      <p>一般 24 小时内完成数据解析，急单可协商加急处理。图表生成通常 5-30 分钟。</p>
+    </div>
+    <div class="notice-card">
+      <h4>关于隐私</h4>
+      <p>绝不泄露你的账号信息，仅用于本次数据分析。完成后可删除源数据，不留痕迹。</p>
+    </div>
+    <div class="notice-card">
+      <h4>关于售后</h4>
+      <p>数据有问题，免费重新生成。微信一对一沟通，不满意可以重做。</p>
+    </div>
+    <div class="notice-card" style="grid-column:1/-1;max-width:600px;margin:0 auto;">
+      <h4 style="color:#e65100;">⚠️ 温馨提示</h4>
+      <p>本平台仅提供跑步数据的可视化分析与个人复盘服务，请合理使用，严禁用于任何违规行为。</p>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <h2>你可能关心的问题</h2>
+  <p class="subtitle">新手必看，打消你的所有顾虑</p>
+  <div class="faq-list">
+    <div class="faq-item">
+      <div class="faq-q">支持哪些平台的数据？<span class="arrow">▼</span></div>
+      <div class="faq-a">支持 Keep、咕咚、悦跑圈、悦动圈等主流平台，可导入 GPX/TCX 格式数据进行可视化分析，包括距离、配速、心率、卡路里等全维度指标。</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">数据准确吗？<span class="arrow">▼</span></div>
+      <div class="faq-a">采用多源 GPS 数据融合算法，自动识别并校准异常漂移点，配速、心率、步频等核心指标误差率低于 0.1%，至今保持高准确率记录。</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">多久能完成分析？<span class="arrow">▼</span></div>
+      <div class="faq-a">上传 GPX/TCX 文件后，系统自动解析并生成可视化图表，通常 5-30 分钟内完成。复杂数据或大量文件可协商处理时间。</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">隐私安全吗？<span class="arrow">▼</span></div>
+      <div class="faq-a">全流程本地化数据处理，绝不留存用户账号信息。分析完成后可主动删除源数据文件，全程不索要任何平台密码。</div>
+    </div>
+  </div>
+</section>
+
+<!-- 服务保障 -->
+<section id="guarantee" style="background:linear-gradient(180deg,rgba(10,46,26,.3),transparent);">
+  <h2>服务保障</h2>
+  <p class="subtitle">四大承诺，让你放心使用</p>
+  <div class="guarantee-bar">
+    <div class="guarantee-item">
+      <div class="guarantee-icon">👨‍💻</div>
+      <h4>专业团队</h4>
+      <p>四年运动数据解析经验，累计服务 3000+ 跑友</p>
+    </div>
+    <div class="guarantee-item">
+      <div class="guarantee-icon">✅</div>
+      <h4>品质保证</h4>
+      <p>数据精准，配速曲线自然，可视化效果专业</p>
+    </div>
+    <div class="guarantee-item">
+      <div class="guarantee-icon">🔐</div>
+      <h4>安全保障</h4>
+      <p>隐私保护，绝不泄露账号信息，全流程可追踪</p>
+    </div>
+    <div class="guarantee-item">
+      <div class="guarantee-icon">💬</div>
+      <h4>服务保障</h4>
+      <p>微信一对一服务，24 小时在线，不满意免费重做</p>
+    </div>
+  </div>
+</section>
+
+<!-- 联系我们 -->
+<section class="contact" id="contact">
+  <h2>准备复盘你的跑步数据了吗？</h2>
+  <p>微信添加好友，备注"数据分析"，快速响应</p>
+  <div class="wechat-box">
+    <div class="wechat-label">微信账号</div>
+    <div class="wechat-number">278715464</div>
+    <a href="weixin://addfriend/278715464" class="wechat-btn">打开微信添加</a>
+  </div>
+</section>
+
+<!-- 页脚 -->
+<footer>
+  <div class="footer-links">
+    <a href="#home">首页</a>
+    <a href="#features">功能优势</a>
+    <a href="#cases">案例展示</a>
+    <a href="#process">使用流程</a>
+    <a href="#faq">常见问题</a>
+    <a href="#contact">联系我们</a>
+  </div>
+  <p style="margin-top:.5rem;">© 2025 RunBN · 专注跑步数据可视化与科学复盘 · 微信：278715464</p>
+</footer>
+
+<!-- 回到顶部 -->
+<div class="back-top" id="backTop">↑</div>
+
+<script>
+// 导航滚动
+window.addEventListener('scroll',()=>{
+  document.getElementById('header').classList.toggle('scrolled',window.scrollY>50);
+  document.getElementById('backTop').classList.toggle('show',window.scrollY>500);
+});
+
+// 回到顶部
+document.getElementById('backTop').onclick=()=>window.scrollTo({top:0,behavior:'smooth'});
+
+// FAQ 折叠
+document.querySelectorAll('.faq-q').forEach(q=>{
+  q.onclick=()=>q.parentNode.classList.toggle('open');
+});
+
+// 滚动入场动画
+const observer=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.style.opacity='1';
+      e.target.style.transform='translateY(0)';
+    }
+  });
+},{threshold:0.1});
+
+document.querySelectorAll('.card,.case-card,.scene-card,.stat-item,.notice-card,.guarantee-item,.flow-item').forEach(el=>{
+  el.style.opacity='0';
+  el.style.transform='translateY(30px)';
+  el.style.transition='opacity .6s ease, transform .6s ease';
+  observer.observe(el);
+});
+</script>
+</body>
+</html>
+

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>泉州5公里跑步轨迹截图 | Keep代跑数据定制 | RUNPRO</title>
+<meta name="description" content="泉州丰泽区5.09公里跑步轨迹实测，配速6分04秒，数据真实可查，支持Keep/悦跑圈/咕咚代跑定制。">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI','Microsoft YaHei',sans-serif;}
+body{background:#0a2e1a;color:#fff;line-height:1.6;overflow-x:hidden;position:relative;}
+body::before{content:'';position:fixed;inset:0;background:linear-gradient(135deg,rgba(10,46,26,0.82),rgba(10,46,26,0.75)),url('https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=1920&q=80') center/cover no-repeat fixed;z-index:-1;}
+header{position:sticky;top:0;z-index:100;background:rgba(10,46,26,0.9);backdrop-filter:blur(10px);display:flex;justify-content:space-between;align-items:center;padding:1rem 5%;transition:.3s;border-bottom:1px solid rgba(255,255,255,0.08);}
+header.scrolled{padding:.5rem 5%;box-shadow:0 4px 20px rgba(0,0,0,.4);}
+.logo{font-size:1.8rem;font-weight:bold;color:#00e676;letter-spacing:2px;}
+.logo span{color:#fff;}
+nav a{color:rgba(255,255,255,.85);text-decoration:none;margin-left:1.8rem;font-size:.95rem;transition:color .3s;}
+nav a:hover{color:#00e676;}
+.content-wrap{max-width:800px;margin:3rem auto;padding:0 1rem;}
+.case-detail{background:rgba(255,255,255,.95);border-radius:16px;padding:2rem;color:#333;box-shadow:0 4px 20px rgba(0,0,0,.15);}
+.case-detail h1{color:#0a2e1a;font-size:1.6rem;margin-bottom:.5rem;text-align:center;}
+.case-detail .meta{color:#666;text-align:center;margin-bottom:1.5rem;font-size:.9rem;}
+.data-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin:1.5rem 0;}
+.data-item{text-align:center;padding:1rem;background:#f0faf0;border-radius:12px;}
+.data-num{font-size:1.8rem;font-weight:bold;color:#00a85c;}
+.data-num small{font-size:.8rem;color:#666;}
+.data-label{font-size:.85rem;color:#555;margin-top:.3rem;}
+.tag-list{display:flex;flex-wrap:wrap;gap:8px;margin:1rem 0;}
+.tag{background:#f0f0f0;padding:5px 14px;border-radius:20px;font-size:.82rem;color:#555;}
+.tag.active{background:#e8f5e9;color:#00a85c;font-weight:600;}
+.highlight-box{background:#e8f5e9;border-left:4px solid #00e676;padding:1rem;margin:1.5rem 0;border-radius:0 8px 8px 0;}
+.highlight-box p{margin:0;color:#2c3e50;line-height:1.8;}
+.step-box{background:#fafafa;border:1px solid #eee;border-radius:8px;padding:1rem;margin:.8rem 0;}
+.step-box h4{color:#0a2e1a;margin:0 0 .5rem;font-size:1rem;}
+.step-box p{margin:0;color:#555;font-size:.9rem;}
+.contact{text-align:center;background:linear-gradient(180deg,rgba(10,46,26,.6),rgba(10,46,26,.8));padding:3rem 5%;}
+.contact h2{color:#fff;margin-bottom:1rem;}
+.contact p{color:rgba(255,255,255,.8);margin-bottom:1.5rem;}
+.wechat-box{display:inline-block;background:rgba(255,255,255,.95);border-radius:16px;padding:2rem 3rem;box-shadow:0 4px 20px rgba(0,0,0,.2);}
+.wechat-label{color:#888;font-size:.9rem;margin-bottom:.3rem;}
+.wechat-number{font-size:2.2rem;font-weight:bold;color:#00a85c;letter-spacing:2px;}
+.wechat-btn{display:inline-block;margin-top:1rem;background:linear-gradient(135deg,#00e676,#00a85c);color:#fff;padding:.7rem 2rem;border-radius:50px;font-weight:bold;text-decoration:none;transition:all .3s;}
+.wechat-btn:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,230,118,.4);}
+footer{background:rgba(5,20,12,.95);padding:2rem 5%;text-align:center;color:rgba(255,255,255,.5);font-size:.82rem;}
+.footer-links{display:flex;flex-wrap:wrap;justify-content:center;gap:1rem;margin-bottom:1rem;}
+.footer-links a{color:rgba(255,255,255,.6);text-decoration:none;font-size:.85rem;}
+.footer-links a:hover{color:#00e676;}
+.back-top{position:fixed;right:20px;bottom:20px;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#00e676,#00a85c);display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;visibility:hidden;transition:.3s;z-index:1000;font-size:1.3rem;color:#fff;box-shadow:0 4px 15px rgba(0,230,118,.3);}
+.back-top.show{opacity:1;visibility:visible;}
+.back-top:hover{transform:translateY(-4px);}
+@media(max-width:768px){.data-grid{grid-template-columns:1fr 1fr;}nav a{margin-left:.8rem;font-size:.85rem;}}
+</style>
+</head>
+<body>
+
+<header id="header">
+  <div class="logo">RUN<span>PRO</span></div>
+  <nav>
+    <a href="https://keepdata.top/">首页</a>
+    <a href="https://keepdata.top/#features">服务优势</a>
+    <a href="https://keepdata.top/#cases">案例展示</a>
+    <a href="https://keepdata.top/#process">定制流程</a>
+    <a href="https://keepdata.top/#faq">常见问题</a>
+    <a href="https://keepdata.top/#contact">联系我们</a>
+  </nav>
+</header>
+
+<main class="content-wrap">
+  <article class="case-detail">
+    <h1>📍 泉州丰泽区 · 5.09km 跑步轨迹实测</h1>
+    <p class="meta">RUNPRO 原创案例 · Keep APP 数据同步 · 可指定地点与日期</p>
+
+    <!-- 🛠️ 核心修改点：限制了最大宽度，电脑端不再撑爆 -->
+    <img src="/images/keep-quanzhou-5km-trail.jpg" 
+         alt="Keep APP 泉州丰泽区5.09公里跑步轨迹截图，配速6分04秒，GPS定位真实" 
+         style="width:100%; max-width:600px; display:block; margin:1rem auto; border-radius:12px; border:1px solid #e0e0e0;">
+
+    <div class="data-grid">
+      <div class="data-item"><div class="data-num">5.09<small>km</small></div><div class="data-label">总距离</div></div>
+      <div class="data-item"><div class="data-num">06'04"<small></small></div><div class="data-label">平均配速</div></div>
+      <div class="data-item"><div class="data-num">357<small>kcal</small></div><div class="data-label">消耗热量</div></div>
+    </div>
+
+    <div class="tag-list">
+      <span class="tag active">📍 泉州丰泽区</span>
+      <span class="tag active">🏃 Keep代跑</span>
+      <span class="tag active">📏 5.09公里</span>
+      <span class="tag active">⚡ 配速6'04"</span>
+      <span class="tag active">🔥 357千卡</span>
+      <span class="tag active">📅 可指定日期</span>
+    </div>
+
+    <div class="highlight-box">
+      <p><strong>✅ 真实轨迹无漂移：</strong>基于 Keep 官方算法生成，GPS 轨迹贴合泉州丰泽区坂头公寓周边实际道路，路线自然流畅，无穿模、无直线漂移。</p>
+    </div>
+    <div class="highlight-box" style="margin-top:.8rem;">
+      <p><strong>✅ 数据精准可查：</strong>跑步时长 30分56秒，步频稳定，配速曲线呈自然波动，完全符合人体运动规律。客户登录账号后可自行截图交差。</p>
+    </div>
+
+    <h2 style="color:#0a2e1a;font-size:1.3rem;margin:1.5rem 0 1rem;border-left:4px solid #00e676;padding-left:.8rem;">截图包含哪些数据？</h2>
+    <p style="color:#444;line-height:1.8;">打开 Keep APP → 进入"我的" → "运动记录" → 选择对应跑步条目 → 查看详情页。截图中将完整展示：<strong>GPS 定位轨迹图、配速曲线、公里数、运动时长、消耗卡路里、步频步幅、海拔起伏</strong>等全部数据维度。</p>
+
+    <h2 style="color:#0a2e1a;font-size:1.3rem;margin:1.5rem 0 1rem;border-left:4px solid #00e676;padding-left:.8rem;">为什么选择我们？</h2>
+    <div class="step-box"><h4>📍 支持指定地点</h4><p>全国任意城市、任意区域，轨迹贴合真实道路地图，满足各地跑友的打卡需求。</p></div>
+    <div class="step-box"><h4>📅 支持指定日期</h4><p>可补跑任意历史日期的跑步记录，帮你填满运动日历，再也不怕断签。</p></div>
+    <div class="step-box"><h4>🔒 安全过检 · 零封号</h4><p>真人设备模拟，数据逻辑自洽，至今保持零封号记录。数据同步后客户自行截图，无风险。</p></div>
+    <div class="step-box"><h4>⚡ 极速交付</h4><p>下单后当天完成代跑，数据同步 Keep 一般不超过 30 分钟，急单可协商加急。</p></div>
+
+    <h2 style="color:#0a2e1a;font-size:1.3rem;margin:1.5rem 0 1rem;border-left:4px solid #00e676;padding-left:.8rem;">常见问答</h2>
+    <div class="step-box"><h4>Q：截图能显示定位吗？</h4><p>A：能。GPS 轨迹图上会显示具体区域位置，点位分布自然真实。</p></div>
+    <div class="step-box"><h4>Q：配速和公里数可以自定义吗？</h4><p>A：可以。只需告知目标配速区间和距离，我们按需求精准定制。</p></div>
+    <div class="step-box"><h4>Q：多久能拿到数据？</h4><p>A：通常当天完成，数据同步平台 5-30 分钟，急单可加急处理。</p></div>
+    <div class="step-box"><h4>Q：安全吗？会不会封号？</h4><p>A：采用真人设备模拟，避开平台风控机制，至今保持零封号记录。</p></div>
+
+    <!-- 🛒 新增：购买引导模块（核心转化） -->
+    <div style="background:#f0fff4; border:2px solid #27ae60; border-radius:12px; padding:20px; margin:24px 0; text-align:center;">
+      <h3 style="margin:0 0 12px; color:#2c3e50; font-size:1.1rem;">✅ 想要同款真实数据？立即下单！</h3>
+      <p style="margin:0 0 16px; color:#555; font-size:0.95rem;">
+        专业代跑团队 · 支持任意城市/日期/配速 · 数据同步Keep官方 · 安全零封号
+      </p>
+      <a href="https://keepdata.top/#contact" 
+         style="display:inline-block; background:linear-gradient(135deg, #00c853 0%, #009624 100%); 
+                color:white; padding:14px 32px; border-radius:30px; text-decoration:none; 
+                font-weight:bold; font-size:1rem; 
+                box-shadow:0 4px 12px rgba(0,200,83,0.3); transition:all 0.3s ease;">
+        🛒 点击前往主页下单
+      </a>
+      <p style="margin:12px 0 0; color:#888; font-size:0.85rem;">⏱️ 平均10分钟完成 · 24小时在线接单 · 支持视频验证</p>
+    </div>
+
+  </article>
+</main>
+
+<section class="contact" id="contact">
+  <h2>准备拿牌了吗？</h2>
+  <p>微信添加好友，备注"代跑"，快速响应</p>
+  <div class="wechat-box">
+    <div class="wechat-label">微信账号</div>
+    <div class="wechat-number">278715464</div>
+    <a href="weixin://addfriend/278715464" class="wechat-btn">打开微信添加</a>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-links">
+    <a href="https://keepdata.top/">首页</a>
+    <a href="https://keepdata.top/#features">服务优势</a>
+    <a href="https://keepdata.top/#cases">案例展示</a>
+    <a href="https://keepdata.top/#process">定制流程</a>
+    <a href="https://keepdata.top/#faq">常见问题</a>
+    <a href="https://keepdata.top/#contact">联系我们</a>
+  </div>
+  <p style="margin-top:.5rem;">© 2025 RUN PRO · 专注跑步数据定制 · 微信：278715464</p>
+</footer>
+
+<div class="back-top" id="backTop">↑</div>
+
+<script>
+window.addEventListener('scroll',()=>{
+  document.getElementById('header').classList.toggle('scrolled',window.scrollY>50);
+  document.getElementById('backTop').classList.toggle('show',window.scrollY>500);
+});
+document.getElementById('backTop').onclick=()=>window.scrollTo({top:0,behavior:'smooth'});
+</script>
+</body>
+</html>
