@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>RUNPRO 文章生成器 · 风格可编辑·永久保存</title>
+<title>RUNPRO 文章生成器 · AI版 · 一键发布</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI','Microsoft YaHei',sans-serif;}
 body{background:#0a2e1a;color:#fff;line-height:1.6;padding:20px;}
@@ -36,7 +36,7 @@ textarea{resize:vertical;}
 .platform-label.yuepao{color:#ff8a65;}
 .platform-label.yuedong{color:#ce93d8;}
 
-/* ★★★ 下拉框核心修复：强制白字+深色背景 ★★★ */
+/* 下拉框 */
 .platform-select{
   flex:1;min-width:160px;max-width:240px;padding:5px 8px;font-size:.82rem;
   background:#1a3a2a;
@@ -48,16 +48,9 @@ textarea{resize:vertical;}
   background-repeat:no-repeat;background-position:right 6px center;background-size:14px;
   padding-right:22px;
 }
-.platform-select option{
-  background:#1a3a2a;
-  color:#ffffff;
-  padding:6px 10px;
-}
+.platform-select option{background:#1a3a2a;color:#ffffff;padding:6px 10px;}
 .platform-select option:checked,
-.platform-select option:hover{
-  background:#00e676;
-  color:#0a2e1a;
-}
+.platform-select option:hover{background:#00e676;color:#0a2e1a;}
 
 .btn-use{background:#00e676;color:#0a2e1a;font-weight:bold;padding:5px 10px;font-size:.78rem;border-radius:5px;cursor:pointer;border:none;}
 .btn-use:hover{filter:brightness(1.15);}
@@ -86,6 +79,12 @@ textarea{resize:vertical;}
 .status-dot.err{background:#ff5252;}
 .status-dot.loading{background:#ff9800;animation:pulse 1s infinite;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+/* 发布区 */
+.publish-card{background:rgba(0,230,118,.06);border:1px solid rgba(0,230,118,.25);}
+.publish-card h3{color:#00e676;border-left-color:#00e676;}
+.publish-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;}
+.publish-row>div{flex:1;min-width:200px;}
 
 .uploads{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
 .prev{width:100%;height:80px;object-fit:contain;background:rgba(0,0,0,.3);border:1px dashed rgba(255,255,255,.2);border-radius:6px;margin-top:4px;display:block;}
@@ -116,7 +115,7 @@ textarea{resize:vertical;}
 
 <div class="wrap">
   <h1 class="title">🏃 RUNPRO 文章生成器 · AI版</h1>
-  <p class="sub">✅ 截图→AI写文案→自动填入→选配图→生成HTML | Keep×10 + 其他×3 指令槽位</p>
+  <p class="sub">✅ 截图→AI写文案→自动填入→选配图→生成HTML → 🚀 一键发布到 GitHub 根目录</p>
 
   <div class="grid">
     <!-- ========== 📷 AI 智能区 ========== -->
@@ -126,7 +125,7 @@ textarea{resize:vertical;}
 
       <div class="model-row">
         <div>
-          <label>🔑 API Key（仅存本机，不泄露）</label>
+          <label>🔑 千问 API Key（仅存本机，不泄露）</label>
           <input id="ai_key" type="password" placeholder="粘贴 sk-... (通义千问)" style="font-family:monospace;">
           <div class="key-save">
             <input type="checkbox" id="ai_saveLocal"> <label style="margin:0;font-size:.75rem;color:rgba(255,255,255,.5);">加密保存本机</label>
@@ -148,7 +147,7 @@ textarea{resize:vertical;}
         <textarea id="ai_instruction" rows="3" placeholder="留空则使用默认指令。" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid rgba(255,165,0,.3);background:rgba(255,255,255,.08);color:#fff;font-size:.85rem;line-height:1.5;"></textarea>
       </div>
 
-      <!-- ★★★ 平台指令管理 ★★★ -->
+      <!-- 平台指令管理 -->
       <div style="margin-top:10px;">
         <label style="color:#ff9800;font-size:.82rem;font-weight:bold;">🎯 选择平台与指令（点"√使用"自动填入上方指令框）</label>
 
@@ -281,10 +280,37 @@ textarea{resize:vertical;}
         自动追加"真实性描述"（防检测）
       </label>
     </div>
+
+    <!-- ========== 🚀 一键发布到 GitHub ========== -->
+    <div class="card publish-card" style="grid-column:1/-1;">
+      <h3>🚀 一键发布到 GitHub（写进仓库根目录）</h3>
+      <p class="tip" style="margin-bottom:8px;">💡 Token 和仓库信息只存本机浏览器，不会上传到任何服务器。Token 建议用 Fine-grained PAT，只给 Contents: Read/Write 权限。</p>
+      <div class="publish-row">
+        <div>
+          <label>🔑 GitHub PAT (Fine-grained Token)</label>
+          <input id="gh_token" type="password" placeholder="github_pat_xxxxxxxx" style="font-family:monospace;">
+          <div class="key-save">
+            <input type="checkbox" id="gh_saveLocal" checked> <label style="margin:0;font-size:.75rem;color:rgba(255,255,255,.5);">保存Token到本机</label>
+          </div>
+        </div>
+        <div>
+          <label>📁 仓库 (格式: owner/repo)</label>
+          <input id="gh_repo" value="chenxin462/runpro-site" style="font-family:monospace;">
+        </div>
+        <div>
+          <label>🌿 分支（固定 main）</label>
+          <input id="gh_branch" value="main" disabled style="font-family:monospace;opacity:.7;">
+        </div>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <button class="btn" onclick="publishToGithub()" style="background:linear-gradient(135deg,#00e676,#00a85c);color:#0a2e1a;font-size:1rem;padding:12px 28px;">🚀 一键发布到 GitHub</button>
+        <span id="publishStatus" style="font-size:.78rem;color:rgba(255,255,255,.5);"></span>
+      </div>
+    </div>
   </div>
 
   <div class="btn-row">
-    <button class="btn btn-primary" onclick="generate()">🚀 生成 HTML</button>
+    <button class="btn btn-primary" onclick="generate()">⚡ 生成 HTML</button>
     <button class="btn btn-secondary" onclick="downloadHTML()">⬇️ 下载文件</button>
     <button class="btn btn-secondary" onclick="copyCode()">📋 复制代码</button>
     <button class="btn btn-secondary" onclick="clearAll()">🗑️ 清空</button>
@@ -295,12 +321,12 @@ textarea{resize:vertical;}
       <button class="tab active" onclick="switchTab('code',this)">📄 代码</button>
       <button class="tab" onclick="switchTab('preview',this)">👁️ 预览</button>
     </div>
-    <div class="code-box" id="codeBox">点击「生成 HTML」后代码显示在这里...</div>
+    <div class="code-box" id="codeBox">点击「⚡ 生成 HTML」后代码显示在这里...</div>
     <iframe class="preview-frame" id="previewFrame"></iframe>
   </div>
 </div>
 
-<!-- ★★★ 编辑/新增 弹窗 ★★★ -->
+<!-- 编辑/新增 弹窗 -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
     <h4 id="modalTitle">编辑指令</h4>
@@ -356,42 +382,33 @@ const PLATFORM_CONFIG={
 function setAIStatus(msg,type){document.getElementById('aiMsg').textContent=msg;document.getElementById('aiDot').className='status-dot '+(type||'');}
 function showToast(msg,err){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(err?' error':'');setTimeout(()=>t.className='toast',2500);}
 
-/* ===== Key 管理 ===== */
+/* ===== Key 管理（千问） ===== */
 function getAIKey(){const k=document.getElementById('ai_key').value.trim();if(k)return k;const s=localStorage.getItem('runpro_ai_key');if(s)return atob(s);return '';}
 function saveAIKeyIfChecked(){if(document.getElementById('ai_saveLocal').checked){const k=document.getElementById('ai_key').value.trim();if(k)localStorage.setItem('runpro_ai_key',btoa(k));}}
 function loadSavedKey(){const s=localStorage.getItem('runpro_ai_key');if(s)document.getElementById('ai_key').value=atob(s);}
-function clearAIKey(){document.getElementById('ai_key').value='';localStorage.removeItem('runpro_ai_key');showToast('✅ 已清除Key');}
+function clearAIKey(){document.getElementById('ai_key').value='';localStorage.removeItem('runpro_ai_key');showToast('✅ 已清除千问Key');}
 
-/* ===== ★★★ 平台指令管理（核心）★★★ */
+/* ===== GitHub Token 管理 ===== */
+function getGHToken(){const k=document.getElementById('gh_token').value.trim();if(k)return k;const s=localStorage.getItem('runpro_gh_token');if(s)return atob(s);return '';}
+function saveGHTokenIfChecked(){if(document.getElementById('gh_saveLocal').checked){const k=document.getElementById('gh_token').value.trim();if(k)localStorage.setItem('runpro_gh_token',btoa(k));}}
+function loadSavedGHToken(){const s=localStorage.getItem('runpro_gh_token');if(s)document.getElementById('gh_token').value=atob(s);}
 
+/* ===== 平台指令管理 ===== */
 function getPlatformStyles(platform){
   const raw=localStorage.getItem('runpro_styles_'+platform);
-  if(raw){
-    try{return JSON.parse(raw);}catch(e){}
-  }
+  if(raw){try{return JSON.parse(raw);}catch(e){}}
   return [{name:PLATFORM_CONFIG[platform].defaultName,content:PLATFORM_CONFIG[platform].defaultContent}];
 }
-
-function savePlatformStyles(platform,list){
-  localStorage.setItem('runpro_styles_'+platform,JSON.stringify(list));
-}
-
+function savePlatformStyles(platform,list){localStorage.setItem('runpro_styles_'+platform,JSON.stringify(list));}
 function refreshSelect(platform){
   const sel=document.getElementById('sel_'+platform);
   const list=getPlatformStyles(platform);
   const currentIdx=sel.dataset.idx||0;
   sel.innerHTML='';
-  list.forEach((item,idx)=>{
-    const opt=document.createElement('option');
-    opt.value=idx;
-    opt.textContent=item.name;
-    sel.appendChild(opt);
-  });
+  list.forEach((item,idx)=>{const opt=document.createElement('option');opt.value=idx;opt.textContent=item.name;sel.appendChild(opt);});
   sel.value=Math.min(currentIdx,list.length-1);
-  const cfg=PLATFORM_CONFIG[platform];
-  document.getElementById('count_'+platform).textContent='('+list.length+'/'+cfg.max+')';
+  document.getElementById('count_'+platform).textContent='('+list.length+'/'+PLATFORM_CONFIG[platform].max+')';
 }
-
 function getCurrentStyle(platform){
   const sel=document.getElementById('sel_'+platform);
   const list=getPlatformStyles(platform);
@@ -399,41 +416,23 @@ function getCurrentStyle(platform){
   sel.dataset.idx=idx;
   return list[idx]||list[0];
 }
-
-function useStyle(platform){
-  const item=getCurrentStyle(platform);
-  document.getElementById('ai_instruction').value=item.content;
-  showToast('✅ 已使用：'+PLATFORM_CONFIG[platform].label+' · '+item.name);
-}
-
-function editStyle(platform){
-  const item=getCurrentStyle(platform);
-  const idx=parseInt(document.getElementById('sel_'+platform).value)||0;
-  openModal('edit',platform,idx,item.name,item.content);
-}
-
+function useStyle(platform){const item=getCurrentStyle(platform);document.getElementById('ai_instruction').value=item.content;showToast('✅ 已使用：'+PLATFORM_CONFIG[platform].label+' · '+item.name);}
+function editStyle(platform){const item=getCurrentStyle(platform);const idx=parseInt(document.getElementById('sel_'+platform).value)||0;openModal('edit',platform,idx,item.name,item.content);}
 function addStyle(platform){
-  const list=getPlatformStyles(platform);
-  const cfg=PLATFORM_CONFIG[platform];
+  const list=getPlatformStyles(platform);const cfg=PLATFORM_CONFIG[platform];
   if(list.length>=cfg.max){showToast('⚠️ '+cfg.label+'最多'+cfg.max+'条指令',true);return;}
   openModal('add',platform,list.length,'新指令',cfg.defaultContent);
 }
-
 function delStyle(platform){
-  const sel=document.getElementById('sel_'+platform);
-  const list=getPlatformStyles(platform);
+  const sel=document.getElementById('sel_'+platform);const list=getPlatformStyles(platform);
   const idx=parseInt(sel.value)||0;
   if(list.length<=1){showToast('⚠️ 至少保留1条指令',true);return;}
   if(!confirm('确定删除「'+list[idx].name+'」？'))return;
-  list.splice(idx,1);
-  savePlatformStyles(platform,list);
-  refreshSelect(platform);
-  showToast('✅ 已删除');
+  list.splice(idx,1);savePlatformStyles(platform,list);refreshSelect(platform);showToast('✅ 已删除');
 }
 
-/* ===== ★★★ 弹窗逻辑 ★★★ ===== */
+/* ===== 弹窗逻辑 ===== */
 let modalMode='',modalPlatform='',modalIdx=0;
-
 function openModal(mode,platform,idx,name,content){
   modalMode=mode;modalPlatform=platform;modalIdx=idx;
   document.getElementById('modalTitle').textContent=(mode==='add'?'新增指令':'编辑指令')+' - '+PLATFORM_CONFIG[platform].label;
@@ -442,80 +441,49 @@ function openModal(mode,platform,idx,name,content){
   document.getElementById('modalOverlay').classList.add('show');
   setTimeout(()=>document.getElementById('modalName').focus(),100);
 }
-
-function closeModal(){
-  document.getElementById('modalOverlay').classList.remove('show');
-}
-
+function closeModal(){document.getElementById('modalOverlay').classList.remove('show');}
 document.getElementById('modalSave').addEventListener('click',function(){
   const name=document.getElementById('modalName').value.trim();
   const content=document.getElementById('modalContent').value.trim();
   if(!name){showToast('⚠️ 名称不能为空',true);return;}
   if(!content){showToast('⚠️ 内容不能为空',true);return;}
-  const platform=modalPlatform;
-  const list=getPlatformStyles(platform);
-  if(modalMode==='add'){
-    list.push({name:name,content:content});
-    showToast('✅ 已新增：'+name);
-  }else{
-    list[modalIdx]={name:name,content:content};
-    showToast('✅ 已保存：'+name);
-  }
-  savePlatformStyles(platform,list);
-  refreshSelect(platform);
-  document.getElementById('ai_instruction').value=content;
-  closeModal();
+  const platform=modalPlatform;const list=getPlatformStyles(platform);
+  if(modalMode==='add'){list.push({name:name,content:content});showToast('✅ 已新增：'+name);}
+  else{list[modalIdx]={name:name,content:content};showToast('✅ 已保存：'+name);}
+  savePlatformStyles(platform,list);refreshSelect(platform);
+  document.getElementById('ai_instruction').value=content;closeModal();
 });
+document.getElementById('modalOverlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
 
-document.getElementById('modalOverlay').addEventListener('click',function(e){
-  if(e.target===this)closeModal();
-});
-
-/* ===== ★★★ 事件委托 ★★★ ===== */
+/* ===== 事件委托 ===== */
 document.addEventListener('DOMContentLoaded',function(){
   const aiCard=document.getElementById('ai-card');
   aiCard.addEventListener('click',function(e){
-    const btn=e.target.closest('button[data-action]');
-    if(!btn)return;
-    const platform=btn.dataset.platform;
-    const action=btn.dataset.action;
-    console.log('点击：',platform,action);
-    switch(action){
-      case 'use':useStyle(platform);break;
-      case 'edit':editStyle(platform);break;
-      case 'add':addStyle(platform);break;
-      case 'del':delStyle(platform);break;
-    }
+    const btn=e.target.closest('button[data-action]');if(!btn)return;
+    const platform=btn.dataset.platform;const action=btn.dataset.action;
+    switch(action){case 'use':useStyle(platform);break;case 'edit':editStyle(platform);break;case 'add':addStyle(platform);break;case 'del':delStyle(platform);break;}
   });
-
-  ['keep','gudong','yuepao','yuedong'].forEach(p=>{
-    const sel=document.getElementById('sel_'+p);
-    sel.addEventListener('change',function(){this.dataset.idx=this.value;});
-  });
-
-  loadSavedKey();
+  ['keep','gudong','yuepao','yuedong'].forEach(p=>{const sel=document.getElementById('sel_'+p);sel.addEventListener('change',function(){this.dataset.idx=this.value;});});
+  loadSavedKey();loadSavedGHToken();
   ['keep','gudong','yuepao','yuedong'].forEach(p=>refreshSelect(p));
   const d=document.getElementById('g_date');if(d&&!d.value)d.value=new Date().toISOString().slice(0,10);
   loadPreset('gudong5k');
 });
 
 /* ===== 获取最终指令 ===== */
-function getInstruction(){
-  const v=document.getElementById('ai_instruction').value.trim();
-  return v||DEFAULT_INSTRUCTION;
-}
+function getInstruction(){const v=document.getElementById('ai_instruction').value.trim();return v||DEFAULT_INSTRUCTION;}
 
 /* ===== 图片转 base64 ===== */
 function fileToBase64(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result.split(',')[1]);r.onerror=reject;r.readAsDataURL(file);});}
 
-/* ===== AI 模型配置（仅通义+Gemini，无DeepSeek，无字数限制） ===== */
+/* ===== AI 模型配置 ===== */
 const AI_CONFIG={
   'qwen-vl-plus':{baseUrl:'https://dashscope.aliyuncs.com/compatible-mode/v1',supportsImage:true},
   'qwen-vl-max':{baseUrl:'https://dashscope.aliyuncs.com/compatible-mode/v1',supportsImage:true},
   'gemini-2.5-flash':{baseUrl:'https://generativelanguage.googleapis.com/v1beta/openai',supportsImage:true}
 };
 
-/* ===== 调用大模型（无字数限制） ===== */
+/* ===== 调用大模型 ===== */
 async function callAI(model,textPrompt,imageBase64){
   const cfg=AI_CONFIG[model];if(!cfg)throw new Error('未知模型');
   const key=getAIKey();if(!key)throw new Error('请先填入API Key');
@@ -528,16 +496,12 @@ async function callAI(model,textPrompt,imageBase64){
     ]}];
   }else{messages=[{role:'user',content:textPrompt}];}
   const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:model,messages:messages,temperature:0.7})});
-  if(!res.ok){
-    if(res.status===403||res.status===401)throw new Error('Key无效或无权限');
-    if(res.status===0)throw new Error('跨域拦截。请装CORS插件或换浏览器');
-    throw new Error('API错误 '+res.status);
-  }
+  if(!res.ok){if(res.status===403||res.status===401)throw new Error('Key无效或无权限');if(res.status===0)throw new Error('跨域拦截。请装CORS插件或换浏览器');throw new Error('API错误 '+res.status);}
   const json=await res.json();
   return json.choices?.[0]?.message?.content || '';
 }
 
-/* ===== 📷 AI看图写文案（原有功能，不动） ===== */
+/* ===== 📷 AI看图写文案 ===== */
 async function aiWrite(){
   const file=document.getElementById('ai_imgInput').files[0];
   if(!file){showToast('⚠️ 请先选择截图',true);return;}
@@ -555,13 +519,10 @@ async function aiWrite(){
   }catch(e){setAIStatus('❌ '+e.message,'err');showToast('❌ '+e.message,true);}
 }
 
-/* ===== ✍️ AI按文字生成（新增功能：不依赖图片） ===== */
+/* ===== ✍️ AI按文字生成 ===== */
 async function aiWriteFromText(){
   const instruction=getInstruction();
-  if(!instruction || instruction===DEFAULT_INSTRUCTION){
-    showToast('⚠️ 请先选指令或写要求（点√使用 或 手动输入）',true);
-    return;
-  }
+  if(!instruction || instruction===DEFAULT_INSTRUCTION){showToast('⚠️ 请先选指令或写要求（点√使用 或 手动输入）',true);return;}
   const model=document.getElementById('ai_visionModel').value;
   setAIStatus('正在按文字生成文案...','loading');
   try{
@@ -574,41 +535,25 @@ async function aiWriteFromText(){
   }catch(e){setAIStatus('❌ '+e.message,'err');showToast('❌ '+e.message,true);}
 }
 
-/* ===== 智能拆分（按空行分段，保留 AI 原有段落） ===== */
+/* ===== 智能拆分 ===== */
 function parseContent(){
   const raw=document.getElementById('smartPaste').value.trim();
   if(!raw){showToast('⚠️ 粘贴区为空');return;}
-
-  // 1. 分离"关键词"行
   let body=raw,keysLine='';
   const kwMatch=raw.match(/(?:关键词|标签|keywords?)[：:]\s*(.+)$/mi);
   if(kwMatch){keysLine=kwMatch[1].trim();body=raw.replace(/(?:关键词|标签|keywords?)[：:]\s*.+$/mi,'').trim();}
-
-  // 2. 按"空行"切分 = AI 的每个段落
   const blocks=body.split(/\n{2,}/).map(b=>b.replace(/\r/g,'').trim()).filter(Boolean);
-
   if(!blocks.length){showToast('⚠️ 未识别到内容');return;}
-
-  // 3. 第一行 = 标题
   document.getElementById('g_title').value=blocks[0];
-
-  // 4. 其余每块 = 一个独立段落（不再合并！）
-  const container=document.getElementById('g_paras');
-  container.innerHTML='';
+  const container=document.getElementById('g_paras');container.innerHTML='';
   blocks.slice(1).forEach(block=>{
-    const d=document.createElement('div');
-    d.className='para-item';
-    // 块内可能有换行，转成空格（AI 用\n代替分段的情况）
+    const d=document.createElement('div');d.className='para-item';
     const text=block.replace(/\n+/g,' ');
     d.innerHTML='<textarea>'+text.replace(/"/g,'&quot;')+'</textarea><button onclick="rmPara(this)">✕</button>';
     container.appendChild(d);
   });
-
-  // 5. SEO 描述 = 第一段正文前80字
   const allText=blocks.slice(1).join(' ');
   document.getElementById('g_desc').value=allText.substring(0,80)+'...';
-
-  // 6. 关键词
   let autoKeys=['跑步'];
   const tags=extractTags(allText);
   if(tags.location)autoKeys.push(tags.location);
@@ -617,11 +562,8 @@ function parseContent(){
   if(tags.calorie)autoKeys.push(tags.calorie);
   if(keysLine)keysLine.split(/[,，]/).forEach(k=>{if(k.trim())autoKeys.push(k.trim());});
   document.getElementById('g_keys').value=[...new Set(autoKeys)].join(',');
-
-  // 7. 自动抓日期
   const dateMatch=allText.match(/(\d{4})\s*[\/\-.年]\s*(\d{1,2})\s*[\/\-.月]\s*(\d{1,2})/);
   if(dateMatch){const y=dateMatch[1],m=String(dateMatch[2]).padStart(2,'0'),d=String(dateMatch[3]).padStart(2,'0');document.getElementById('g_date').value=y+'-'+m+'-'+d;}
-
   showToast('✅ 已按段落拆分并填入 '+blocks.length+' 段！');
 }
 
@@ -638,11 +580,11 @@ function loadPreset(k){const p=PRESETS[k];if(!p)return;document.getElementById('
 function addPara(){const d=document.createElement('div');d.className='para-item';d.innerHTML='<textarea placeholder="新段落"></textarea><button onclick="rmPara(this)">✕</button>';document.getElementById('g_paras').appendChild(d);}
 function rmPara(b){if(document.querySelectorAll('.para-item').length>1)b.parentElement.remove();}
 
-/* ===== 工具 ===== */
+/* ===== 工具函数 ===== */
 function todayStr(){return new Date().toISOString().slice(0,10);}
-function autoFilename(){const c=document.getElementById('g_filename')?document.getElementById('g_filename').value.trim():'';if(c)return c.endsWith('.html')?c:c+'.html';const d=todayStr().replace(/-/g,'');return 'article-'+d+'-'+String(Math.floor(Math.random()*900)+100)+'.html';}
+function autoFilename(){const d=todayStr().replace(/-/g,'');return 'article-'+d+'-'+String(Math.floor(Math.random()*900)+100)+'.html';}
 function getRealismLine(){return REALISM_LINES[Math.floor(Math.random()*REALISM_LINES.length)];}
-function extractTags(t){const tags={};const l=t.match(/([\u4e00-\u9fa5]+(?:市|区|县|公园|海边|路|街|道|广场|镇))/);if(l)tags.location=l[1];const d=t.match(/(\d+\.?\d*\s*公里)/);if(d)tags.distance=d[1];const p=t.match(/(\d+['\u2019]?[\d]*["\u201d]?)/);if(p)tags.pace=p[1].replace(/['\u2019]/g,"'").replace(/["\u201d]/g,'"');const c=t.match(/(\d+\.?\d*\s*千卡)/);if(c)tags.calorie=c[1];const du=t.match(/(\d+:\d{2}:\d{2})/);if(du)tags.duration=du[1];return tags;}
+function extractTags(t){const tags={};const l=t.match(/([\u4e00-\u9fa5]+(?:市|区|县|公园|海边|路|街|道|广场|镇))/);if(l)tags.location=l[1];const d=t.match(/(\d+\.?\d*\s*公里)/);if(d)tags.distance=d[1];const p=t.match(/(\d+['\u2019]?\d*["\u201d]?)/);if(p)tags.pace=p[1].replace(/['\u2019]/g,"'").replace(/["\u201d]/g,'"');const c=t.match(/(\d+\.?\d*\s*千卡)/);if(c)tags.calorie=c[1];const du=t.match(/(\d+:\d{2}:\d{2})/);if(du)tags.duration=du[1];return tags;}
 function hl(text,keys){let r=esc(text);keys.forEach(k=>{if(!k)return;r=r.replace(new RegExp(k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g'),'<span class="highlight">'+esc(k)+'</span>');});return r;}
 function imgsHTML(){const l=imgs.filter(Boolean);if(!l.length)return '';if(l.length===1)return '<div style="text-align:center">\n    <img src="images/'+esc(l[0].name.replace(/\s+/g,'-'))+'" alt="文章配图" class="article-image">\n  </div>';const w=l.length===2?'48%':'32%';let h='<div class="img-row">\n';l.forEach(f=>{h+='    <img src="images/'+esc(f.name.replace(/\s+/g,'-'))+'" alt="文章配图" class="article-image" style="margin:0;width:'+w+';">\n';});h+='  </div>';return h;}
 function tagsHTML(t){const i=[];if(t.location)i.push('<span class="tag tag-loc">📍 '+esc(t.location)+'</span>');if(t.distance)i.push('<span class="tag tag-dist">📏 '+esc(t.distance)+'</span>');if(t.pace)i.push('<span class="tag tag-pace">⚡ 配速 '+esc(t.pace)+'</span>');if(t.calorie)i.push('<span class="tag tag-cal">🔥 '+esc(t.calorie)+'</span>');if(t.duration)i.push('<span class="tag tag-time">⏱️ '+esc(t.duration)+'</span>');if(!i.length)return '';return '\n\n<!-- 数据标签栏 -->\n<div class="data-tags">\n  '+i.join('\n  ')+'\n</div>';}
@@ -730,7 +672,7 @@ ${disc}
 ${wechatBox}
 </article></main>
 ${tagsBlock}
-<footer><div class="footer-links"><a href="index.html">首页</a><a href="index.html#features">服务优势</a><a href="index.html#cases">案例</a><a href="index.html#contact">联系</a></div><p>© 2025 RUN PRO${wechat?(' · 微信：'+esc(wechat)):''}</p></footer>
+<footer><div class="footer-links"><a href="index.html">首页</a><a href="index.html#features">服务优势</a><a href="index.html#cases">案例</a><a href="index.html#contact">联系</a></div><p>© 2026 RUN PRO${wechat?(' · 微信：'+esc(wechat)):''}</p></footer>
 <div class="back-top" id="backTop">↑</div>
 <script>
 window.addEventListener('scroll',()=>{document.getElementById('header').classList.toggle('scrolled',window.scrollY>50);document.getElementById('backTop').classList.toggle('show',window.scrollY>500);});
@@ -739,9 +681,57 @@ document.getElementById('backTop').onclick=()=>window.scrollTo({top:0,behavior:'
   document.getElementById('codeBox').textContent=html;window.__html=html;document.getElementById('previewFrame').srcdoc=html;
 }
 
+/* ===== 🚀 一键发布到 GitHub（核心功能） ===== */
+async function publishToGithub(){
+  // 1. 检查是否生成了 HTML
+  if(!window.__html){showToast('⚠️ 请先点「⚡ 生成 HTML」',true);return;}
+
+  // 2. 获取 GitHub 配置
+  const token=getGHToken();
+  if(!token){showToast('⚠️ 请先填入 GitHub PAT Token',true);return;}
+  const repo=document.getElementById('gh_repo').value.trim();
+  if(!repo || !repo.includes('/')){showToast('⚠️ 仓库格式应为 owner/repo',true);return;}
+  const branch=document.getElementById('gh_branch').value.trim()||'main';
+
+  // 3. 生成文件名（根目录，无文件夹）
+  const title=document.getElementById('g_title').value.trim().replace(/[^\w\s-]/g,'').substring(0,30)||'article';
+  const d=todayStr().replace(/-/g,'');
+  const filename=d+'-'+Math.floor(Math.random()*900+100)+'.html';
+
+  // 4. 编码内容（Base64）
+  const content=btoa(unescape(encodeURIComponent(window.__html)));
+
+  // 5. 检查文件是否已存在（获取 SHA）
+  const apiBase='https://api.github.com/repos/'+repo+'/contents';
+  let sha;
+  try{
+    const res=await fetch(apiBase+'/'+filename,{headers:{'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json'}});
+    if(res.ok){const data=await res.json();sha=data.sha;}
+  }catch(e){/* 文件不存在，正常 */}
+
+  // 6. 上传/更新文件
+  document.getElementById('publishStatus').textContent='⏳ 正在发布到 GitHub...';
+  try{
+    const res=await fetch(apiBase+'/'+filename,{
+      method:'PUT',
+      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json','Accept':'application/vnd.github+json'},
+      body:JSON.stringify({message:'SEO更新：'+title,content:content,branch:branch,...(sha?{sha}:{})})
+    });
+    if(!res.ok){const err=await res.json().catch(()=>({}));throw new Error(err.message||('发布失败 HTTP '+res.status));}
+    const data=await res.json();
+    const fileUrl='https://'+repo.split('/')[0]+'.github.io/'+(repo.split('/')[1])+'/'+filename;
+    document.getElementById('publishStatus').innerHTML='✅ 已发布：<a href="'+fileUrl+'" target="_blank" style="color:#00e676;">'+filename+'</a>';
+    showToast('✅ 发布成功：'+filename);
+    saveGHTokenIfChecked();
+  }catch(e){
+    document.getElementById('publishStatus').textContent='❌ '+e.message;
+    showToast('❌ 发布失败：'+e.message,true);
+  }
+}
+
 /* ===== 辅助 ===== */
-function downloadHTML(){if(!window.__html){alert('请先点「生成 HTML」');return;}const b=new Blob([window.__html],{type:'text/html;charset=utf-8'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=autoFilename();a.click();URL.revokeObjectURL(u);showToast('✅ 已下载：'+a.download);}
-function copyCode(){if(!window.__html){alert('请先点「生成 HTML」');return;}navigator.clipboard.writeText(window.__html).then(()=>showToast('✅ 已复制代码')).catch(()=>{const t=document.createElement('textarea');t.value=window.__html;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);showToast('✅ 已复制代码');});}
+function downloadHTML(){if(!window.__html){alert('请先点「⚡ 生成 HTML」');return;}const b=new Blob([window.__html],{type:'text/html;charset=utf-8'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=autoFilename();a.click();URL.revokeObjectURL(u);showToast('✅ 已下载：'+a.download);}
+function copyCode(){if(!window.__html){alert('请先点「⚡ 生成 HTML」');return;}navigator.clipboard.writeText(window.__html).then(()=>showToast('✅ 已复制代码')).catch(()=>{const t=document.createElement('textarea');t.value=window.__html;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);showToast('✅ 已复制代码');});}
 function clearAll(){if(!confirm('确定清空？'))return;['g_title','g_desc','g_date','g_author','g_keys','g_wechat'].forEach(id=>document.getElementById(id).value='');document.getElementById('g_paras').innerHTML='<div class="para-item"><textarea placeholder="新段落"></textarea><button onclick="rmPara(this)">✕</button></div>';document.getElementById('smartPaste').value='';document.getElementById('ai_instruction').value='';imgs=[null,null,null];[0,1,2].forEach(i=>document.getElementById('prev'+i).src='');document.getElementById('codeBox').textContent='已清空';window.__html='';document.getElementById('g_date').value=todayStr();}
 function switchTab(tab,btn){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');document.getElementById('codeBox').style.display=tab==='code'?'block':'none';document.getElementById('previewFrame').style.display=tab==='preview'?'block':'none';}
 </script>
