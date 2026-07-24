@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RUNPRO 文章生成器 · 风格可编辑·永久保存</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI','Microsoft YaHei',sans-serif;}
+body{background:#0a2e1a;color:#fff;line-height:1.6;padding:20px;}
+.wrap{max-width:1400px;margin:auto;}
+h1.title{text-align:center;color:#00e676;font-size:1.6rem;margin-bottom:6px;}
+.sub{text-align:center;color:rgba(255,255,255,.5);font-size:.82rem;margin-bottom:16px;}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px;}
+.card h3{color:#00e676;font-size:.92rem;margin-bottom:8px;border-left:3px solid #00e676;padding-left:8px;}
+label{display:block;font-size:.8rem;color:rgba(255,255,255,.8);margin:6px 0 3px;}
+input,textarea,select{width:100%;padding:8px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;font-size:.88rem;outline:none;}
+input:focus,textarea:focus,select:focus{border-color:#00e676;}
+textarea{resize:vertical;}
+.tip{font-size:.73rem;color:rgba(255,255,255,.4);margin-top:2px;}
+.warn{font-size:.73rem;color:#ff9800;margin-top:2px;}
+.btn-row{text-align:center;margin:16px 0;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;}
+.btn{padding:11px 22px;border:none;border-radius:8px;cursor:pointer;font-size:.95rem;font-weight:bold;}
+.btn-primary{background:linear-gradient(135deg,#00e676,#00a85c);color:#0a2e1a;}
+.btn-secondary{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.3)}
+.btn-ai{background:linear-gradient(135deg,#ff6f00,#ff8f00);color:#fff;}
+.btn-ai:hover{filter:brightness(1.1);}
+.btn-small{padding:5px 10px;font-size:.78rem;border-radius:5px;cursor:pointer;border:none;}
+.btn-copy{background:#2196f3;color:#fff;}
+
+/* 平台行 */
+.platform-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;}
+.platform-label{font-size:.82rem;font-weight:bold;min-width:60px;}
+.platform-label.keep{color:#69f0ae;}
+.platform-label.gudong{color:#64b5f6;}
+.platform-label.yuepao{color:#ff8a65;}
+.platform-label.yuedong{color:#ce93d8;}
+
+/* ★★★ 下拉框核心修复：强制白字+深色背景 ★★★ */
+.platform-select{
+  flex:1;min-width:160px;max-width:240px;padding:5px 8px;font-size:.82rem;
+  background:#1a3a2a;
+  color:#ffffff;
+  border:1px solid rgba(0,230,118,.3);
+  border-radius:5px;
+  appearance:none;-webkit-appearance:none;-moz-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ffffff'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 6px center;background-size:14px;
+  padding-right:22px;
+}
+.platform-select option{
+  background:#1a3a2a;
+  color:#ffffff;
+  padding:6px 10px;
+}
+.platform-select option:checked,
+.platform-select option:hover{
+  background:#00e676;
+  color:#0a2e1a;
+}
+
+.btn-use{background:#00e676;color:#0a2e1a;font-weight:bold;padding:5px 10px;font-size:.78rem;border-radius:5px;cursor:pointer;border:none;}
+.btn-use:hover{filter:brightness(1.15);}
+.btn-edit{background:rgba(255,152,0,.25);color:#ffb74d;border:1px solid rgba(255,152,0,.4);padding:5px 9px;font-size:.78rem;border-radius:5px;cursor:pointer;}
+.btn-add{background:rgba(0,200,83,.2);color:#69f0ae;border:1px solid rgba(0,200,83,.4);padding:5px 9px;font-size:.78rem;border-radius:5px;cursor:pointer;}
+.btn-del{background:rgba(255,82,82,.2);color:#ff8a8a;border:1px solid rgba(255,82,82,.4);padding:5px 9px;font-size:.78rem;border-radius:5px;cursor:pointer;}
+.btn-use:active,.btn-edit:active,.btn-add:active,.btn-del:active{transform:scale(.95);}
+
+/* 弹窗 */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9998;display:none;align-items:center;justify-content:center;}
+.modal-overlay.show{display:flex;}
+.modal{background:#1a3a2a;border:1px solid rgba(0,230,118,.3);border-radius:12px;padding:20px;width:90%;max-width:520px;z-index:9999;box-shadow:0 8px 30px rgba(0,0,0,.5);}
+.modal h4{color:#00e676;margin-bottom:12px;font-size:1rem;}
+.modal label{font-size:.82rem;color:rgba(255,255,255,.8);margin:8px 0 3px;}
+.modal input,.modal textarea{width:100%;padding:8px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.1);color:#fff;font-size:.88rem;}
+.modal textarea{min-height:100px;resize:vertical;}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:14px;}
+.modal-actions button{padding:7px 16px;border-radius:6px;cursor:pointer;border:none;font-size:.88rem;font-weight:bold;}
+.modal-save{background:#00e676;color:#0a2e1a;}
+.modal-cancel{background:rgba(255,255,255,.15);color:#fff;}
+
+/* 状态 */
+#aiStatus{font-size:.78rem;color:rgba(255,255,255,.6);margin-top:6px;min-height:18px;}
+.status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#666;margin-right:6px;vertical-align:middle;}
+.status-dot.ok{background:#00e676;}
+.status-dot.err{background:#ff5252;}
+.status-dot.loading{background:#ff9800;animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+.uploads{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.prev{width:100%;height:80px;object-fit:contain;background:rgba(0,0,0,.3);border:1px dashed rgba(255,255,255,.2);border-radius:6px;margin-top:4px;display:block;}
+.para-item{display:flex;gap:6px;margin-bottom:6px;}
+.para-item textarea{flex:1;height:70px;}
+.para-item button{background:#ff5252;color:#fff;border:none;border-radius:6px;padding:0 8px;cursor:pointer;}
+.preset-btn{background:rgba(0,230,118,.15);color:#00e676;border:1px solid rgba(0,230,118,.3);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:.8rem;}
+.preset-btn:hover{background:rgba(0,230,118,.3);}
+
+.output{margin-top:10px;}
+.tabs{display:flex;gap:10px;margin-bottom:8px;}
+.tab{padding:7px 14px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);border-radius:6px;cursor:pointer;border:none;font-size:.85rem;}
+.tab.active{background:#00e676;color:#0a2e1a;font-weight:bold;}
+.code-box{background:#111;color:#0f0;padding:12px;border-radius:10px;font-size:11px;white-space:pre-wrap;word-break:break-all;max-height:380px;overflow:auto;display:none;}
+.preview-frame{border:none;width:100%;height:520px;border-radius:10px;background:#fff;display:none;}
+.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:rgba(0,230,118,.95);color:#0a2e1a;padding:10px 22px;border-radius:8px;font-size:.9rem;font-weight:bold;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;}
+.toast.show{opacity:1;}
+.toast.error{background:rgba(255,82,82,.95);color:#fff;}
+
+.model-row{display:flex;gap:10px;align-items:flex-end;}
+.model-row>div{flex:1;}
+.key-save{display:flex;gap:6px;align-items:center;margin-top:6px;}
+.key-save input[type=checkbox]{width:auto;}
+@media(max-width:900px){.grid{grid-template-columns:1fr;}.platform-row{flex-wrap:wrap;}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <h1 class="title">🏃 RUNPRO 文章生成器 · AI版</h1>
+  <p class="sub">✅ 截图→AI写文案→自动填入→选配图→生成HTML | Keep×10 + 其他×3 指令槽位</p>
+
+  <div class="grid">
+    <!-- ========== 📷 AI 智能区 ========== -->
+    <div class="card" id="ai-card" style="grid-column:1/-1;background:rgba(255,165,0,.08);border-color:rgba(255,165,0,.3);">
+      <h3 style="color:#ff9800;">📷 AI 智能写文案</h3>
+      <p class="tip" style="margin-bottom:8px;">⚠️ 上方"选择图片"是给AI看的截图（不进网页）；网页配图请在右侧"图片上传"区选。</p>
+
+      <div class="model-row">
+        <div>
+          <label>🔑 API Key（仅存本机，不泄露）</label>
+          <input id="ai_key" type="password" placeholder="粘贴 sk-... (通义千问)" style="font-family:monospace;">
+          <div class="key-save">
+            <input type="checkbox" id="ai_saveLocal"> <label style="margin:0;font-size:.75rem;color:rgba(255,255,255,.5);">加密保存本机</label>
+          </div>
+        </div>
+        <div>
+          <label>🤖 看图模型</label>
+          <select id="ai_visionModel">
+            <option value="qwen-vl-plus">通义千问 VL Plus（推荐）</option>
+            <option value="qwen-vl-max">通义千问 VL Max（更贵更准）</option>
+            <option value="gemini-2.5-flash">Gemini 2.5 Flash（Google）</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 写作要求框 -->
+      <div style="margin-top:10px;">
+        <label>✍️ 写作要求（点下方"√使用"自动填入，也可手动编辑）</label>
+        <textarea id="ai_instruction" rows="3" placeholder="留空则使用默认指令。" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid rgba(255,165,0,.3);background:rgba(255,255,255,.08);color:#fff;font-size:.85rem;line-height:1.5;"></textarea>
+      </div>
+
+      <!-- ★★★ 平台指令管理 ★★★ -->
+      <div style="margin-top:10px;">
+        <label style="color:#ff9800;font-size:.82rem;font-weight:bold;">🎯 选择平台与指令（点"√使用"自动填入上方指令框）</label>
+
+        <!-- Keep（10条） -->
+        <div class="platform-row" style="margin-top:6px;">
+          <span class="platform-label keep">🟢 Keep</span>
+          <select class="platform-select" id="sel_keep" data-platform="keep"></select>
+          <button class="btn-use" data-platform="keep" data-action="use">√使用</button>
+          <button class="btn-edit" data-platform="keep" data-action="edit">✏️编辑</button>
+          <button class="btn-add" data-platform="keep" data-action="add">＋新增</button>
+          <button class="btn-del" data-platform="keep" data-action="del">🗑️</button>
+          <span style="font-size:.72rem;color:rgba(255,255,255,.35);" id="count_keep"></span>
+        </div>
+
+        <!-- 咕咚（3条） -->
+        <div class="platform-row">
+          <span class="platform-label gudong">咕咚</span>
+          <select class="platform-select" id="sel_gudong" data-platform="gudong"></select>
+          <button class="btn-use" data-platform="gudong" data-action="use">√使用</button>
+          <button class="btn-edit" data-platform="gudong" data-action="edit">✏️编辑</button>
+          <button class="btn-add" data-platform="gudong" data-action="add">＋新增</button>
+          <button class="btn-del" data-platform="gudong" data-action="del">🗑️</button>
+          <span style="font-size:.72rem;color:rgba(255,255,255,.35);" id="count_gudong"></span>
+        </div>
+
+        <!-- 悦跑圈（3条） -->
+        <div class="platform-row">
+          <span class="platform-label yuepao">悦跑圈</span>
+          <select class="platform-select" id="sel_yuepao" data-platform="yuepao"></select>
+          <button class="btn-use" data-platform="yuepao" data-action="use">√使用</button>
+          <button class="btn-edit" data-platform="yuepao" data-action="edit">✏️编辑</button>
+          <button class="btn-add" data-platform="yuepao" data-action="add">＋新增</button>
+          <button class="btn-del" data-platform="yuepao" data-action="del">🗑️</button>
+          <span style="font-size:.72rem;color:rgba(255,255,255,.35);" id="count_yuepao"></span>
+        </div>
+
+        <!-- 悦动圈（3条） -->
+        <div class="platform-row">
+          <span class="platform-label yuedong">悦动圈</span>
+          <select class="platform-select" id="sel_yuedong" data-platform="yuedong"></select>
+          <button class="btn-use" data-platform="yuedong" data-action="use">√使用</button>
+          <button class="btn-edit" data-platform="yuedong" data-action="edit">✏️编辑</button>
+          <button class="btn-add" data-platform="yuedong" data-action="add">＋新增</button>
+          <button class="btn-del" data-platform="yuedong" data-action="del">🗑️</button>
+          <span style="font-size:.72rem;color:rgba(255,255,255,.35);" id="count_yuedong"></span>
+        </div>
+
+        <p class="tip" style="margin-top:6px;">💡 用法：下拉框选指令 → √使用填入指令框 → ✏️编辑名称和内容 → ＋新增一条 → 🗑️删除 | Keep最多10条，其他最多3条</p>
+      </div>
+
+      <div style="margin-top:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <input type="file" id="ai_imgInput" accept="image/*" style="flex:1;padding:6px;">
+        <button class="btn btn-ai" onclick="aiWrite()">📷 AI看图写文案</button>
+        <button class="btn" onclick="aiWriteFromText()" style="background:linear-gradient(135deg,#2196f3,#1565c0);color:#fff;">✍️ AI按文字生成</button>
+        <button class="btn-small" style="background:#555;color:#fff;" onclick="clearAIKey()">🗑️ 清Key</button>
+      </div>
+      <p class="tip" style="margin-top:4px;">💡 有截图 → 点「📷 AI看图写文案」｜没截图 → 在上方指令框写要求 → 点「✍️ AI按文字生成」</p>
+      <div id="aiStatus"><span class="status-dot" id="aiDot"></span><span id="aiMsg">等待操作...</span></div>
+    </div>
+
+    <!-- 左：基本信息 -->
+    <div class="card">
+      <h3>📋 基本信息</h3>
+      <label>文章标题</label>
+      <input id="g_title" value="">
+      <label>SEO 描述</label>
+      <input id="g_desc" value="">
+      <label>发布日期（自动设为今天）</label>
+      <input id="g_date" value="">
+      <label>作者 / 来源</label>
+      <input id="g_author" value="RUNPRO 运动数据定制">
+    </div>
+
+    <!-- 右：图片上传 -->
+    <div class="card">
+      <h3>🖼️ 图片上传（最多3张 · 网页配图）</h3>
+      <div class="uploads">
+        <div><label>图片 1（主图）</label><input type="file" accept="image/*" onchange="pickImg(this,0)"><img class="prev" id="prev0"></div>
+        <div><label>图片 2（可选）</label><input type="file" accept="image/*" onchange="pickImg(this,1)"><img class="prev" id="prev1"></div>
+        <div><label>图片 3（可选）</label><input type="file" accept="image/*" onchange="pickImg(this,2)"><img class="prev" id="prev2"></div>
+      </div>
+      <p class="tip">1张→居中｜2张→并排｜3张→并排。文件名自动保留原格式。</p>
+      <p class="warn">⚠️ 建议上传前清除图片 EXIF 信息（可用"佐糖"在线工具）。</p>
+    </div>
+
+    <!-- 📥 智能粘贴区 -->
+    <div class="card" style="grid-column:1/-1;">
+      <h3>📥 智能粘贴区（AI返回结果粘贴这里 → 一键拆分）</h3>
+      <p class="tip" style="margin-bottom:6px;">规则：第一行=标题 | 空行=分段 | 自动提取关键词 | 自动填SEO | 自动抓日期</p>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <button class="btn-small" style="background:#00e676;color:#0a2e1a;font-weight:bold;" onclick="parseContent()">✨ 自动拆分并填入</button>
+        <button class="btn-small" style="background:rgba(255,255,255,.1);color:#fff;" onclick="document.getElementById('smartPaste').value=''">清空粘贴区</button>
+      </div>
+      <textarea id="smartPaste" rows="5" placeholder="把AI返回的文案粘贴到这里，点上方【自动拆分】..." style="width:100%;padding:10px;border-radius:6px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#fff;font-size:.85rem;"></textarea>
+    </div>
+
+    <!-- 正文 -->
+    <div class="card" style="grid-column:1/-1;">
+      <h3>📝 正文段落</h3>
+      <div class="preset-row">
+        <span style="font-size:.78rem;color:rgba(255,255,255,.5);">预设模板：</span>
+        <button class="preset-btn" onclick="loadPreset('gudong5k')">咕咚5公里</button>
+        <button class="preset-btn" onclick="loadPreset('keep10k')">Keep10公里</button>
+        <button class="preset-btn" onclick="loadPreset('gudong20k')">咕咚半马</button>
+        <button class="preset-btn" onclick="loadPreset('nightRun')">夜跑打卡</button>
+        <button class="preset-btn" onclick="loadPreset('anniv')">周年纪念</button>
+      </div>
+      <div id="g_paras" style="margin-top:8px;"></div>
+      <button class="btn-secondary" style="margin-top:6px;padding:5px 12px;font-size:.82rem;" onclick="addPara()">＋ 新增一段</button>
+    </div>
+
+    <!-- 高亮 + 微信 -->
+    <div class="card">
+      <h3>✨ 高亮关键词</h3>
+      <label>英文逗号分隔</label>
+      <input id="g_keys" value="">
+    </div>
+    <div class="card">
+      <h3>⚙️ 底部设置</h3>
+      <label>微信（留空则不显示）</label>
+      <input id="g_wechat" value="278715464">
+      <label style="margin-top:6px;">显示微信收口框</label>
+      <select id="g_showWechatBox"><option value="false">隐藏</option><option value="true">显示</option></select>
+      <label>显示免责声明</label>
+      <select id="g_disclaimer"><option value="false">隐藏</option><option value="true">显示</option></select>
+      <label>显示底部数据标签栏</label>
+      <select id="g_showTags"><option value="true">显示</option><option value="false">隐藏</option></select>
+      <label style="margin-top:8px;">
+        <input type="checkbox" id="g_addRealism" checked style="width:auto;margin-right:6px;vertical-align:middle;">
+        自动追加"真实性描述"（防检测）
+      </label>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" onclick="generate()">🚀 生成 HTML</button>
+    <button class="btn btn-secondary" onclick="downloadHTML()">⬇️ 下载文件</button>
+    <button class="btn btn-secondary" onclick="copyCode()">📋 复制代码</button>
+    <button class="btn btn-secondary" onclick="clearAll()">🗑️ 清空</button>
+  </div>
+
+  <div class="output">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('code',this)">📄 代码</button>
+      <button class="tab" onclick="switchTab('preview',this)">👁️ 预览</button>
+    </div>
+    <div class="code-box" id="codeBox">点击「生成 HTML」后代码显示在这里...</div>
+    <iframe class="preview-frame" id="previewFrame"></iframe>
+  </div>
+</div>
+
+<!-- ★★★ 编辑/新增 弹窗 ★★★ -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h4 id="modalTitle">编辑指令</h4>
+    <label>指令名称</label>
+    <input id="modalName" placeholder="如：跑步·小红书">
+    <label>指令内容</label>
+    <textarea id="modalContent" placeholder="写详细的写作要求..."></textarea>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal()">取消</button>
+      <button class="modal-save" id="modalSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== 预设模板库 ===== */
+const PRESETS={
+  gudong5k:{title:'【咕咚户外跑】临沂河东5公里晨跑｜配速6\'00"·441千卡',desc:'咕咚户外跑5公里记录，临沂市河东区东都雅苑周边晨跑，配速6分整，消耗441千卡',keys:'跑步,咕咚,配速,5公里,晨跑,步频,步幅,441千卡',paras:['今日在临沂市河东区东都雅苑周边完成一次5公里户外跑，雨后初晴，空气格外清新。轨迹基于真实道路数据生成，无穿模、无直线漂移，完整绕行和美苑花园、吾悦华府、赵家庄一带。','核心数据：距离5.00公里，用时30分00秒，平均配速6\'00"，消耗441千卡。步数4818步，平均步频150步/分钟，平均步幅103厘米。','咕咚运动记录累计已完成1547次运动。数据来自Garmin设备同步，轨迹真实可信。每一步都算数，每一公里都有迹可循。','支持定制地点、日期、配速区间，满足个性化需求。']},
+  keep10k:{title:'【Keep户外跑】晚间10公里训练｜配速5\'30"·680千卡',desc:'Keep户外跑10公里晚间训练，配速5分30秒，消耗680千卡',keys:'跑步,Keep,配速,10公里,晚间跑,心率,680千卡',paras:['今晚在城市绿道完成10公里晚间训练，气温适宜，微风习习。','核心数据：距离10.02公里，用时55分12秒，平均配速5\'30"。平均心率148bpm，消耗约680千卡。','Keep近30天累计跑步126公里，完成率92%。跑步就是这样，慢就是快，稳就是赢。','需要定制跑步数据？支持指定地点、日期、配速区间。']},
+  gudong20k:{title:'【咕咚户外跑】周末半马拉练｜21.1公里·配速5\'45"',desc:'咕咚半马拉练，21.1公里，配速5分45秒',keys:'跑步,咕咚,半马,21公里,配速,拉练,1500千卡',paras:['周末清晨完成半马距离拉练，21.1公里，用时2小时01分。','核心数据：距离21.10公里，用时2:01:33，平均配速5\'45"。消耗约1500千卡。','这次拉练验证了最近课表效果，跑步经济性有提升。下一个目标：正式比赛突破2小时。','跑步数据定制：支持半马、全马、日常训练。']},
+  nightRun:{title:'【夜跑打卡】城市夜景5公里｜配速6\'30"·放松跑',desc:'夜间城市跑步5公里，放松配速6分30秒',keys:'夜跑,跑步,配速,5公里,放松跑,城市夜景',paras:['晚上9点出门，沿着江边步道跑了5公里。路灯把影子拉得很长。','放松跑节奏：距离5.01公里，用时32分36秒，平均配速6\'30"。心率保持在130左右。','夜跑的好处是气温低、空气静、人少。戴上耳机，调低音量，整个世界只剩你和路面。','想记录这些安静的夜晚？我们可以帮你定制专属夜跑轨迹。']},
+  anniv:{title:'从0到5000公里：我的户外跑步五年复盘',desc:'回顾5年户外跑步历程，累计4972公里',keys:'跑步,坚持,配速,5000公里,4972,五年,复盘',paras:['最近翻看运动记录，累计户外跑步4972.43公里，完成1171次，总消耗266989千卡。','从最初5.04公里到后来20公里。每一次都是挑战。','这近5000公里，是1171次和自己的对话。跑步教会我的，不只是体力，更是面对生活起伏的韧性。','下一个5000公里，我将继续用脚步丈量世界。']}
+};
+
+/* ===== 真实性描述库 ===== */
+const REALISM_LINES=['今天逆风路段较多，体感略累，后半程配速有小幅波动。','中途在3公里处短暂补水，心率有约10秒的下降。','第4公里经过施工路段，路面略有不平，步幅稍有压缩。','起跑前未充分热身，前2公里体感偏紧，之后逐渐打开。','今日湿度偏高，出汗量较大，建议下次注意补水节奏。','后半程略有掉速，但整体心率控制在有氧区间，训练质量达标。','经过红绿灯两次，轨迹中有短暂停顿（已自动修正）。','今天状态一般，但坚持完成了计划里程，意志分拉满。'];
+
+/* ===== 默认指令 ===== */
+const DEFAULT_INSTRUCTION=`你是一个跑步运动数据文案专家。我会给你一张跑步APP截图。
+请严格按以下格式输出（不要加多余解释）：
+第1行：文章标题（含平台名+地点+距离+配速+消耗，用｜分隔）
+空行
+第2-4行：正文段落，每段描述跑步体验、数据、感悟，自然流畅像真人跑者写的
+空行
+关键词：xxx,xxx,xxx（3-6个逗号分隔）
+要求：提取截图中的距离、配速、消耗、地点、时长、步频等数据；语气像运动爱好者，不要营销腔；不出现"定制""伪造"等词。`;
+
+/* ===== 平台指令默认数据 ===== */
+const PLATFORM_CONFIG={
+  keep:{max:10,label:'Keep',defaultName:'默认·跑步',
+    defaultContent:`Keep风格：以Keep用户视角写，年轻有活力，像在朋友圈分享今日成就。多夸Keep的数据记录精准、课程科学、社区氛围好。口语化，带emoji，段落短小适合手机阅读。结尾自然带出"Keep，自律给我自由"的感觉。语气热情积极，像刚完成目标那种兴奋劲儿。`},
+  gudong:{max:3,label:'咕咚',defaultName:'默认·跑步',
+    defaultContent:`咕咚风格：以咕咚跑者视角写，偏硬核专业。多关注配速曲线、步频步幅、心率区间、海拔起伏等数据细节。语气像跑团里的老鸟，理性克制，偶尔来一句"数据不会骗人"。提到咕咚的路跑认证、线上马拉松、跑团排行榜。`},
+  yuepao:{max:3,label:'悦跑圈',defaultName:'默认·跑步',
+    defaultContent:`悦跑圈风格：以悦跑圈用户视角写，成就感满满。重点突出PB记录、勋章收集、跑团排名、线上挑战赛。语气像刚完成一个里程碑，兴奋又自豪。提到悦跑圈的跑步路线美化、跑团PK、月度报告。结尾带"每一步都在超越自己"。`},
+  yuedong:{max:3,label:'悦动圈',defaultName:'默认·跑步',
+    defaultContent:`悦动圈风格：以悦动圈用户视角写，轻松有趣不端着。多提挑战赛、好友PK、组队打卡、红包跑步。语气像在群里发战报，带点小嘚瑟和小幽默。提到悦动圈的社交玩法：一起跑、挑战榜、运动红包。结尾自然带"越动越快乐"。`}
+};
+
+/* ===== 状态提示 ===== */
+function setAIStatus(msg,type){document.getElementById('aiMsg').textContent=msg;document.getElementById('aiDot').className='status-dot '+(type||'');}
+function showToast(msg,err){const t=document.getElementById('toast');t.textContent=msg;t.className='toast show'+(err?' error':'');setTimeout(()=>t.className='toast',2500);}
+
+/* ===== Key 管理 ===== */
+function getAIKey(){const k=document.getElementById('ai_key').value.trim();if(k)return k;const s=localStorage.getItem('runpro_ai_key');if(s)return atob(s);return '';}
+function saveAIKeyIfChecked(){if(document.getElementById('ai_saveLocal').checked){const k=document.getElementById('ai_key').value.trim();if(k)localStorage.setItem('runpro_ai_key',btoa(k));}}
+function loadSavedKey(){const s=localStorage.getItem('runpro_ai_key');if(s)document.getElementById('ai_key').value=atob(s);}
+function clearAIKey(){document.getElementById('ai_key').value='';localStorage.removeItem('runpro_ai_key');showToast('✅ 已清除Key');}
+
+/* ===== ★★★ 平台指令管理（核心）★★★ */
+
+function getPlatformStyles(platform){
+  const raw=localStorage.getItem('runpro_styles_'+platform);
+  if(raw){
+    try{return JSON.parse(raw);}catch(e){}
+  }
+  return [{name:PLATFORM_CONFIG[platform].defaultName,content:PLATFORM_CONFIG[platform].defaultContent}];
+}
+
+function savePlatformStyles(platform,list){
+  localStorage.setItem('runpro_styles_'+platform,JSON.stringify(list));
+}
+
+function refreshSelect(platform){
+  const sel=document.getElementById('sel_'+platform);
+  const list=getPlatformStyles(platform);
+  const currentIdx=sel.dataset.idx||0;
+  sel.innerHTML='';
+  list.forEach((item,idx)=>{
+    const opt=document.createElement('option');
+    opt.value=idx;
+    opt.textContent=item.name;
+    sel.appendChild(opt);
+  });
+  sel.value=Math.min(currentIdx,list.length-1);
+  const cfg=PLATFORM_CONFIG[platform];
+  document.getElementById('count_'+platform).textContent='('+list.length+'/'+cfg.max+')';
+}
+
+function getCurrentStyle(platform){
+  const sel=document.getElementById('sel_'+platform);
+  const list=getPlatformStyles(platform);
+  const idx=parseInt(sel.value)||0;
+  sel.dataset.idx=idx;
+  return list[idx]||list[0];
+}
+
+function useStyle(platform){
+  const item=getCurrentStyle(platform);
+  document.getElementById('ai_instruction').value=item.content;
+  showToast('✅ 已使用：'+PLATFORM_CONFIG[platform].label+' · '+item.name);
+}
+
+function editStyle(platform){
+  const item=getCurrentStyle(platform);
+  const idx=parseInt(document.getElementById('sel_'+platform).value)||0;
+  openModal('edit',platform,idx,item.name,item.content);
+}
+
+function addStyle(platform){
+  const list=getPlatformStyles(platform);
+  const cfg=PLATFORM_CONFIG[platform];
+  if(list.length>=cfg.max){showToast('⚠️ '+cfg.label+'最多'+cfg.max+'条指令',true);return;}
+  openModal('add',platform,list.length,'新指令',cfg.defaultContent);
+}
+
+function delStyle(platform){
+  const sel=document.getElementById('sel_'+platform);
+  const list=getPlatformStyles(platform);
+  const idx=parseInt(sel.value)||0;
+  if(list.length<=1){showToast('⚠️ 至少保留1条指令',true);return;}
+  if(!confirm('确定删除「'+list[idx].name+'」？'))return;
+  list.splice(idx,1);
+  savePlatformStyles(platform,list);
+  refreshSelect(platform);
+  showToast('✅ 已删除');
+}
+
+/* ===== ★★★ 弹窗逻辑 ★★★ ===== */
+let modalMode='',modalPlatform='',modalIdx=0;
+
+function openModal(mode,platform,idx,name,content){
+  modalMode=mode;modalPlatform=platform;modalIdx=idx;
+  document.getElementById('modalTitle').textContent=(mode==='add'?'新增指令':'编辑指令')+' - '+PLATFORM_CONFIG[platform].label;
+  document.getElementById('modalName').value=name;
+  document.getElementById('modalContent').value=content;
+  document.getElementById('modalOverlay').classList.add('show');
+  setTimeout(()=>document.getElementById('modalName').focus(),100);
+}
+
+function closeModal(){
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+document.getElementById('modalSave').addEventListener('click',function(){
+  const name=document.getElementById('modalName').value.trim();
+  const content=document.getElementById('modalContent').value.trim();
+  if(!name){showToast('⚠️ 名称不能为空',true);return;}
+  if(!content){showToast('⚠️ 内容不能为空',true);return;}
+  const platform=modalPlatform;
+  const list=getPlatformStyles(platform);
+  if(modalMode==='add'){
+    list.push({name:name,content:content});
+    showToast('✅ 已新增：'+name);
+  }else{
+    list[modalIdx]={name:name,content:content};
+    showToast('✅ 已保存：'+name);
+  }
+  savePlatformStyles(platform,list);
+  refreshSelect(platform);
+  document.getElementById('ai_instruction').value=content;
+  closeModal();
+});
+
+document.getElementById('modalOverlay').addEventListener('click',function(e){
+  if(e.target===this)closeModal();
+});
+
+/* ===== ★★★ 事件委托 ★★★ ===== */
+document.addEventListener('DOMContentLoaded',function(){
+  const aiCard=document.getElementById('ai-card');
+  aiCard.addEventListener('click',function(e){
+    const btn=e.target.closest('button[data-action]');
+    if(!btn)return;
+    const platform=btn.dataset.platform;
+    const action=btn.dataset.action;
+    console.log('点击：',platform,action);
+    switch(action){
+      case 'use':useStyle(platform);break;
+      case 'edit':editStyle(platform);break;
+      case 'add':addStyle(platform);break;
+      case 'del':delStyle(platform);break;
+    }
+  });
+
+  ['keep','gudong','yuepao','yuedong'].forEach(p=>{
+    const sel=document.getElementById('sel_'+p);
+    sel.addEventListener('change',function(){this.dataset.idx=this.value;});
+  });
+
+  loadSavedKey();
+  ['keep','gudong','yuepao','yuedong'].forEach(p=>refreshSelect(p));
+  const d=document.getElementById('g_date');if(d&&!d.value)d.value=new Date().toISOString().slice(0,10);
+  loadPreset('gudong5k');
+});
+
+/* ===== 获取最终指令 ===== */
+function getInstruction(){
+  const v=document.getElementById('ai_instruction').value.trim();
+  return v||DEFAULT_INSTRUCTION;
+}
+
+/* ===== 图片转 base64 ===== */
+function fileToBase64(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result.split(',')[1]);r.onerror=reject;r.readAsDataURL(file);});}
+
+/* ===== AI 模型配置（仅通义+Gemini，无DeepSeek，无字数限制） ===== */
+const AI_CONFIG={
+  'qwen-vl-plus':{baseUrl:'https://dashscope.aliyuncs.com/compatible-mode/v1',supportsImage:true},
+  'qwen-vl-max':{baseUrl:'https://dashscope.aliyuncs.com/compatible-mode/v1',supportsImage:true},
+  'gemini-2.5-flash':{baseUrl:'https://generativelanguage.googleapis.com/v1beta/openai',supportsImage:true}
+};
+
+/* ===== 调用大模型（无字数限制） ===== */
+async function callAI(model,textPrompt,imageBase64){
+  const cfg=AI_CONFIG[model];if(!cfg)throw new Error('未知模型');
+  const key=getAIKey();if(!key)throw new Error('请先填入API Key');
+  const url=cfg.baseUrl+'/chat/completions';
+  let messages;
+  if(imageBase64 && cfg.supportsImage){
+    messages=[{role:'user',content:[
+      {type:'text',text:textPrompt},
+      {type:'image_url',image_url:{url:'data:image/jpeg;base64,'+imageBase64}}
+    ]}];
+  }else{messages=[{role:'user',content:textPrompt}];}
+  const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},body:JSON.stringify({model:model,messages:messages,temperature:0.7})});
+  if(!res.ok){
+    if(res.status===403||res.status===401)throw new Error('Key无效或无权限');
+    if(res.status===0)throw new Error('跨域拦截。请装CORS插件或换浏览器');
+    throw new Error('API错误 '+res.status);
+  }
+  const json=await res.json();
+  return json.choices?.[0]?.message?.content || '';
+}
+
+/* ===== 📷 AI看图写文案（原有功能，不动） ===== */
+async function aiWrite(){
+  const file=document.getElementById('ai_imgInput').files[0];
+  if(!file){showToast('⚠️ 请先选择截图',true);return;}
+  const model=document.getElementById('ai_visionModel').value;
+  const instruction=getInstruction();
+  setAIStatus('正在识图写文案...','loading');
+  try{
+    const b64=await fileToBase64(file);
+    const text=await callAI(model,instruction,b64);
+    document.getElementById('smartPaste').value=text;
+    parseContent();
+    setAIStatus('✅ 文案已生成并填入','ok');
+    showToast('✅ AI写文案完成！');
+    saveAIKeyIfChecked();
+  }catch(e){setAIStatus('❌ '+e.message,'err');showToast('❌ '+e.message,true);}
+}
+
+/* ===== ✍️ AI按文字生成（新增功能：不依赖图片） ===== */
+async function aiWriteFromText(){
+  const instruction=getInstruction();
+  if(!instruction || instruction===DEFAULT_INSTRUCTION){
+    showToast('⚠️ 请先选指令或写要求（点√使用 或 手动输入）',true);
+    return;
+  }
+  const model=document.getElementById('ai_visionModel').value;
+  setAIStatus('正在按文字生成文案...','loading');
+  try{
+    const text=await callAI(model,instruction,null);
+    document.getElementById('smartPaste').value=text;
+    parseContent();
+    setAIStatus('✅ 文字生成成功并填入','ok');
+    showToast('✅ AI按文字生成完成！');
+    saveAIKeyIfChecked();
+  }catch(e){setAIStatus('❌ '+e.message,'err');showToast('❌ '+e.message,true);}
+}
+
+/* ===== 智能拆分（按空行分段，保留 AI 原有段落） ===== */
+function parseContent(){
+  const raw=document.getElementById('smartPaste').value.trim();
+  if(!raw){showToast('⚠️ 粘贴区为空');return;}
+
+  // 1. 分离"关键词"行
+  let body=raw,keysLine='';
+  const kwMatch=raw.match(/(?:关键词|标签|keywords?)[：:]\s*(.+)$/mi);
+  if(kwMatch){keysLine=kwMatch[1].trim();body=raw.replace(/(?:关键词|标签|keywords?)[：:]\s*.+$/mi,'').trim();}
+
+  // 2. 按"空行"切分 = AI 的每个段落
+  const blocks=body.split(/\n{2,}/).map(b=>b.replace(/\r/g,'').trim()).filter(Boolean);
+
+  if(!blocks.length){showToast('⚠️ 未识别到内容');return;}
+
+  // 3. 第一行 = 标题
+  document.getElementById('g_title').value=blocks[0];
+
+  // 4. 其余每块 = 一个独立段落（不再合并！）
+  const container=document.getElementById('g_paras');
+  container.innerHTML='';
+  blocks.slice(1).forEach(block=>{
+    const d=document.createElement('div');
+    d.className='para-item';
+    // 块内可能有换行，转成空格（AI 用\n代替分段的情况）
+    const text=block.replace(/\n+/g,' ');
+    d.innerHTML='<textarea>'+text.replace(/"/g,'&quot;')+'</textarea><button onclick="rmPara(this)">✕</button>';
+    container.appendChild(d);
+  });
+
+  // 5. SEO 描述 = 第一段正文前80字
+  const allText=blocks.slice(1).join(' ');
+  document.getElementById('g_desc').value=allText.substring(0,80)+'...';
+
+  // 6. 关键词
+  let autoKeys=['跑步'];
+  const tags=extractTags(allText);
+  if(tags.location)autoKeys.push(tags.location);
+  if(tags.distance)autoKeys.push(tags.distance.replace('公里','')+'公里');
+  if(tags.pace)autoKeys.push('配速');
+  if(tags.calorie)autoKeys.push(tags.calorie);
+  if(keysLine)keysLine.split(/[,，]/).forEach(k=>{if(k.trim())autoKeys.push(k.trim());});
+  document.getElementById('g_keys').value=[...new Set(autoKeys)].join(',');
+
+  // 7. 自动抓日期
+  const dateMatch=allText.match(/(\d{4})\s*[\/\-.年]\s*(\d{1,2})\s*[\/\-.月]\s*(\d{1,2})/);
+  if(dateMatch){const y=dateMatch[1],m=String(dateMatch[2]).padStart(2,'0'),d=String(dateMatch[3]).padStart(2,'0');document.getElementById('g_date').value=y+'-'+m+'-'+d;}
+
+  showToast('✅ 已按段落拆分并填入 '+blocks.length+' 段！');
+}
+
+/* ===== 图片管理 ===== */
+let imgs=[null,null,null];
+function pickImg(input,idx){imgs[idx]=input.files[0]||null;const pv=document.getElementById('prev'+idx);if(imgs[idx]){const r=new FileReader();r.onload=e=>pv.src=e.target.result;r.readAsDataURL(imgs[idx]);}else{pv.src='';}}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function copyText(t){navigator.clipboard.writeText(t).catch(()=>{const x=document.createElement('textarea');x.value=t;document.body.appendChild(x);x.select();document.execCommand('copy');document.body.removeChild(x);});}
+
+/* ===== 预设模板 ===== */
+function loadPreset(k){const p=PRESETS[k];if(!p)return;document.getElementById('g_title').value=p.title;document.getElementById('g_desc').value=p.desc;document.getElementById('g_keys').value=p.keys;const c=document.getElementById('g_paras');c.innerHTML='';p.paras.forEach(t=>{const d=document.createElement('div');d.className='para-item';d.innerHTML='<textarea>'+t+'</textarea><button onclick="rmPara(this)">✕</button>';c.appendChild(d);});showToast('✅ 已加载模板');}
+
+/* ===== 段落管理 ===== */
+function addPara(){const d=document.createElement('div');d.className='para-item';d.innerHTML='<textarea placeholder="新段落"></textarea><button onclick="rmPara(this)">✕</button>';document.getElementById('g_paras').appendChild(d);}
+function rmPara(b){if(document.querySelectorAll('.para-item').length>1)b.parentElement.remove();}
+
+/* ===== 工具 ===== */
+function todayStr(){return new Date().toISOString().slice(0,10);}
+function autoFilename(){const c=document.getElementById('g_filename')?document.getElementById('g_filename').value.trim():'';if(c)return c.endsWith('.html')?c:c+'.html';const d=todayStr().replace(/-/g,'');return 'article-'+d+'-'+String(Math.floor(Math.random()*900)+100)+'.html';}
+function getRealismLine(){return REALISM_LINES[Math.floor(Math.random()*REALISM_LINES.length)];}
+function extractTags(t){const tags={};const l=t.match(/([\u4e00-\u9fa5]+(?:市|区|县|公园|海边|路|街|道|广场|镇))/);if(l)tags.location=l[1];const d=t.match(/(\d+\.?\d*\s*公里)/);if(d)tags.distance=d[1];const p=t.match(/(\d+['\u2019]?[\d]*["\u201d]?)/);if(p)tags.pace=p[1].replace(/['\u2019]/g,"'").replace(/["\u201d]/g,'"');const c=t.match(/(\d+\.?\d*\s*千卡)/);if(c)tags.calorie=c[1];const du=t.match(/(\d+:\d{2}:\d{2})/);if(du)tags.duration=du[1];return tags;}
+function hl(text,keys){let r=esc(text);keys.forEach(k=>{if(!k)return;r=r.replace(new RegExp(k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g'),'<span class="highlight">'+esc(k)+'</span>');});return r;}
+function imgsHTML(){const l=imgs.filter(Boolean);if(!l.length)return '';if(l.length===1)return '<div style="text-align:center">\n    <img src="images/'+esc(l[0].name.replace(/\s+/g,'-'))+'" alt="文章配图" class="article-image">\n  </div>';const w=l.length===2?'48%':'32%';let h='<div class="img-row">\n';l.forEach(f=>{h+='    <img src="images/'+esc(f.name.replace(/\s+/g,'-'))+'" alt="文章配图" class="article-image" style="margin:0;width:'+w+';">\n';});h+='  </div>';return h;}
+function tagsHTML(t){const i=[];if(t.location)i.push('<span class="tag tag-loc">📍 '+esc(t.location)+'</span>');if(t.distance)i.push('<span class="tag tag-dist">📏 '+esc(t.distance)+'</span>');if(t.pace)i.push('<span class="tag tag-pace">⚡ 配速 '+esc(t.pace)+'</span>');if(t.calorie)i.push('<span class="tag tag-cal">🔥 '+esc(t.calorie)+'</span>');if(t.duration)i.push('<span class="tag tag-time">⏱️ '+esc(t.duration)+'</span>');if(!i.length)return '';return '\n\n<!-- 数据标签栏 -->\n<div class="data-tags">\n  '+i.join('\n  ')+'\n</div>';}
+
+/* ===== 核心生成 ===== */
+function generate(){
+  const title=document.getElementById('g_title').value.trim();
+  const desc=document.getElementById('g_desc').value.trim();
+  const date=document.getElementById('g_date').value.trim();
+  const author=document.getElementById('g_author').value.trim();
+  const keys=document.getElementById('g_keys').value.split(/[,，]/).map(k=>k.trim()).filter(Boolean);
+  const wechat=document.getElementById('g_wechat').value.trim();
+  const showD=document.getElementById('g_disclaimer').value==='true';
+  const showW=document.getElementById('g_showWechatBox').value==='true';
+  const showTags=document.getElementById('g_showTags').value==='true';
+  const addRealism=document.getElementById('g_addRealism').checked;
+  let paras=Array.from(document.querySelectorAll('.para-item textarea')).map(t=>t.value.trim()).filter(Boolean);
+  if(addRealism&&paras.length>0)paras[paras.length-1]=paras[paras.length-1]+' '+getRealismLine();
+  const bodyHTML=paras.map(p=>'    <p>'+hl(p,keys)+'</p>').join('\n');
+  const tags=extractTags(paras.join(' '));
+  const disc=showD?'\n    <p class="disclaimer">⚠️ 温馨提示：本服务仅限个人娱乐、纪念用途，严禁用于学校体测、企业考核、赛事资格等正式场景。</p>':'';
+  const wechatBox=(showW&&wechat)?'\n    <div style="background:linear-gradient(135deg,#0a2e1a,#1a5e3a);color:#fff;border-radius:12px;padding:1.5rem;text-align:center;margin:2rem 0;">\n      <p style="margin-bottom:.5rem;color:rgba(255,255,255,.8);">想拥有同款跑步数据？</p>\n      <p style="font-size:1.4rem;font-weight:bold;color:#00e676;letter-spacing:1px;">微信：'+esc(wechat)+'</p>\n    </div>\n':'';
+  const imgBlock=imgsHTML();const tagsBlock=(showTags)?tagsHTML(tags):'';
+  const html='<!DOCTYPE html>\n'+
+`<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>${esc(title)} | RUNPRO</title>
+<meta name="description" content="${esc(desc)}">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI','Microsoft YaHei',sans-serif;}
+body{background:#0a2e1a;color:#fff;line-height:1.6;overflow-x:hidden;position:relative;}
+body::before{content:'';position:fixed;inset:0;background:linear-gradient(135deg,rgba(10,46,26,0.82),rgba(10,46,26,0.75)),url('https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=1920&q=80') center/cover no-repeat fixed;z-index:-1;}
+header{position:sticky;top:0;z-index:100;background:rgba(10,46,26,0.9);backdrop-filter:blur(10px);display:flex;justify-content:space-between;align-items:center;padding:1rem 5%;transition:.3s;border-bottom:1px solid rgba(255,255,255,0.08);}
+header.scrolled{padding:.5rem 5%;box-shadow:0 4px 20px rgba(0,0,0,.4);}
+.logo{font-size:1.8rem;font-weight:bold;color:#00e676;letter-spacing:2px;}
+.logo span{color:#fff;}
+nav a{color:rgba(255,255,255,.85);text-decoration:none;margin-left:1.8rem;font-size:.95rem;transition:color .3s;}
+nav a:hover{color:#00e676;}
+.content-wrap{max-width:800px;margin:3rem auto;padding:0 1rem;}
+.article-body{background:rgba(255,255,255,.95);border-radius:16px;padding:2rem;color:#333;box-shadow:0 4px 20px rgba(0,0,0,.15);}
+.article-body h1{color:#0a2e1a;font-size:1.6rem;margin-bottom:.5rem;text-align:center;}
+.article-body .meta{color:#666;text-align:center;margin-bottom:1.5rem;font-size:.9rem;}
+.article-body p{margin:1rem 0;line-height:1.8;font-size:1rem;color:#444;}
+.article-body .highlight{color:#00c853;font-weight:bold;}
+.article-body .disclaimer{font-size:.82rem;color:#999;text-align:center;margin-top:2rem;padding-top:1rem;border-top:1px dashed #ddd;}
+.article-image{display:block;width:100%;max-width:560px;max-height:380px;height:auto;object-fit:contain;background:#f5f5f5;margin:1.5rem auto;border-radius:12px;border:1px solid #eee;}
+.article-body .img-row{display:flex;justify-content:center;align-items:flex-start;gap:12px;flex-wrap:wrap;margin:1.5rem 0;}
+.article-body .img-row .article-image{margin:0;}
+.social-stats{display:flex;gap:24px;justify-content:flex-start;padding:12px 0;margin:1.5rem 0;font-size:.9rem;color:#666;border-top:1px solid #eee;border-bottom:1px solid #eee;}
+.social-stats span{display:inline-flex;align-items:center;gap:6px;cursor:pointer;}
+.social-stats span:hover{color:#00c853;}
+@media(max-width:768px){nav a{margin-left:.8rem;font-size:.85rem;}.article-image{max-height:240px;}.article-body .img-row{flex-direction:column;align-items:center;}.article-body .img-row .article-image{width:100%!important;max-height:240px;}.social-stats{gap:16px;font-size:.85rem;}}
+footer{background:rgba(5,20,12,.95);padding:2rem 5%;text-align:center;color:rgba(255,255,255,.5);font-size:.82rem;}
+.footer-links{display:flex;flex-wrap:wrap;justify-content:center;gap:1rem;margin-bottom:1rem;}
+.footer-links a{color:rgba(255,255,255,.6);text-decoration:none;font-size:.85rem;}
+.footer-links a:hover{color:#00e676;}
+.data-tags{max-width:800px;margin:0 auto;padding:14px 20px;background:rgba(5,20,12,.92);display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;}
+.data-tags .tag{display:inline-flex;align-items:center;padding:5px 12px;border-radius:20px;font-size:.85rem;font-weight:600;}
+.data-tags .tag-loc{background:rgba(0,123,255,.15);color:#6cb4ff;border:1px solid rgba(0,123,255,.3);}
+.data-tags .tag-dist{background:rgba(255,193,7,.15);color:#ffd54f;border:1px solid rgba(255,193,7,.3);}
+.data-tags .tag-pace{background:rgba(76,175,80,.15);color:#81c784;border:1px solid rgba(76,175,80,.3);}
+.data-tags .tag-cal{background:rgba(244,67,54,.15);color:#ef9a9a;border:1px solid rgba(244,67,54,.3);}
+.data-tags .tag-time{background:rgba(156,39,176,.15);color:#ce93d8;border:1px solid rgba(156,39,176,.3);}
+.back-top{position:fixed;right:20px;bottom:20px;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#00e676,#00a85c);display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;visibility:hidden;transition:.3s;z-index:1000;font-size:1.3rem;color:#fff;box-shadow:0 4px 15px rgba(0,230,118,.3);}
+.back-top.show{opacity:1;visibility:visible;}
+</style>
+</head>
+<body>
+<header id="header"><div class="logo">RUN<span>PRO</span></div><nav><a href="index.html">首页</a><a href="index.html#features">服务优势</a><a href="index.html#cases">案例</a><a href="index.html#contact">联系</a></nav></header>
+<main class="content-wrap"><article class="article-body">
+<h1>${esc(title)}</h1>
+<p class="meta">${esc(date)} / ${esc(author)}</p>
+${imgBlock}
+${bodyHTML}
+<div class="social-stats">
+  <span>❤️ ${Math.floor(Math.random()*80+20)}</span>
+  <span>💬 ${Math.floor(Math.random()*15+3)}</span>
+  <span>🔗 分享</span>
+  <span>👁️ ${Math.floor(Math.random()*800+200)}</span>
+</div>
+${disc}
+${wechatBox}
+</article></main>
+${tagsBlock}
+<footer><div class="footer-links"><a href="index.html">首页</a><a href="index.html#features">服务优势</a><a href="index.html#cases">案例</a><a href="index.html#contact">联系</a></div><p>© 2025 RUN PRO${wechat?(' · 微信：'+esc(wechat)):''}</p></footer>
+<div class="back-top" id="backTop">↑</div>
+<script>
+window.addEventListener('scroll',()=>{document.getElementById('header').classList.toggle('scrolled',window.scrollY>50);document.getElementById('backTop').classList.toggle('show',window.scrollY>500);});
+document.getElementById('backTop').onclick=()=>window.scrollTo({top:0,behavior:'smooth'});
+<\/script></body></html>`;
+  document.getElementById('codeBox').textContent=html;window.__html=html;document.getElementById('previewFrame').srcdoc=html;
+}
+
+/* ===== 辅助 ===== */
+function downloadHTML(){if(!window.__html){alert('请先点「生成 HTML」');return;}const b=new Blob([window.__html],{type:'text/html;charset=utf-8'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=autoFilename();a.click();URL.revokeObjectURL(u);showToast('✅ 已下载：'+a.download);}
+function copyCode(){if(!window.__html){alert('请先点「生成 HTML」');return;}navigator.clipboard.writeText(window.__html).then(()=>showToast('✅ 已复制代码')).catch(()=>{const t=document.createElement('textarea');t.value=window.__html;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);showToast('✅ 已复制代码');});}
+function clearAll(){if(!confirm('确定清空？'))return;['g_title','g_desc','g_date','g_author','g_keys','g_wechat'].forEach(id=>document.getElementById(id).value='');document.getElementById('g_paras').innerHTML='<div class="para-item"><textarea placeholder="新段落"></textarea><button onclick="rmPara(this)">✕</button></div>';document.getElementById('smartPaste').value='';document.getElementById('ai_instruction').value='';imgs=[null,null,null];[0,1,2].forEach(i=>document.getElementById('prev'+i).src='');document.getElementById('codeBox').textContent='已清空';window.__html='';document.getElementById('g_date').value=todayStr();}
+function switchTab(tab,btn){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');document.getElementById('codeBox').style.display=tab==='code'?'block':'none';document.getElementById('previewFrame').style.display=tab==='preview'?'block':'none';}
+</script>
+</body>
+</html>

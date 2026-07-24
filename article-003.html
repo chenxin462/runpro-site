@@ -18,14 +18,20 @@ nav a:hover{color:#00e676;}
 .article-body{max-width:800px;margin:0 auto;background:#fff;padding:2rem;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,.05);}
 h1{font-size:1.8rem;margin-bottom:1rem;text-align:center;color:#00a85c;}
 .meta{color:#666;text-align:center;margin-bottom:1.5rem;font-size:.9rem;}
+
+/* ✅ 统一图片控制 class：限制宽高，居中，不变形 */
 .article-image {
-    max-width: 600px;
-    width: 100%;
-    display: block;
-    margin: 1.5rem auto;
-    border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,.08);
+  display: block;
+  max-width: 100%;
+  width: auto;
+  max-height: 420px;
+  height: auto;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,.08);
+  margin: 1.5rem auto;
 }
+
 p{margin-bottom:1rem;font-size:1rem;color:#333;line-height:1.8;}
 ul{margin:1rem 0 1rem 1.5rem;}
 li{margin-bottom:.5rem;color:#333;}
@@ -40,7 +46,13 @@ footer{background:rgba(5,20,12,.95);padding:2rem 5%;text-align:center;color:rgba
 .back-top{position:fixed;right:20px;bottom:20px;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#00e676,#00a85c);display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;visibility:hidden;transition:.3s;z-index:1000;font-size:1.3rem;color:#fff;box-shadow:0 4px 15px rgba(0,230,118,.3);}
 .back-top.show{opacity:1;visibility:visible;}
 .back-top:hover{transform:translateY(-4px);}
-@media(max-width:768px){nav a{margin-left:.8rem;font-size:.85rem;}.article-body{padding:1.2rem;}}
+
+/* ✅ 移动端额外收紧图片高度 */
+@media(max-width:768px){
+  nav a{margin-left:.8rem;font-size:.85rem;}
+  .article-body{padding:1.2rem;}
+  .article-image{max-height:260px;}
+}
 </style>
 </head>
 <body>
@@ -63,7 +75,8 @@ footer{background:rgba(5,20,12,.95);padding:2rem 5%;text-align:center;color:rgba
     <h1>咕咚20km运动数据定制 · 荃湾海滨公园环线</h1>
     <p class="meta">咕咚户外跑 · 20.01km · 配速6'03" · 数据可视化定制服务</p>
 
-    <img src="images/gudong-20km-trail.jpg" style="max-width:600px !important; width:100% !important; height:auto !important; display:block !important; margin:1rem auto !important;" alt="咕咚20km轨迹截图">
+    <!-- ✅ 图片用 class 控制大小，干净清晰 -->
+    <img src="images/gudong-20km-trail.jpg" class="article-image" alt="咕咚20km轨迹截图">
 
     <p>本次数据定制覆盖<strong>荃湾海滨公园至环宇海湾</strong>沿海环线，全程 <strong>20.01公里</strong>，平均配速 <strong>6'03"</strong>，总耗时 <strong>2小时1分16秒</strong>，消耗 <strong>1200.9千卡</strong>。</p>
 

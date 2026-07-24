@@ -15,10 +15,44 @@ header.scrolled{padding:.5rem 5%;box-shadow:0 4px 20px rgba(0,0,0,.4);}
 .logo span{color:#fff;}
 nav a{color:rgba(255,255,255,.85);text-decoration:none;margin-left:1.8rem;font-size:.95rem;transition:color .3s;}
 nav a:hover{color:#00e676;}
+
 .content-wrap{max-width:800px;margin:3rem auto;padding:0 1rem;}
+
 .article-body{background:rgba(255,255,255,.95);border-radius:16px;padding:2.5rem;color:#333;box-shadow:0 4px 20px rgba(0,0,0,.15);}
 .article-body h1{color:#0a2e1a;font-size:1.8rem;margin-bottom:.5rem;text-align:center;line-height:1.3;}
 .article-body .meta{color:#666;text-align:center;margin-bottom:2rem;font-size:.9rem;}
+
+/* ============================================
+   ✅✅✅ 图片终极解决方案 ✅✅✅
+   ============================================
+   问题根因：你的图是手机竖屏截图，超高窄长
+   → 只限宽度没用，高度会按比例撑到几千px
+   → 必须同时锁死 width 和 height 的上限
+*/
+.article-image{
+  /* 固定一个"画框"，图片不管多大都塞进去 */
+  display:block;
+  width:100%;
+  max-width:560px;        /* 电脑上最大 560px 宽 */
+  height:350px;           /* ✅ 固定高度，不管原图多高 */
+  max-height:350px;       /* 双保险 */
+  object-fit:contain;     /* 图片完整显示，不被裁切 */
+  object-position:center;  /* 居中 */
+  margin:1.5rem auto;
+  border-radius:12px;
+  box-shadow:0 4px 15px rgba(0,0,0,.08);
+  background:#f5f5f5;     /* 图片没加载时显示灰底，方便排查 */
+}
+
+/* ✅ 手机端再缩小一点 */
+@media(max-width:768px){
+  .article-image{
+    max-width:100%;
+    height:240px;
+    max-height:240px;
+  }
+}
+
 footer{background:rgba(5,20,12,.95);padding:2rem 5%;text-align:center;color:rgba(255,255,255,.5);font-size:.82rem;}
 .footer-links{display:flex;flex-wrap:wrap;justify-content:center;gap:1rem;margin-bottom:1rem;}
 .footer-links a{color:rgba(255,255,255,.6);text-decoration:none;font-size:.85rem;}
@@ -34,13 +68,12 @@ footer{background:rgba(5,20,12,.95);padding:2rem 5%;text-align:center;color:rgba
 <header id="header">
   <div class="logo">RUN<span>PRO</span></div>
   <nav>
-    <!-- 👇 关键改动：去掉了 https://keepdata.top，改成了 /#xxx -->
-    <a href="/">首页</a>
-    <a href="/#features">服务优势</a>
-    <a href="/#cases">案例展示</a>
-    <a href="/#process">定制流程</a>
-    <a href="/#faq">常见问题</a>
-    <a href="/#contact">联系我们</a>
+    <a href="index.html">首页</a>
+    <a href="index.html#features">服务优势</a>
+    <a href="index.html#cases">案例展示</a>
+    <a href="index.html#process">定制流程</a>
+    <a href="index.html#faq">常见问题</a>
+    <a href="index.html#contact">联系我们</a>
   </nav>
 </header>
 
@@ -50,7 +83,10 @@ footer{background:rgba(5,20,12,.95);padding:2rem 5%;text-align:center;color:rgba
     <h1>沈阳夜跑日记｜2公里8分配，下班后的治愈时刻</h1>
     <p class="meta">RUNPRO 原创跑步记录 · 2026年7月22日 · Keep · 沈阳浑南</p>
 
-    <img src="images/keep-2km-shenyang.jpg" alt="Keep沈阳浑南2公里晚间慢跑轨迹截图" style="width:100%;max-width:600px;display:block;margin:1.5rem auto;border-radius:12px;box-shadow:0 4px 15px rgba(0,0,0,.08);">
+    <!-- ✅ 干干净净，只用 class，没有任何内联 style -->
+    <img src="images/keep-2km-shenyang.jpg"
+         alt="Keep沈阳浑南2公里晚间慢跑轨迹截图"
+         class="article-image">
 
     <div style="background:#e8f5e9;border-left:4px solid #00e676;padding:1rem 1.2rem;margin:1.5rem 0;border-radius:0 8px 8px 0;">
       <p style="margin:0;color:#2c3e50;font-size:1rem;line-height:1.8;">
@@ -87,13 +123,12 @@ footer{background:rgba(5,20,12,.95);padding:2rem 5%;text-align:center;color:rgba
 
 <footer>
   <div class="footer-links">
-    <!-- 👇 页脚也同步改成了 /#xxx -->
-    <a href="/">首页</a>
-    <a href="/#features">服务优势</a>
-    <a href="/#cases">案例展示</a>
-    <a href="/#process">定制流程</a>
-    <a href="/#faq">常见问题</a>
-    <a href="/#contact">联系我们</a>
+    <a href="index.html">首页</a>
+    <a href="index.html#features">服务优势</a>
+    <a href="index.html#cases">案例展示</a>
+    <a href="index.html#process">定制流程</a>
+    <a href="index.html#faq">常见问题</a>
+    <a href="index.html#contact">联系我们</a>
   </div>
   <p style="margin-top:.5rem;">© 2025 RUN PRO · 专注跑步数据定制 · 微信：278715464</p>
 </footer>

@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>沈阳太原街夜行5km | 运动数据定制案例</title>
   <style>
-    /* 保持和首页一致的样式，不改动外壳 */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #fafafa; color: #333; line-height: 1.6; }
     header { background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: fixed; top: 0; left: 0; right: 0; z-index: 100; }
@@ -18,14 +17,18 @@
     
     .meta { color: #888; font-size: 0.9rem; margin-bottom: 1.5rem; display: block; }
     
-    /* 图片不管大小，直接放，保持原样 */
+    /* ✅✅✅ 图片终极方案：同时锁死宽高 ✅✅✅ */
     .article-image { 
-      width: 100%; 
-      height: auto; 
+      display: block;
+      width: 100%;
+      max-width: 560px;        /* 电脑上最大 560px */
+      height: 350px;           /* ✅ 固定高度，不管原图多高 */
+      max-height: 350px;       /* 双保险 */
+      object-fit: contain;     /* 完整显示，不裁切 */
+      object-position: center;
       border-radius: 8px; 
-      margin-bottom: 1.5rem; 
-      display: block; 
-      /* 不加 max-width 限制，让它原图显示，想大就大 */
+      margin: 0 auto 1.5rem; 
+      background: #f5f5f5;     /* 灰底，方便排查 */
     }
     
     h1 { font-size: 1.8rem; margin-bottom: 1rem; color: #2c3e50; }
@@ -81,11 +84,17 @@
     .back-top.show { opacity: 1; }
     .back-top:hover { background: #0056b3; }
     
+    /* ✅ 移动端收紧 */
     @media (max-width: 768px) {
       .header-inner { padding: 0 15px; }
       main { margin: 70px 15px 30px; padding: 20px; }
       .data-grid { grid-template-columns: 1fr; }
       h1 { font-size: 1.5rem; }
+      .article-image {
+        max-width: 100%;
+        height: 240px;
+        max-height: 240px;
+      }
     }
   </style>
 </head>
@@ -105,14 +114,13 @@
   <main>
     <span class="meta">咕咚户外行走 · 5.03km · 夜间散步 · 数据可视化定制服务</span>
     
-    <!-- 图片路径：请确保 images 文件夹里有这张图，命名为 walk-shenyang-5km.jpg -->
     <img src="images/walk-shenyang-5km.jpg" alt="沈阳太原街夜间行走5.03km轨迹截图" class="article-image">
 
-    本次数据定制覆盖<strong>沈阳太原街、民主广场、中国医科大学</strong>周边区域，全程 <strong>5.03公里</strong>，训练时长 <strong>58分40秒</strong>，消耗 <strong>334千卡</strong>，总步数 <strong>6899步</strong>。
+    <p>本次数据定制覆盖<strong>沈阳太原街、民主广场、中国医科大学</strong>周边区域，全程 <strong>5.03公里</strong>，训练时长 <strong>58分40秒</strong>，消耗 <strong>334千卡</strong>，总步数 <strong>6899步</strong>。</p>
 
-    轨迹全程围绕<strong>太原街商圈</strong>核心地带，经过<strong>金杯商务酒店、辽宁出版大厦、力创大厦</strong>等真实地标，夜间行走路线自然流畅，无任何漂移或异常点，完美适配咕咚平台算法审核。
+    <p>轨迹全程围绕<strong>太原街商圈</strong>核心地带，经过<strong>金杯商务酒店、辽宁出版大厦、力创大厦</strong>等真实地标，夜间行走路线自然流畅，无任何漂移或异常点，完美适配咕咚平台算法审核。</p>
 
-    行走节奏平稳，数据符合<strong>夜间休闲散步</strong>的运动特征，配速自然，步频合理，可直接用于个人记录或案例展示。
+    <p>行走节奏平稳，数据符合<strong>夜间休闲散步</strong>的运动特征，配速自然，步频合理，可直接用于个人记录或案例展示。</p>
 
     <div class="data-grid">
       <div class="data-item"><div class="data-num">5.03<small>km</small></div><div class="data-label">总距离</div></div>
@@ -157,7 +165,7 @@
       <a href="index.html#faq">常见问题</a>
       <a href="index.html#contact">联系我们</a>
     </div>
-    <p style="margin-top:.5rem;">© 2025 RUN PRO · 专注运动数据定制 · 微信：278715464
+    <p style="margin-top:.5rem;">© 2025 RUN PRO · 专注运动数据定制 · 微信：278715464</p>
   </footer>
 
   <div class="back-top" id="backTop">↑</div>

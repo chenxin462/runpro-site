@@ -19,6 +19,20 @@ nav a:hover{color:#00e676;}
 .case-detail{background:rgba(255,255,255,.95);border-radius:16px;padding:2rem;color:#333;box-shadow:0 4px 20px rgba(0,0,0,.15);}
 .case-detail h1{color:#0a2e1a;font-size:1.6rem;margin-bottom:.5rem;text-align:center;}
 .case-detail .meta{color:#666;text-align:center;margin-bottom:1.5rem;font-size:.9rem;}
+
+/* ✅ 统一图片控制 class：限制宽高，居中，不变形 */
+.article-image {
+  display: block;
+  max-width: 100%;
+  width: auto;
+  max-height: 420px;
+  height: auto;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  margin: 1rem auto;
+}
+
 .data-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin:1.5rem 0;}
 .data-item{text-align:center;padding:1rem;background:#f0faf0;border-radius:12px;}
 .data-num{font-size:1.8rem;font-weight:bold;color:#00a85c;}
@@ -47,7 +61,13 @@ footer{background:rgba(5,20,12,.95);padding:2rem 5%;text-align:center;color:rgba
 .back-top{position:fixed;right:20px;bottom:20px;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#00e676,#00a85c);display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;visibility:hidden;transition:.3s;z-index:1000;font-size:1.3rem;color:#fff;box-shadow:0 4px 15px rgba(0,230,118,.3);}
 .back-top.show{opacity:1;visibility:visible;}
 .back-top:hover{transform:translateY(-4px);}
-@media(max-width:768px){.data-grid{grid-template-columns:1fr 1fr;}nav a{margin-left:.8rem;font-size:.85rem;}}
+
+/* ✅ 移动端额外收紧图片高度 */
+@media(max-width:768px){
+  .data-grid{grid-template-columns:1fr 1fr;}
+  nav a{margin-left:.8rem;font-size:.85rem;}
+  .article-image{max-height:260px;}
+}
 </style>
 </head>
 <body>
@@ -69,10 +89,10 @@ footer{background:rgba(5,20,12,.95);padding:2rem 5%;text-align:center;color:rgba
     <h1>📍 泉州丰泽区 · 5.09km 跑步轨迹实测</h1>
     <p class="meta">RUNPRO 原创案例 · Keep APP 数据同步 · 可指定地点与日期</p>
 
-    <!-- 🛠️ 核心修改点：限制了最大宽度，电脑端不再撑爆 -->
+    <!-- ✅ 图片用 class 控制大小，干净清晰 -->
     <img src="/images/keep-quanzhou-5km-trail.jpg" 
          alt="Keep APP 泉州丰泽区5.09公里跑步轨迹截图，配速6分04秒，GPS定位真实" 
-         style="width:100%; max-width:600px; display:block; margin:1rem auto; border-radius:12px; border:1px solid #e0e0e0;">
+         class="article-image">
 
     <div class="data-grid">
       <div class="data-item"><div class="data-num">5.09<small>km</small></div><div class="data-label">总距离</div></div>
@@ -111,7 +131,7 @@ footer{background:rgba(5,20,12,.95);padding:2rem 5%;text-align:center;color:rgba
     <div class="step-box"><h4>Q：多久能拿到数据？</h4><p>A：通常当天完成，数据同步平台 5-30 分钟，急单可加急处理。</p></div>
     <div class="step-box"><h4>Q：安全吗？会不会封号？</h4><p>A：采用真人设备模拟，避开平台风控机制，至今保持零封号记录。</p></div>
 
-    <!-- 🛒 新增：购买引导模块（核心转化） -->
+    <!-- 🛒 购买引导模块 -->
     <div style="background:#f0fff4; border:2px solid #27ae60; border-radius:12px; padding:20px; margin:24px 0; text-align:center;">
       <h3 style="margin:0 0 12px; color:#2c3e50; font-size:1.1rem;">✅ 想要同款真实数据？立即下单！</h3>
       <p style="margin:0 0 16px; color:#555; font-size:0.95rem;">
