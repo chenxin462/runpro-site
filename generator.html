@@ -81,7 +81,7 @@ textarea{resize:vertical;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
 
 /* 发布区 */
-.publish-card{background:rgba(0,230,118,.06);border:1px solid rgba(0,230,118,.25)}
+.publish-card{background:rgba(0,230,118,.06);border:1px solid rgba(0,230,118,.25);}
 .publish-card h3{color:#00e676;border-left-color:#00e676;}
 .publish-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;}
 .publish-row>div{flex:1;min-width:200px;}
@@ -115,7 +115,7 @@ textarea{resize:vertical;}
 
 <div class="wrap">
   <h1 class="title">🏃 RUNPRO 文章生成器 · AI版</h1>
-  <p class="sub">✅ 截图→AI写文案→自动填入→选配图→生成HTML → 🚀 一键发布到 GitHub（图片自动上传到 images/）</p>
+  <p class="sub">✅ 截图→AI写文案→自动填入→选配图→生成HTML → 🚀 一键发布到 GitHub 根目录</p>
 
   <div class="grid">
     <!-- ========== 📷 AI 智能区 ========== -->
@@ -174,7 +174,7 @@ textarea{resize:vertical;}
         </div>
 
         <!-- 悦跑圈（3条） -->
-        <strong class="platform-row">
+        <div class="platform-row">
           <span class="platform-label yuepao">悦跑圈</span>
           <select class="platform-select" id="sel_yuepao" data-platform="yuepao"></select>
           <button class="btn-use" data-platform="yuepao" data-action="use">√使用</button>
@@ -283,7 +283,7 @@ textarea{resize:vertical;}
 
     <!-- ========== 🚀 一键发布到 GitHub ========== -->
     <div class="card publish-card" style="grid-column:1/-1;">
-      <h3>🚀 一键发布到 GitHub（图片自动上传到 images/ 文件夹）</h3>
+      <h3>🚀 一键发布到 GitHub（写进仓库根目录）</h3>
       <p class="tip" style="margin-bottom:8px;">💡 Token 和仓库信息只存本机浏览器，不会上传到任何服务器。Token 建议用 Fine-grained PAT，只给 Contents: Read/Write 权限。</p>
       <div class="publish-row">
         <div>
@@ -357,19 +357,14 @@ const PRESETS={
 const REALISM_LINES=['今天逆风路段较多，体感略累，后半程配速有小幅波动。','中途在3公里处短暂补水，心率有约10秒的下降。','第4公里经过施工路段，路面略有不平，步幅稍有压缩。','起跑前未充分热身，前2公里体感偏紧，之后逐渐打开。','今日湿度偏高，出汗量较大，建议下次注意补水节奏。','后半程略有掉速，但整体心率控制在有氧区间，训练质量达标。','经过红绿灯两次，轨迹中有短暂停顿（已自动修正）。','今天状态一般，但坚持完成了计划里程，意志分拉满。'];
 
 /* ===== 默认指令 ===== */
-const DEFAULT_INSTRUCTION=`你是我的跑步记录助手。请严格按以下规则生成内容：
-
-1. **看图说话**：仔细分析我上传的跑步APP截图，识别并提取其中的真实数据——日期、APP名称、距离、时长、配速、消耗卡路里、地点等。所有数据以图片为准，严禁瞎编。
-
-2. **自由写作**：文章结构、风格、字数完全由你自由决定。可以写成叙事文、内心独白、吐槽贴或流水账，用第一人称"我"。
-
-3. **强制植入**：文中必须自然提及截图里那个跑步软件的名称（比如"Keep"）至少3-4次。可以是在打开APP看数据、点赞、分享、结束跑步时提到，像真人用户口吻。
-
-4. **身份伪装**：语气像朋友圈跑友，口语化。严禁出现"AI"、"人工智能"、"文章生成器"等字眼。
-
-5. **输出格式**：直接输出正文内容，不要包含任何解释、标题或Markdown标记。
-
-现在，请根据图片开始创作。`;
+const DEFAULT_INSTRUCTION=`你是一个跑步运动数据文案专家。我会给你一张跑步APP截图。
+请严格按以下格式输出（不要加多余解释）：
+第1行：文章标题（含平台名+地点+距离+配速+消耗，用｜分隔）
+空行
+第2-4行：正文段落，每段描述跑步体验、数据、感悟，自然流畅像真人跑者写的
+空行
+关键词：xxx,xxx,xxx（3-6个逗号分隔）
+要求：提取截图中的距离、配速、消耗、地点、时长、步频等数据；语气像运动爱好者，不要营销腔；不出现"定制""伪造"等词。`;
 
 /* ===== 平台指令默认数据 ===== */
 const PLATFORM_CONFIG={
@@ -478,24 +473,7 @@ document.addEventListener('DOMContentLoaded',function(){
 /* ===== 获取最终指令 ===== */
 function getInstruction(){const v=document.getElementById('ai_instruction').value.trim();return v||DEFAULT_INSTRUCTION;}
 
-/* ===== 图片管理（改造版：同时存 base64） ===== */
-let imgs=[null,null,null]; // 每个元素: {file: File, b64: string, url: string}
-function pickImg(input,idx){
-  const file=input.files[0];
-  if(!file){imgs[idx]=null;document.getElementById('prev'+idx).src='';return;}
-  const reader=new FileReader();
-  reader.onload=function(e){
-    imgs[idx]={
-      file:file,
-      b64:e.target.result, // data:image/xxx;base64,XXXX
-      name:file.name
-    };
-    document.getElementById('prev'+idx).src=e.target.result;
-  };
-  reader.readAsDataURL(file);
-}
-
-/* ===== 图片转 base64（Promise版） ===== */
+/* ===== 图片转 base64 ===== */
 function fileToBase64(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result.split(',')[1]);r.onerror=reject;r.readAsDataURL(file);});}
 
 /* ===== AI 模型配置 ===== */
@@ -589,6 +567,12 @@ function parseContent(){
   showToast('✅ 已按段落拆分并填入 '+blocks.length+' 段！');
 }
 
+/* ===== 图片管理 ===== */
+let imgs=[null,null,null];
+function pickImg(input,idx){imgs[idx]=input.files[0]||null;const pv=document.getElementById('prev'+idx);if(imgs[idx]){const r=new FileReader();r.onload=e=>pv.src=e.target.result;r.readAsDataURL(imgs[idx]);}else{pv.src='';}}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function copyText(t){navigator.clipboard.writeText(t).catch(()=>{const x=document.createElement('textarea');x.value=t;document.body.appendChild(x);x.select();document.execCommand('copy');document.body.removeChild(x);});}
+
 /* ===== 预设模板 ===== */
 function loadPreset(k){const p=PRESETS[k];if(!p)return;document.getElementById('g_title').value=p.title;document.getElementById('g_desc').value=p.desc;document.getElementById('g_keys').value=p.keys;const c=document.getElementById('g_paras');c.innerHTML='';p.paras.forEach(t=>{const d=document.createElement('div');d.className='para-item';d.innerHTML='<textarea>'+t+'</textarea><button onclick="rmPara(this)">✕</button>';c.appendChild(d);});showToast('✅ 已加载模板');}
 
@@ -600,38 +584,10 @@ function rmPara(b){if(document.querySelectorAll('.para-item').length>1)b.parentE
 function todayStr(){return new Date().toISOString().slice(0,10);}
 function autoFilename(){const d=todayStr().replace(/-/g,'');return 'article-'+d+'-'+String(Math.floor(Math.random()*900)+100)+'.html';}
 function getRealismLine(){return REALISM_LINES[Math.floor(Math.random()*REALISM_LINES.length)];}
-function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
-function copyText(t){navigator.clipboard.writeText(t).catch(()=>{const x=document.createElement('textarea');x.value=t;document.body.appendChild(x);x.select();document.execCommand('copy');document.body.removeChild(x);});}
 function extractTags(t){const tags={};const l=t.match(/([\u4e00-\u9fa5]+(?:市|区|县|公园|海边|路|街|道|广场|镇))/);if(l)tags.location=l[1];const d=t.match(/(\d+\.?\d*\s*公里)/);if(d)tags.distance=d[1];const p=t.match(/(\d+['\u2019]?\d*["\u201d]?)/);if(p)tags.pace=p[1].replace(/['\u2019]/g,"'").replace(/["\u201d]/g,'"');const c=t.match(/(\d+\.?\d*\s*千卡)/);if(c)tags.calorie=c[1];const du=t.match(/(\d+:\d{2}:\d{2})/);if(du)tags.duration=du[1];return tags;}
 function hl(text,keys){let r=esc(text);keys.forEach(k=>{if(!k)return;r=r.replace(new RegExp(k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g'),'<span class="highlight">'+esc(k)+'</span>');});return r;}
-
-/* ===== imgsHTML（改造版：使用占位符） ===== */
-function imgsHTML(){
-  const l=imgs.filter(Boolean);
-  if(!l.length)return '';
-  // 用占位符 __IMG_0__ __IMG_1__ __IMG_2__，发布时再替换
-  if(l.length===1){
-    return '<div style="text-align:center">\n  <img src="__IMG_0__" alt="文章配图" class="article-image">\n</div>';
-  }
-  const w=l.length===2?'48%':'32%';
-  let h='<div class="img-row">\n';
-  l.forEach((f,idx)=>{
-    h+='  <img src="__IMG_'+idx+'__" alt="文章配图" class="article-image" style="margin:0;width:'+w+';">\n';
-  });
-  h+='</div>';
-  return h;
-}
-
-function tagsHTML(t){
-  const i=[];
-  if(t.location)i.push('<span class="tag tag-loc">📍 '+esc(t.location)+'</span>');
-  if(t.distance)i.push('<span class="tag tag-dist">📏 '+esc(t.distance)+'</span>');
-  if(t.pace)i.push('<span class="tag tag-pace">⚡ 配速 '+esc(t.pace)+'</span>');
-  if(t.calorie)i.push('<span class="tag tag-cal">🔥 '+esc(t.calorie)+'</span>');
-  if(t.duration)i.push('<span class="tag tag-time">⏱️ '+esc(t.duration)+'</span>');
-  if(!i.length)return '';
-  return '\n\n<!-- 数据标签栏 -->\n<div class="data-tags">\n  '+i.join('\n  ')+'\n</div>';
-}
+function imgsHTML(){const l=imgs.filter(Boolean);if(!l.length)return '';if(l.length===1)return '<div style="text-align:center">\n    <img src="images/'+esc(l[0].name.replace(/\s+/g,'-'))+'" alt="文章配图" class="article-image">\n  </div>';const w=l.length===2?'48%':'32%';let h='<div class="img-row">\n';l.forEach(f=>{h+='    <img src="images/'+esc(f.name.replace(/\s+/g,'-'))+'" alt="文章配图" class="article-image" style="margin:0;width:'+w+';">\n';});h+='  </div>';return h;}
+function tagsHTML(t){const i=[];if(t.location)i.push('<span class="tag tag-loc">📍 '+esc(t.location)+'</span>');if(t.distance)i.push('<span class="tag tag-dist">📏 '+esc(t.distance)+'</span>');if(t.pace)i.push('<span class="tag tag-pace">⚡ 配速 '+esc(t.pace)+'</span>');if(t.calorie)i.push('<span class="tag tag-cal">🔥 '+esc(t.calorie)+'</span>');if(t.duration)i.push('<span class="tag tag-time">⏱️ '+esc(t.duration)+'</span>');if(!i.length)return '';return '\n\n<!-- 数据标签栏 -->\n<div class="data-tags">\n  '+i.join('\n  ')+'\n</div>';}
 
 /* ===== 核心生成 ===== */
 function generate(){
@@ -725,7 +681,7 @@ document.getElementById('backTop').onclick=()=>window.scrollTo({top:0,behavior:'
   document.getElementById('codeBox').textContent=html;window.__html=html;document.getElementById('previewFrame').srcdoc=html;
 }
 
-/* ===== 🚀 一键发布到 GitHub（核心改造：先传图到 images/，再传 HTML） ===== */
+/* ===== 🚀 一键发布到 GitHub（核心功能） ===== */
 async function publishToGithub(){
   // 1. 检查是否生成了 HTML
   if(!window.__html){showToast('⚠️ 请先点「⚡ 生成 HTML」',true);return;}
@@ -737,103 +693,37 @@ async function publishToGithub(){
   if(!repo || !repo.includes('/')){showToast('⚠️ 仓库格式应为 owner/repo',true);return;}
   const branch=document.getElementById('gh_branch').value.trim()||'main';
 
-  // 3. 过滤有效图片
-  const validImgs=imgs.filter(Boolean);
-  if(validImgs.length===0){showToast('⚠️ 请至少上传一张图片',true);return;}
-
-  const apiBase='https://api.github.com/repos/'+repo+'/contents';
-  const headers={
-    'Authorization':'Bearer '+token,
-    'Content-Type':'application/json',
-    'Accept':'application/vnd.github+json'
-  };
-
-  // 4. 生成时间戳（保证图片和 HTML 同名关联）
+  // 3. 生成文件名（根目录，无文件夹）
+  const title=document.getElementById('g_title').value.trim().replace(/[^\w\s-]/g,'').substring(0,30)||'article';
   const d=todayStr().replace(/-/g,'');
-  const ts=Date.now();
+  const filename=d+'-'+Math.floor(Math.random()*900+100)+'.html';
 
-  // 5. 上传图片到 images/ 文件夹
-  const uploadedPaths=[]; // 存储成功上传的图片路径
-  document.getElementById('publishStatus').textContent='⏳ 正在上传图片到 images/ ...';
+  // 4. 编码内容（Base64）
+  const content=btoa(unescape(encodeURIComponent(window.__html)));
 
+  // 5. 检查文件是否已存在（获取 SHA）
+  const apiBase='https://api.github.com/repos/'+repo+'/contents';
+  let sha;
   try{
-    for(let i=0;i<validImgs.length;i++){
-      const img=validImgs[i];
-      const ext=(img.name.split('.').pop()||'jpg').toLowerCase();
-      const imgName=d+'-'+ts+'-'+i+'.'+ext;
-      const imgPath='images/'+imgName; // 关键：存到 images/ 文件夹
+    const res=await fetch(apiBase+'/'+filename,{headers:{'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json'}});
+    if(res.ok){const data=await res.json();sha=data.sha;}
+  }catch(e){/* 文件不存在，正常 */}
 
-      // 提取 base64 内容（去掉 data:image/xxx;base64, 前缀）
-      const base64Content=img.b64.split(',')[1];
-
-      // 检查是否已存在（获取 SHA）
-      let imgSha;
-      try{
-        const checkRes=await fetch(apiBase+'/'+imgPath,{headers});
-        if(checkRes.ok){const d=await checkRes.json();imgSha=d.sha;}
-      }catch(e){/* 不存在，正常 */}
-
-      // 上传图片
-      const putRes=await fetch(apiBase+'/'+imgPath,{
-        method:'PUT',
-        headers,
-        body:JSON.stringify({
-          message:'upload image: '+imgName,
-          content:base64Content,
-          branch:branch,
-          ...(imgSha?{sha:imgSha}:{})
-        })
-      });
-
-      if(!putRes.ok){
-        const err=await putRes.json().catch(()=>({}));
-        throw new Error('图片 '+imgName+' 上传失败：'+(err.message||putRes.status));
-      }
-
-      uploadedPaths.push({placeholder:'__IMG_'+i+'__',url:'/images/'+imgName});
-      document.getElementById('publishStatus').textContent='✅ 图片 '+(i+1)+'/'+validImgs.length+' 上传成功';
-    }
-
-    // 6. 替换 HTML 中的占位符为真实路径
-    let finalHtml=window.__html;
-    uploadedPaths.forEach(p=>{
-      finalHtml=finalHtml.replace(p.placeholder,'/images/'+p.url.split('/').pop());
-    });
-
-    // 7. 生成 HTML 文件名并上传
-    const htmlName=d+'-'+ts+'.html';
-    document.getElementById('publishStatus').textContent='⏳ 正在发布文章...';
-
-    const htmlContent=btoa(unescape(encodeURIComponent(finalHtml)));
-
-    // 检查 HTML 是否已存在
-    let htmlSha;
-    try{
-      const checkRes=await fetch(apiBase+'/'+htmlName,{headers});
-      if(checkRes.ok){const d=await checkRes.json();htmlSha=d.sha;}
-    }catch(e){}
-
-    const htmlRes=await fetch(apiBase+'/'+htmlName,{
+  // 6. 上传/更新文件
+  document.getElementById('publishStatus').textContent='⏳ 正在发布到 GitHub...';
+  try{
+    const res=await fetch(apiBase+'/'+filename,{
       method:'PUT',
-      headers,
-      body:JSON.stringify({
-        message:'publish article: '+document.getElementById('g_title').value.trim().substring(0,30),
-        content:htmlContent,
-        branch:branch,
-        ...(htmlSha?{sha:htmlSha}:{})
-      })
+      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json','Accept':'application/vnd.github+json'},
+      body:JSON.stringify({message:'SEO更新：'+title,content:content,branch:branch,...(sha?{sha}:{})})
     });
-
-    if(!htmlRes.ok){const err=await htmlRes.json().catch(()=>({}));throw new Error('文章发布失败：'+(err.message||htmlRes.status));}
-
-    // 8. 成功
-    const fileUrl='https://'+repo.split('/')[0]+'.github.io/'+(repo.split('/')[1])+'/'+htmlName;
-    document.getElementById('publishStatus').innerHTML='✅ 发布成功！<br><a href="'+fileUrl+'" target="_blank" style="color:#00e676;">'+htmlName+'</a>';
-    showToast('✅ 发布成功：'+htmlName);
+    if(!res.ok){const err=await res.json().catch(()=>({}));throw new Error(err.message||('发布失败 HTTP '+res.status));}
+    const data=await res.json();
+    const fileUrl='https://'+repo.split('/')[0]+'.github.io/'+(repo.split('/')[1])+'/'+filename;
+    document.getElementById('publishStatus').innerHTML='✅ 已发布：<a href="'+fileUrl+'" target="_blank" style="color:#00e676;">'+filename+'</a>';
+    showToast('✅ 发布成功：'+filename);
     saveGHTokenIfChecked();
-
   }catch(e){
-    console.error(e);
     document.getElementById('publishStatus').textContent='❌ '+e.message;
     showToast('❌ 发布失败：'+e.message,true);
   }
