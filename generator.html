@@ -569,7 +569,26 @@ function parseContent(){
 
 /* ===== 图片管理 ===== */
 let imgs=[null,null,null];
-function pickImg(input,idx){imgs[idx]=input.files[0]||null;const pv=document.getElementById('prev'+idx);if(imgs[idx]){const r=new FileReader();r.onload=e=>pv.src=e.target.result;r.readAsDataURL(imgs[idx]);}else{pv.src='';}}
+window.__imgDataUrls={};  // 缓存 dataURL：key = 清理后的文件名, value = dataURL
+
+function pickImg(input,idx){
+  imgs[idx]=input.files[0]||null;
+  const pv=document.getElementById('prev'+idx);
+  if(imgs[idx]){
+    const f=imgs[idx];
+    const r=new FileReader();
+    r.onload=e=>{
+      pv.src=e.target.result;
+      // ✅ 同时用原始名和清理名存两份，彻底避免 key 不匹配
+      window.__imgDataUrls[f.name]=e.target.result;
+      window.__imgDataUrls[f.name.replace(/\s+/g,'-')]=e.target.result;
+    };
+    r.readAsDataURL(f);
+  }else{
+    pv.src='';
+  }
+}
+
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 function copyText(t){navigator.clipboard.writeText(t).catch(()=>{const x=document.createElement('textarea');x.value=t;document.body.appendChild(x);x.select();document.execCommand('copy');document.body.removeChild(x);});}
 
@@ -586,30 +605,43 @@ function autoFilename(){const d=todayStr().replace(/-/g,'');return 'article-'+d+
 function getRealismLine(){return REALISM_LINES[Math.floor(Math.random()*REALISM_LINES.length)];}
 function extractTags(t){const tags={};const l=t.match(/([\u4e00-\u9fa5]+(?:市|区|县|公园|海边|路|街|道|广场|镇))/);if(l)tags.location=l[1];const d=t.match(/(\d+\.?\d*\s*公里)/);if(d)tags.distance=d[1];const p=t.match(/(\d+['\u2019]?\d*["\u201d]?)/);if(p)tags.pace=p[1].replace(/['\u2019]/g,"'").replace(/["\u201d]/g,'"');const c=t.match(/(\d+\.?\d*\s*千卡)/);if(c)tags.calorie=c[1];const du=t.match(/(\d+:\d{2}:\d{2})/);if(du)tags.duration=du[1];return tags;}
 function hl(text,keys){let r=esc(text);keys.forEach(k=>{if(!k)return;r=r.replace(new RegExp(k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g'),'<span class="highlight">'+esc(k)+'</span>');});return r;}
-function imgsHTML(){const l=imgs.filter(Boolean);if(!l.length)return '';if(l.length===1)return '<div style="text-align:center">\n    <img src="images/'+esc(l[0].name.replace(/\s+/g,'-'))+'" alt="文章配图" class="article-image">\n  </div>';const w=l.length===2?'48%':'32%';let h='<div class="img-row">\n';l.forEach(f=>{h+='    <img src="images/'+esc(f.name.replace(/\s+/g,'-'))+'" alt="文章配图" class="article-image" style="margin:0;width:'+w+';">\n';});h+='  </div>';return h;}
 function tagsHTML(t){const i=[];if(t.location)i.push('<span class="tag tag-loc">📍 '+esc(t.location)+'</span>');if(t.distance)i.push('<span class="tag tag-dist">📏 '+esc(t.distance)+'</span>');if(t.pace)i.push('<span class="tag tag-pace">⚡ 配速 '+esc(t.pace)+'</span>');if(t.calorie)i.push('<span class="tag tag-cal">🔥 '+esc(t.calorie)+'</span>');if(t.duration)i.push('<span class="tag tag-time">⏱️ '+esc(t.duration)+'</span>');if(!i.length)return '';return '\n\n<!-- 数据标签栏 -->\n<div class="data-tags">\n  '+i.join('\n  ')+'\n</div>';}
 
-/* ===== 核心生成 ===== */
-function generate(){
-  const title=document.getElementById('g_title').value.trim();
-  const desc=document.getElementById('g_desc').value.trim();
-  const date=document.getElementById('g_date').value.trim();
-  const author=document.getElementById('g_author').value.trim();
-  const keys=document.getElementById('g_keys').value.split(/[,，]/).map(k=>k.trim()).filter(Boolean);
-  const wechat=document.getElementById('g_wechat').value.trim();
-  const showD=document.getElementById('g_disclaimer').value==='true';
-  const showW=document.getElementById('g_showWechatBox').value==='true';
-  const showTags=document.getElementById('g_showTags').value==='true';
-  const addRealism=document.getElementById('g_addRealism').checked;
-  let paras=Array.from(document.querySelectorAll('.para-item textarea')).map(t=>t.value.trim()).filter(Boolean);
-  if(addRealism&&paras.length>0)paras[paras.length-1]=paras[paras.length-1]+' '+getRealismLine();
+/* ===== 构建图片区块 ===== */
+function buildImgBlock(imgSources,useBase64){
+  if(!imgSources.length)return '';
+  if(useBase64){
+    // 预览版：直接用 data URI 内嵌
+    if(imgSources.length===1){
+      return '<div style="text-align:center">\n    <img src="'+imgSources[0].dataUrl+'" alt="文章配图" class="article-image">\n  </div>';
+    }
+    const w=imgSources.length===2?'48%':'32%';
+    let row='';
+    imgSources.forEach(s=>{row+='    <img src="'+s.dataUrl+'" alt="文章配图" class="article-image" style="margin:0;width:'+w+';">\n';});
+    return '<div class="img-row">\n'+row+'  </div>';
+  }else{
+    // 发布版：用 images/ 相对路径
+    const names=imgSources.map(s=>s.name);
+    if(names.length===1){
+      return '<div style="text-align:center">\n    <img src="images/'+esc(names[0])+'" alt="文章配图" class="article-image">\n  </div>';
+    }
+    const w=names.length===2?'48%':'32%';
+    let row='';
+    names.forEach(n=>{row+='    <img src="images/'+esc(n)+'" alt="文章配图" class="article-image" style="margin:0;width:'+w+';">\n';});
+    return '<div class="img-row">\n'+row+'  </div>';
+  }
+}
+
+/* ===== ✅ FIX: buildFullHTML 改为接收所有参数，不再依赖外部变量 ===== */
+function buildFullHTML(imgBlock,params){
+  const {title,desc,date,author,paras,keys,showD,showW,wechat,showTags}=params;
   const bodyHTML=paras.map(p=>'    <p>'+hl(p,keys)+'</p>').join('\n');
   const tags=extractTags(paras.join(' '));
   const disc=showD?'\n    <p class="disclaimer">⚠️ 温馨提示：本服务仅限个人娱乐、纪念用途，严禁用于学校体测、企业考核、赛事资格等正式场景。</p>':'';
   const wechatBox=(showW&&wechat)?'\n    <div style="background:linear-gradient(135deg,#0a2e1a,#1a5e3a);color:#fff;border-radius:12px;padding:1.5rem;text-align:center;margin:2rem 0;">\n      <p style="margin-bottom:.5rem;color:rgba(255,255,255,.8);">想拥有同款跑步数据？</p>\n      <p style="font-size:1.4rem;font-weight:bold;color:#00e676;letter-spacing:1px;">微信：'+esc(wechat)+'</p>\n    </div>\n':'';
-  const imgBlock=imgsHTML();const tagsBlock=(showTags)?tagsHTML(tags):'';
-  const html='<!DOCTYPE html>\n'+
-`<!DOCTYPE html>
+  const tagsBlock=(showTags)?tagsHTML(tags):'';
+
+  return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8"/>
@@ -678,53 +710,193 @@ ${tagsBlock}
 window.addEventListener('scroll',()=>{document.getElementById('header').classList.toggle('scrolled',window.scrollY>50);document.getElementById('backTop').classList.toggle('show',window.scrollY>500);});
 document.getElementById('backTop').onclick=()=>window.scrollTo({top:0,behavior:'smooth'});
 <\/script></body></html>`;
-  document.getElementById('codeBox').textContent=html;window.__html=html;document.getElementById('previewFrame').srcdoc=html;
 }
 
-/* ===== 🚀 一键发布到 GitHub（核心功能） ===== */
-async function publishToGithub(){
-  // 1. 检查是否生成了 HTML
-  if(!window.__html){showToast('⚠️ 请先点「⚡ 生成 HTML」',true);return;}
+/* ===== ✅ FIX: generate() 改为 async，正确传参给 buildFullHTML ===== */
+async function generate(){
+  const title=document.getElementById('g_title').value.trim();
+  const desc=document.getElementById('g_desc').value.trim();
+  const date=document.getElementById('g_date').value.trim();
+  const author=document.getElementById('g_author').value.trim();
+  const keys=document.getElementById('g_keys').value.split(/[,，]/).map(k=>k.trim()).filter(Boolean);
+  const wechat=document.getElementById('g_wechat').value.trim();
+  const showD=document.getElementById('g_disclaimer').value==='true';
+  const showW=document.getElementById('g_showWechatBox').value==='true';
+  const showTags=document.getElementById('g_showTags').value==='true';
+  const addRealism=document.getElementById('g_addRealism').checked;
+  let paras=Array.from(document.querySelectorAll('.para-item textarea')).map(t=>t.value.trim()).filter(Boolean);
+  if(addRealism&&paras.length>0)paras[paras.length-1]=paras[paras.length-1]+' '+getRealismLine();
 
-  // 2. 获取 GitHub 配置
+  // 构建图片源列表（异步读取 File → base64）
+  const imageFiles=imgs.filter(Boolean);
+  const imgSources=await Promise.all(imageFiles.map(async f=>{
+    const cleanName=f.name.replace(/\s+/g,'-');
+    // 先尝试从缓存取
+    let dataUrl=window.__imgDataUrls&&(window.__imgDataUrls[cleanName]||window.__imgDataUrls[f.name]);
+    // 缓存没有就现场读
+    if(!dataUrl){
+      dataUrl=await new Promise((resolve,reject)=>{
+        const r=new FileReader();
+        r.onload=()=>resolve(r.result);
+        r.onerror=()=>resolve('');
+        r.readAsDataURL(f);
+      });
+      // 写回缓存
+      if(dataUrl){window.__imgDataUrls[cleanName]=dataUrl;window.__imgDataUrls[f.name]=dataUrl;}
+    }
+    return {name:cleanName, dataUrl:dataUrl||''};
+  }));
+
+  // 打印调试信息
+  console.log('[generate] imgSources:',imgSources);
+  console.log('[generate] __imgDataUrls keys:',Object.keys(window.__imgDataUrls));
+
+  // 预览版 HTML（图片用 base64 内嵌 → iframe 能直接显示）
+  const previewImgBlock=buildImgBlock(imgSources,true);
+  const previewHTML=buildFullHTML(previewImgBlock,{
+    title,desc,date,author,paras,keys,showD,showW,wechat,showTags
+  });
+
+  // 发布版 HTML（图片用 images/ 相对路径 → GitHub Pages 能找到）
+  const publishImgBlock=buildImgBlock(imgSources,false);
+  const publishHTML=buildFullHTML(publishImgBlock,{
+    title,desc,date,author,paras,keys,showD,showW,wechat,showTags
+  });
+
+  // 预览 iframe + 代码框 用预览版
+  document.getElementById('codeBox').textContent=previewHTML;
+  window.__html=previewHTML;          // 供"复制代码""下载"使用（含 base64，离线可用）
+  window.__publishHtml=publishHTML;   // 供"发布到 GitHub"使用（用 images/ 路径）
+  document.getElementById('previewFrame').srcdoc=previewHTML;
+
+  // 保存图片文件列表供发布时上传
+  window.__imageFiles=imageFiles;
+
+  showToast('✅ HTML 生成成功，预览已就绪');
+}
+
+/* ===== 🚀 GitHub API 辅助函数 ===== */
+const GH_API='https://api.github.com';
+
+async function uploadFileToGithub(token,repo,path,content,branch,message){
+  let sha;
+  const checkUrl=`${GH_API}/repos/${repo}/contents/${encodeURIComponent(path)}`;
+  try{
+    const checkRes=await fetch(checkUrl,{
+      headers:{'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json'}
+    });
+    if(checkRes.ok){const data=await checkRes.json();sha=data.sha;}
+  }catch(e){/* 文件不存在，正常 */}
+
+  const putUrl=`${GH_API}/repos/${repo}/contents/${encodeURIComponent(path)}`;
+  const body=JSON.stringify({
+    message:message,
+    content:content,
+    branch:branch,
+    ...(sha?{sha}:{})
+  });
+
+  const res=await fetch(putUrl,{
+    method:'PUT',
+    headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json','Accept':'application/vnd.github+json'},
+    body:body
+  });
+
+  if(!res.ok){
+    const errData=await res.json().catch(()=>({}));
+    throw new Error(`上传 ${path} 失败 (HTTP ${res.status}): ${errData.message||res.statusText}`);
+  }
+  return res.json();
+}
+
+function fileToBase64String(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const b64=reader.result.split(',')[1];
+      resolve(b64);
+    };
+    reader.onerror=reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ===== 🚀 一键发布到 GitHub（含图片上传） ===== */
+async function publishToGithub(){
+  if(!window.__publishHtml){showToast('⚠️ 请先点「⚡ 生成 HTML」',true);return;}
+
   const token=getGHToken();
   if(!token){showToast('⚠️ 请先填入 GitHub PAT Token',true);return;}
   const repo=document.getElementById('gh_repo').value.trim();
   if(!repo || !repo.includes('/')){showToast('⚠️ 仓库格式应为 owner/repo',true);return;}
   const branch=document.getElementById('gh_branch').value.trim()||'main';
 
-  // 3. 生成文件名（根目录，无文件夹）
   const title=document.getElementById('g_title').value.trim().replace(/[^\w\s-]/g,'').substring(0,30)||'article';
   const d=todayStr().replace(/-/g,'');
-  const filename=d+'-'+Math.floor(Math.random()*900+100)+'.html';
+  const htmlFilename=d+'-'+Math.floor(Math.random()*900+100)+'.html';
 
-  // 4. 编码内容（Base64）
-  const content=btoa(unescape(encodeURIComponent(window.__html)));
+  const htmlContent=btoa(unescape(encodeURIComponent(window.__publishHtml)));
 
-  // 5. 检查文件是否已存在（获取 SHA）
-  const apiBase='https://api.github.com/repos/'+repo+'/contents';
-  let sha;
+  const statusEl=document.getElementById('publishStatus');
+  const imageFiles=window.__imageFiles||[];
+  const totalSteps=1+imageFiles.length;
+  let currentStep=0;
+
   try{
-    const res=await fetch(apiBase+'/'+filename,{headers:{'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json'}});
-    if(res.ok){const data=await res.json();sha=data.sha;}
-  }catch(e){/* 文件不存在，正常 */}
+    // 上传图片到 images/ 目录
+    for(let i=0;i<imageFiles.length;i++){
+      const file=imageFiles[i];
+      currentStep++;
+      const fileName=file.name.replace(/\s+/g,'-');
+      const ghPath='images/'+fileName;
+      statusEl.textContent=`⏳ 正在上传图片 (${currentStep}/${totalSteps}): ${fileName} ...`;
 
-  // 6. 上传/更新文件
-  document.getElementById('publishStatus').textContent='⏳ 正在发布到 GitHub...';
-  try{
-    const res=await fetch(apiBase+'/'+filename,{
+      const b64Content=await fileToBase64String(file);
+      await uploadFileToGithub(token,repo,ghPath,b64Content,branch,`添加图片: ${fileName}`);
+    }
+
+    // 最后上传 HTML 文件
+    currentStep++;
+    statusEl.textContent=`⏳ 正在发布 HTML (${currentStep}/${totalSteps}): ${htmlFilename} ...`;
+
+    let htmlSha;
+    const htmlCheckUrl=`${GH_API}/repos/${repo}/contents/${encodeURIComponent(htmlFilename)}`;
+    try{
+      const checkRes=await fetch(htmlCheckUrl,{
+        headers:{'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json'}
+      });
+      if(checkRes.ok){const data=await checkRes.json();htmlSha=data.sha;}
+    }catch(e){}
+
+    const htmlPutUrl=`${GH_API}/repos/${repo}/contents/${encodeURIComponent(htmlFilename)}`;
+    const htmlBody=JSON.stringify({
+      message:'SEO更新：'+title,
+      content:htmlContent,
+      branch:branch,
+      ...(htmlSha?{sha:htmlSha}:{})
+    });
+
+    const htmlRes=await fetch(htmlPutUrl,{
       method:'PUT',
       headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json','Accept':'application/vnd.github+json'},
-      body:JSON.stringify({message:'SEO更新：'+title,content:content,branch:branch,...(sha?{sha}:{})})
+      body:htmlBody
     });
-    if(!res.ok){const err=await res.json().catch(()=>({}));throw new Error(err.message||('发布失败 HTTP '+res.status));}
-    const data=await res.json();
-    const fileUrl='https://'+repo.split('/')[0]+'.github.io/'+(repo.split('/')[1])+'/'+filename;
-    document.getElementById('publishStatus').innerHTML='✅ 已发布：<a href="'+fileUrl+'" target="_blank" style="color:#00e676;">'+filename+'</a>';
-    showToast('✅ 发布成功：'+filename);
+
+    if(!htmlRes.ok){
+      const errData=await htmlRes.json().catch(()=>({}));
+      throw new Error(errData.message||('发布失败 HTTP '+htmlRes.status));
+    }
+
+    // 成功！
+    const [owner,repoName]=repo.split('/');
+    const fileUrl=`https://${owner}.github.io/${repoName}/${htmlFilename}`;
+    statusEl.innerHTML=`✅ 已发布：<a href="${fileUrl}" target="_blank" style="color:#00e676;">${htmlFilename}</a>
+      ${imageFiles.length>0?`<br>📷 已上传 ${imageFiles.length} 张图片到 images/ 目录`:''}`;
+    showToast('✅ 发布成功：'+htmlFilename);
     saveGHTokenIfChecked();
+
   }catch(e){
-    document.getElementById('publishStatus').textContent='❌ '+e.message;
+    statusEl.textContent='❌ '+e.message;
     showToast('❌ 发布失败：'+e.message,true);
   }
 }
@@ -732,7 +904,7 @@ async function publishToGithub(){
 /* ===== 辅助 ===== */
 function downloadHTML(){if(!window.__html){alert('请先点「⚡ 生成 HTML」');return;}const b=new Blob([window.__html],{type:'text/html;charset=utf-8'});const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download=autoFilename();a.click();URL.revokeObjectURL(u);showToast('✅ 已下载：'+a.download);}
 function copyCode(){if(!window.__html){alert('请先点「⚡ 生成 HTML」');return;}navigator.clipboard.writeText(window.__html).then(()=>showToast('✅ 已复制代码')).catch(()=>{const t=document.createElement('textarea');t.value=window.__html;document.body.appendChild(t);t.select();document.execCommand('copy');document.body.removeChild(t);showToast('✅ 已复制代码');});}
-function clearAll(){if(!confirm('确定清空？'))return;['g_title','g_desc','g_date','g_author','g_keys','g_wechat'].forEach(id=>document.getElementById(id).value='');document.getElementById('g_paras').innerHTML='<div class="para-item"><textarea placeholder="新段落"></textarea><button onclick="rmPara(this)">✕</button></div>';document.getElementById('smartPaste').value='';document.getElementById('ai_instruction').value='';imgs=[null,null,null];[0,1,2].forEach(i=>document.getElementById('prev'+i).src='');document.getElementById('codeBox').textContent='已清空';window.__html='';document.getElementById('g_date').value=todayStr();}
+function clearAll(){if(!confirm('确定清空？'))return;['g_title','g_desc','g_date','g_author','g_keys','g_wechat'].forEach(id=>document.getElementById(id).value='');document.getElementById('g_paras').innerHTML='<div class="para-item"><textarea placeholder="新段落"></textarea><button onclick="rmPara(this)">✕</button></div>';document.getElementById('smartPaste').value='';document.getElementById('ai_instruction').value='';imgs=[null,null,null];window.__imgDataUrls={};[0,1,2].forEach(i=>document.getElementById('prev'+i).src='');document.getElementById('codeBox').textContent='已清空';window.__html='';window.__publishHtml='';window.__imageFiles=[];document.getElementById('g_date').value=todayStr();}
 function switchTab(tab,btn){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');document.getElementById('codeBox').style.display=tab==='code'?'block':'none';document.getElementById('previewFrame').style.display=tab==='preview'?'block':'none';}
 </script>
 </body>
