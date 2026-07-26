@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>爬楼梯截图生成器</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, 'PingFang SC', 'Helvetica Neue', 'Segoe UI', 'Microsoft YaHei', sans-serif;
+    background: #e8e8e8;
+    padding: 20px;
+    min-height: 100vh;
+  }
+
+  h2 { text-align: center; margin-bottom: 18px; color: #222; }
+
+  /* ===== 左右双栏布局 ===== */
+  .main {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  /* ===== 左侧：控制面板 ===== */
+  .control-panel {
+    background: #fff;
+    border-radius: 14px;
+    padding: 20px 24px;
+    width: 380px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .control-panel label {
+    display: block;
+    font-size: 13px;
+    color: #555;
+    margin: 12px 0 4px;
+    font-weight: 600;
+  }
+  .control-panel input[type="text"],
+  .control-panel input[type="number"] {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #d0d0d0;
+    border-radius: 8px;
+    font-size: 15px;
+    outline: none;
+    transition: border .2s;
+  }
+  .control-panel input:focus { border-color: #2ecc71; box-shadow: 0 0 0 2px rgba(46,204,113,.15); }
+  .row { display: flex; gap: 10px; }
+  .row > div { flex: 1; }
+
+  .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+  .btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity .2s;
+  }
+  .btn:hover { opacity: .88; }
+  .btn-green { background: #2ecc71; color: #fff; }
+  .btn-gray  { background: #555;   color: #fff; }
+
+  /* ===== 右侧：手机预览 ===== */
+  .phone-frame {
+    width: 375px;
+    background: #fff;
+    border-radius: 36px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.15);
+    overflow: hidden;
+    position: relative;
+    padding-bottom: 30px;
+  }
+
+  /* 顶部状态栏 */
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 26px 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: #000;
+  }
+  .status-bar .icons { font-size: 12px; opacity: .55; letter-spacing: 2px; }
+
+  /* 导航栏 */
+  .nav-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 18px;
+  }
+  .back-arrow { font-size: 26px; color: #000; font-weight: 300; }
+  .right-icons { display: flex; gap: 14px; font-size: 18px; color: #333; align-items: center; }
+  .privacy-btn {
+    display: flex; align-items: center; gap: 4px;
+    background: #f2f2f2; border-radius: 20px;
+    padding: 5px 14px; font-size: 13px; color: #333; font-weight: 500;
+  }
+
+  /* 用户信息区 */
+  .user-info {
+    display: flex; align-items: center;
+    padding: 8px 22px 12px; gap: 14px;
+  }
+  .avatar {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: #2ecc71;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .avatar svg { width: 24px; height: 24px; }
+  .user-name { font-size: 15px; font-weight: 700; color: #000; }
+  .user-time { font-size: 12px; color: #999; margin-top: 3px; }
+
+  /* 运动类型 */
+  .sport-type { display: flex; align-items: center; padding: 10px 22px; gap: 8px; }
+  .sport-type .lbl { font-size: 19px; font-weight: 700; color: #000; }
+
+  /* 大数字区 */
+  .big-number-area {
+    padding: 12px 22px 8px;
+    display: flex; align-items: baseline; gap: 8px;
+  }
+  .big-number {
+    font-size: 82px; font-weight: 900; color: #000;
+    line-height: 1; letter-spacing: -2px;
+  }
+  .big-unit { font-size: 20px; color: #888; font-weight: 500; }
+
+  /* 插画 */
+  .illustration {
+    margin: 12px 22px;
+    background: #3a3a3a;
+    border-radius: 18px;
+    height: 185px;
+    display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden;
+  }
+  .illustration svg { width: 130px; height: 165px; }
+
+  /* 运动数据标题 */
+  .data-title { padding: 20px 22px 12px; font-size: 19px; font-weight: 700; color: #000; }
+
+  /* 数据网格 */
+  .data-grid {
+    padding: 0 22px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px 10px;
+  }
+  .data-item .val { font-size: 22px; font-weight: 800; color: #000; line-height: 1.15; }
+  .data-item .unit { font-size: 12px; color: #888; margin-top: 2px; }
+  .data-item .desc { font-size: 13px; color: #555; margin-top: 3px; }
+
+  /* 底部 */
+  .home-bar {
+    width: 120px; height: 4px;
+    background: #000; border-radius: 2px;
+    margin: 28px auto 0; opacity: .2;
+  }
+
+  /* ===== 提示 ===== */
+  .tip { text-align: center; margin-top: 16px; font-size: 13px; color: #888; }
+</style>
+</head>
+<body>
+
+<h2>🏋️ 爬楼梯截图生成器</h2>
+
+<div class="main">
+
+  <!-- ========== 左侧：输入框 ========== -->
+  <div class="control-panel">
+    <div class="row">
+      <div><label>日期</label><input type="text" id="f-date" value="2026/06/22"></div>
+      <div><label>开始</label><input type="text" id="f-start" value="17:10"></div>
+      <div><label>结束</label><input type="text" id="f-end" value="17:50"></div>
+    </div>
+
+    <label>用户名</label>
+    <input type="text" id="f-username" value="用户名615183321">
+
+    <label>消耗千卡（大数字）</label>
+    <input type="text" id="f-cal" value="911">
+
+    <div class="row">
+      <div><label>训练时长</label><input type="text" id="f-dur" value="00:40:25"></div>
+      <div><label>运动负荷</label><input type="text" id="f-load" value="67"></div>
+      <div><label>爬升高度(米)</label><input type="text" id="f-height" value="586"></div>
+    </div>
+
+    <div class="row">
+      <div><label>楼层数</label><input type="text" id="f-floor" value="97"></div>
+      <div><label>台阶数</label><input type="text" id="f-steps" value="1443"></div>
+      <div><label>步数</label><input type="text" id="f-walk" value="1443"></div>
+    </div>
+
+    <div class="row">
+      <div><label>总时长</label><input type="text" id="f-total" value="00:40:26"></div>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-green" id="btn-export">📥 导出截图</button>
+      <button class="btn btn-gray"  id="btn-reset">🔄 重置</button>
+    </div>
+  </div>
+
+  <!-- ========== 右侧：手机预览 ========== -->
+  <div class="phone-frame" id="previewArea">
+
+    <div class="status-bar">
+      <span id="out-time">17:10</span>
+      <span class="icons">📶 📡 🔋</span>
+    </div>
+
+    <div class="nav-bar">
+      <span class="back-arrow">‹</span>
+      <div class="right-icons">
+        <span class="privacy-btn">🔒 隐私</span>
+        <span>⬆</span><span>⋯</span>
+      </div>
+    </div>
+
+    <div class="user-info">
+      <div class="avatar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2">
+          <circle cx="12" cy="8" r="4"/>
+          <path d="M4 22c0-4.4 3.6-8 8-8s8 3.6 8 8"/>
+        </svg>
+      </div>
+      <div>
+        <div class="user-name" id="out-username">用户名615183321</div>
+        <div class="user-time" id="out-datetime">2026/06/22 17:10 - 17:50</div>
+      </div>
+    </div>
+
+    <div class="sport-type">
+      <span class="lbl">🧗 爬楼梯</span>
+    </div>
+
+    <div class="big-number-area">
+      <span class="big-number" id="out-cal">911</span>
+      <span class="big-unit">千卡</span>
+    </div>
+
+    <div class="illustration">
+      <svg viewBox="0 0 100 140">
+        <circle cx="50" cy="70" r="55" fill="none" stroke="#2ecc71" stroke-width="2"
+                stroke-dasharray="4 4" opacity=".7"/>
+        <g fill="#2ecc71">
+          <circle cx="50" cy="30" r="6"/>
+          <line x1="50" y1="36" x2="50" y2="60" stroke="#2ecc71" stroke-width="3"/>
+          <line x1="50" y1="44" x2="44" y2="56" stroke="#2ecc71" stroke-width="2.5"/>
+          <line x1="50" y1="44" x2="58" y2="56" stroke="#2ecc71" stroke-width="2.5"/>
+          <line x1="50" y1="60" x2="44" y2="78" stroke="#2ecc71" stroke-width="3"/>
+          <line x1="50" y1="60" x2="56" y2="76" stroke="#2ecc71" stroke-width="3"/>
+        </g>
+        <g stroke="#2ecc71" stroke-width="2.5" fill="none">
+          <line x1="20" y1="110" x2="80" y2="110"/>
+          <line x1="80" y1="110" x2="80" y2="100"/>
+          <line x1="30" y1="100" x2="80" y2="100"/>
+          <line x1="80" y1="100" x2="80" y2="90"/>
+          <line x1="40" y1="90" x2="80" y2="90"/>
+        </g>
+      </svg>
+    </div>
+
+    <div class="data-title">运动数据</div>
+    <div class="data-grid">
+      <div class="data-item">
+        <div class="val" id="out-dur">00:40:25</div>
+        <div class="unit">分钟</div>
+        <div class="desc">训练时长</div>
+      </div>
+      <div class="data-item">
+        <div class="val" id="out-load">67</div>
+        <div class="desc">运动负荷</div>
+      </div>
+      <div class="data-item">
+        <div class="val" id="out-height">586</div>
+        <div class="unit">米</div>
+        <div class="desc">爬升高度</div>
+      </div>
+      <div class="data-item">
+        <div class="val" id="out-floor">97</div>
+        <div class="desc">楼层数</div>
+      </div>
+      <div class="data-item">
+        <div class="val" id="out-steps">1443</div>
+        <div class="desc">台阶数</div>
+      </div>
+      <div class="data-item">
+        <div class="val" id="out-total">00:40:26</div>
+        <div class="unit">分钟</div>
+        <div class="desc">总时长</div>
+      </div>
+      <div class="data-item">
+        <div class="val" id="out-walk">1443</div>
+        <div class="desc">步数</div>
+      </div>
+    </div>
+
+    <div class="home-bar"></div>
+  </div>
+</div>
+
+<p class="tip">💡 左侧改数字，右侧实时预览 → 点「导出截图」保存为 PNG</p>
+
+<!-- html2canvas（失败也不影响实时预览） -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<script>
+(function () {
+  'use strict';
+
+  // 字段映射：inputId -> outId（1对1直接拷贝）
+  var map = [
+    ['f-date',     'out-datetime'],  // 特殊处理
+    ['f-username', 'out-username'],
+    ['f-cal',      'out-cal'],
+    ['f-dur',      'out-dur'],
+    ['f-load',     'out-load'],
+    ['f-height',   'out-height'],
+    ['f-floor',    'out-floor'],
+    ['f-steps',    'out-steps'],
+    ['f-total',    'out-total'],
+    ['f-walk',     'out-walk'],
+    ['f-start',    'out-time'],
+  ];
+
+  function $(id) { return document.getElementById(id); }
+
+  // 日期时间拼接
+  function updateDateTime() {
+    var d = $('f-date').value;
+    var s = $('f-start').value;
+    var e = $('f-end').value;
+    $('out-datetime').textContent = d + ' ' + s + ' - ' + e;
+  }
+
+  // 绑定所有输入框
+  map.forEach(function (pair) {
+    var inp = $(pair[0]);
+    var out = $(pair[1]);
+    if (!inp || !out) return;
+    var handler = function () {
+      if (pair[0] === 'f-date' || pair[0] === 'f-start' || pair[0] === 'f-end') {
+        updateDateTime();
+      } else {
+        out.textContent = inp.value;
+      }
+    };
+    inp.addEventListener('input', handler);
+    inp.addEventListener('change', handler);
+    // 初始化
+    handler();
+  });
+
+  // 日期/时间三个字段联动
+  ['f-date', 'f-start', 'f-end'].forEach(function (id) {
+    $(id).addEventListener('input', updateDateTime);
+  });
+  updateDateTime();
+
+  // 重置
+  $('btn-reset').addEventListener('click', function () {
+    var defaults = {
+      'f-date': '2026/06/22', 'f-start': '17:10', 'f-end': '17:50',
+      'f-username': '用户名615183321', 'f-cal': '911',
+      'f-dur': '00:40:25', 'f-load': '67', 'f-height': '586',
+      'f-floor': '97', 'f-steps': '1443', 'f-total': '00:40:26', 'f-walk': '1443'
+    };
+    Object.keys(defaults).forEach(function (k) {
+      $(k).value = defaults[k];
+      // 手动触发事件
+      var ev = new Event('input', { bubbles: true });
+      $(k).dispatchEvent(ev);
+    });
+  });
+
+  // 导出截图
+  $('btn-export').addEventListener('click', function () {
+    if (typeof html2canvas === 'undefined') {
+      alert('导出库还没加载完，请稍等 2 秒再试');
+      return;
+    }
+    html2canvas($('previewArea'), {
+      scale: 2,
+      backgroundColor: '#ffffff',
+      useCORS: true,
+      logging: false
+    }).then(function (canvas) {
+      var link = document.createElement('a');
+      link.download = '爬楼梯截图_' + Date.now() + '.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }).catch(function (err) {
+      alert('导出失败: ' + err.message);
+    });
+  });
+
+})();
+</script>
+
+</body>
+</html>
