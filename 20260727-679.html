@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Keep截图生成器网代码制作指南 | RUNPRO</title>
+<meta name="description" content="在当今社交媒体盛行的时代，健身爱好者们越来越喜欢通过分享自己的运动成果来激励自己和他人。Keep作为一款广受欢迎的健身应用，提供了丰富的运动记录功能，而将这些记...">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI','Microsoft YaHei',sans-serif;}
+body{background:#0a2e1a;color:#fff;line-height:1.6;overflow-x:hidden;position:relative;}
+body::before{content:'';position:fixed;inset:0;background:linear-gradient(135deg,rgba(10,46,26,0.82),rgba(10,46,26,0.75)),url('https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=1920&q=80') center/cover no-repeat fixed;z-index:-1;}
+header{position:sticky;top:0;z-index:100;background:rgba(10,46,26,0.9);backdrop-filter:blur(10px);display:flex;justify-content:space-between;align-items:center;padding:1rem 5%;transition:.3s;border-bottom:1px solid rgba(255,255,255,0.08);}
+header.scrolled{padding:.5rem 5%;box-shadow:0 4px 20px rgba(0,0,0,.4);}
+.logo{font-size:1.8rem;font-weight:bold;color:#00e676;letter-spacing:2px;}
+.logo span{color:#fff;}
+nav a{color:rgba(255,255,255,.85);text-decoration:none;margin-left:1.8rem;font-size:.95rem;transition:color .3s;}
+nav a:hover{color:#00e676;}
+.content-wrap{max-width:800px;margin:3rem auto;padding:0 1rem;}
+.article-body{background:rgba(255,255,255,.95);border-radius:16px;padding:2rem;color:#333;box-shadow:0 4px 20px rgba(0,0,0,.15);}
+.article-body h1{color:#0a2e1a;font-size:1.6rem;margin-bottom:.5rem;text-align:center;}
+.article-body .meta{color:#666;text-align:center;margin-bottom:1.5rem;font-size:.9rem;}
+.article-body p{margin:1rem 0;line-height:1.8;font-size:1rem;color:#444;}
+.article-body .highlight{color:#00c853;font-weight:bold;}
+.article-body .disclaimer{font-size:.82rem;color:#999;text-align:center;margin-top:2rem;padding-top:1rem;border-top:1px dashed #ddd;}
+.article-image{display:block;width:100%;max-width:560px;max-height:380px;height:auto;object-fit:contain;background:#f5f5f5;margin:1.5rem auto;border-radius:12px;border:1px solid #eee;}
+.article-body .img-row{display:flex;justify-content:center;align-items:flex-start;gap:12px;flex-wrap:wrap;margin:1.5rem 0;}
+.article-body .img-row .article-image{margin:0;}
+.social-stats{display:flex;gap:24px;justify-content:flex-start;padding:12px 0;margin:1.5rem 0;font-size:.9rem;color:#666;border-top:1px solid #eee;border-bottom:1px solid #eee;}
+.social-stats span{display:inline-flex;align-items:center;gap:6px;cursor:pointer;}
+.social-stats span:hover{color:#00c853;}
+@media(max-width:768px){nav a{margin-left:.8rem;font-size:.85rem;}.article-image{max-height:240px;}.article-body .img-row{flex-direction:column;align-items:center;}.article-body .img-row .article-image{width:100%!important;max-height:240px;}.social-stats{gap:16px;font-size:.85rem;}}
+footer{background:rgba(5,20,12,.95);padding:2rem 5%;text-align:center;color:rgba(255,255,255,.5);font-size:.82rem;}
+.footer-links{display:flex;flex-wrap:wrap;justify-content:center;gap:1rem;margin-bottom:1rem;}
+.footer-links a{color:rgba(255,255,255,.6);text-decoration:none;font-size:.85rem;}
+.footer-links a:hover{color:#00e676;}
+.data-tags{max-width:800px;margin:0 auto;padding:14px 20px;background:rgba(5,20,12,.92);display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;}
+.data-tags .tag{display:inline-flex;align-items:center;padding:5px 12px;border-radius:20px;font-size:.85rem;font-weight:600;}
+.data-tags .tag-loc{background:rgba(0,123,255,.15);color:#6cb4ff;border:1px solid rgba(0,123,255,.3);}
+.data-tags .tag-dist{background:rgba(255,193,7,.15);color:#ffd54f;border:1px solid rgba(255,193,7,.3);}
+.data-tags .tag-pace{background:rgba(76,175,80,.15);color:#81c784;border:1px solid rgba(76,175,80,.3);}
+.data-tags .tag-cal{background:rgba(244,67,54,.15);color:#ef9a9a;border:1px solid rgba(244,67,54,.3);}
+.data-tags .tag-time{background:rgba(156,39,176,.15);color:#ce93d8;border:1px solid rgba(156,39,176,.3);}
+.back-top{position:fixed;right:20px;bottom:20px;width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#00e676,#00a85c);display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;visibility:hidden;transition:.3s;z-index:1000;font-size:1.3rem;color:#fff;box-shadow:0 4px 15px rgba(0,230,118,.3);}
+.back-top.show{opacity:1;visibility:visible;}
+</style>
+</head>
+<body>
+<header id="header"><div class="logo">RUN<span>PRO</span></div><nav><a href="index.html">首页</a><a href="index.html#features">服务优势</a><a href="index.html#cases">案例</a><a href="index.html#contact">联系</a></nav></header>
+<main class="content-wrap"><article class="article-body">
+<h1>Keep截图生成器网代码制作指南</h1>
+<p class="meta">2026-07-27 / RUNPRO 运动数据定制</p>
+
+    <p>在当今社交媒体盛行的时代，健身爱好者们越来越喜欢通过分享自己的运动成果来激励自己和他人。Keep作为一款广受欢迎的健身应用，提供了丰富的运动记录功能，而将这些记录转化为精美的截图并分享到社交平台，成为了许多用户的刚需。本文将详细介绍如何制作一个简单的“Keep截图生成器”网站，并提供相应的代码实现。</p>
+    <p>---</p>
+    <p>#### 一、项目需求分析</p>
+    <p>1. **功能需求**：    - 用户上传一张来自Keep的运动截图。    - 系统自动识别截图中的关键信息（如运动类型、时长、<span class="highlight">消耗卡路</span>里等）。    - 将提取的信息以美观的方式展示在图片上。    - 提供下载功能，用户可以保存生成的截图。</p>
+    <p>2. **技术需求**：    - 前端：HTML + CSS + JavaScript。    - 后端：Node.js + Express（可选，用于处理文件上传和生成图片）。    - 图片处理：使用Canvas或第三方库（如Jimp）进行图片编辑。</p>
+    <p>3. **工具推荐**：    - Node.js：用于搭建后端服务。    - Jimp：一个轻量级的JavaScript图像处理库。    - HTML5 Canvas：用于前端直接生成图片。</p>
+    <p>---</p>
+    <p>#### 二、项目结构设计</p>
+    <p>``` keep-screenshot-generator/ │ ├── public/              # 静态资源目录 │   ├── index.html       # 页面入口 │   ├── style.css        # 样式文件 │   └── script.js        # 前端逻辑 │ ├── server/              # 后端服务目录 │   └── app.js           # Node.js后端主文件 │ └── README.md            # 项目说明 ```</p>
+    <p>---</p>
+    <p>#### 三、前端实现</p>
+    <p>##### 1. HTML页面结构</p>
+    <p>```html &lt;!DOCTYPE html&gt; &lt;html lang=&quot;zh-CN&quot;&gt; &lt;head&gt;     &lt;meta charset=&quot;UTF-8&quot; /&gt;     &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot; /&gt;     &lt;title&gt;Keep截图生成器&lt;/title&gt;     &lt;link rel=&quot;stylesheet&quot; href=&quot;style.css&quot; /&gt; &lt;/head&gt; &lt;body&gt;     &lt;div class=&quot;container&quot;&gt;         &lt;h1&gt;Keep截图生成器&lt;/h1&gt;         &lt;input type=&quot;file&quot; id=&quot;upload&quot; accept=&quot;image/*&quot; /&gt;         &lt;canvas id=&quot;canvas&quot;&gt;&lt;/canvas&gt;         &lt;button id=&quot;download&quot;&gt;下载截图&lt;/button&gt;     &lt;/div&gt;     &lt;script src=&quot;script.js&quot;&gt;&lt;/script&gt; &lt;/body&gt; &lt;/html&gt; ```</p>
+    <p>##### 2. CSS样式</p>
+    <p>```css body {     font-family: Arial, sans-serif;     background-color: #f4f4f4;     display: flex;     justify-content: center;     align-items: center;     height: 100vh; }</p>
+    <p>.container {     text-align: center;     background: white;     padding: 20px;     border-radius: 10px;     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }</p>
+    <p>#canvas {     width: 600px;     height: 400px;     margin-top: 20px;     border: 1px solid #ccc; } ```</p>
+    <p>##### 3. JavaScript逻辑</p>
+    <p>```javascript const upload = document.getElementById(&#39;upload&#39;); const canvas = document.getElementById(&#39;canvas&#39;); const ctx = canvas.getContext(&#39;2d&#39;); const downloadBtn = document.getElementById(&#39;download&#39;);</p>
+    <p>let image;</p>
+    <p>upload.addEventListener(&#39;change&#39;, (e) =&gt; {     const file = e.target.files[0];     if (file) {         const reader = new FileReader();         reader.onload = (event) =&gt; {             image = new Image();             image.onload = () =&gt; {                 canvas.width = image.width;                 canvas.height = image.height;                 ctx.drawImage(image, 0, 0);                 // 这里可以添加OCR识别逻辑，提取文字信息                 drawTextOnImage(ctx, &#39;运动类型：<span class="highlight">跑步</span>&#39;, 20, 50);                 drawTextOnImage(ctx, &#39;时长：30分钟&#39;, 20, 80);                 drawTextOnImage(ctx, &#39;<span class="highlight">消耗卡路</span>里：300大卡&#39;, 20, 110);             };             image.src = event.target.result;         };         reader.readAsDataURL(file);     } });</p>
+    <p>function drawTextOnImage(ctx, text, x, y) {     ctx.font = &#39;20px Arial&#39;;     ctx.fillStyle = &#39;#ffffff&#39;;     ctx.fillText(text, x, y); }</p>
+    <p>downloadBtn.addEventListener(&#39;click&#39;, () =&gt; {     if (canvas.toDataURL()) {         const link = document.createElement(&#39;a&#39;);         link.href = canvas.toDataURL(&#39;image/png&#39;);         link.download = &#39;keep-screenshot.png&#39;;         link.click();     } }); ```</p>
+    <p>---</p>
+    <p>#### 四、后端实现（可选）</p>
+    <p>如果你希望将OCR识别功能集成到后端，可以使用Node.js和Express框架，结合第三方OCR服务（如百度AI开放平台或Tesseract）来实现。</p>
+    <p>##### 1. 安装依赖</p>
+    <p>```bash npm install express multer jimp ```</p>
+    <p>##### 2. 后端代码示例</p>
+    <p>```javascript const express = require(&#39;express&#39;); const multer = require(&#39;multer&#39;); const Jimp = require(&#39;jimp&#39;); const app = express(); const upload = multer({ dest: &#39;uploads/&#39; });</p>
+    <p>app.post(&#39;/upload&#39;, upload.single(&#39;image&#39;), async (req, res) =&gt; {     try {         const imagePath = req.file.path;         const image = await Jimp.read(imagePath);</p>
+    <p>// OCR识别逻辑（此处省略）         const extractedText = &#39;运动类型：<span class="highlight">跑步</span>\n时长：30分钟\n<span class="highlight">消耗卡路</span>里：300大卡&#39;;</p>
+    <p>// 在图片上绘制文字         image.print(Jimp.FONT_SANS_16X16, 10, 10, extractedText);</p>
+    <p>// 保存生成的图片         const outputPath = `output/${Date.now()}.png`;         await image.writeAsync(outputPath);</p>
+    <p>res.json({ success: true, url: `/static/${outputPath}` });     } catch (error) {         res.status(500).json({ success: false, message: error.message });     } });</p>
+    <p>app.listen(3000, () =&gt; {     console.log(&#39;Server is running on http://localhost:3000&#39;); }); ```</p>
+    <p>---</p>
+    <p>#### 五、总结</p>
+    <p>通过以上步骤，你可以轻松实现一个简单的“Keep截图生成器”网站。前端部分利用HTML5 Canvas和JavaScript完成图片绘制和下载功能，后端部分则可以通过Node.js和Jimp库进一步增强功能，例如集成OCR识别。当然，这只是一个基础版本，你还可以根据需求扩展更多功能，比如自定义模板、多语言支持等。</p>
+    <p>希望这篇文章能为你提供灵感，祝你在开发过程中一切顺利！ 中途在3公里处短暂补水，心率有约10秒的下降。</p>
+<div class="social-stats">
+  <span>❤️ 73</span>
+  <span>💬 5</span>
+  <span>🔗 分享</span>
+  <span>👁️ 681</span>
+</div>
+
+
+</article></main>
+
+
+<!-- 数据标签栏 -->
+<div class="data-tags">
+  <span class="tag tag-loc">📍 消耗卡路</span>
+  <span class="tag tag-dist">📏 3公里</span>
+  <span class="tag tag-pace">⚡ 配速 1</span>
+</div>
+<footer><div class="footer-links"><a href="index.html">首页</a><a href="index.html#features">服务优势</a><a href="index.html#cases">案例</a><a href="index.html#contact">联系</a></div><p>© 2026 RUN PRO · 微信：278715464</p></footer>
+<div class="back-top" id="backTop">↑</div>
+<script>
+window.addEventListener('scroll',()=>{document.getElementById('header').classList.toggle('scrolled',window.scrollY>50);document.getElementById('backTop').classList.toggle('show',window.scrollY>500);});
+document.getElementById('backTop').onclick=()=>window.scrollTo({top:0,behavior:'smooth'});
+</script></body></html>
