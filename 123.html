@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>运动截图拼图工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            background: #f0f2f5;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 12px;
+        }
+        .app-container {
+            max-width: 1400px;
+            width: 100%;
+            height: 90vh;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        header {
+            padding: 16px 24px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            background: #ffffff;
+        }
+        header h1 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #1a2634;
+            letter-spacing: 1px;
+            margin-right: auto;
+        }
+        header select {
+            padding: 8px 14px;
+            border-radius: 30px;
+            border: 1px solid #ced4da;
+            background: white;
+            font-size: 15px;
+            min-width: 150px;
+            cursor: pointer;
+            outline: none;
+            transition: 0.2s;
+        }
+        header select:focus {
+            border-color: #339af0;
+            box-shadow: 0 0 0 3px rgba(51,154,240,0.15);
+        }
+        .main-layout {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+        }
+        /* 左侧素材区 */
+        .panel-materials {
+            width: 260px;
+            min-width: 220px;
+            background: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+            padding: 10px 12px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .material-group-title {
+            font-size: 13px;
+            font-weight: 500;
+            color: #495057;
+            margin: 6px 0 4px 0;
+            letter-spacing: 0.3px;
+            border-left: 3px solid #339af0;
+            padding-left: 8px;
+        }
+        .material-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 6px;
+        }
+        .material-item {
+            background: white;
+            border-radius: 10px;
+            padding: 6px 4px 4px;
+            text-align: center;
+            cursor: pointer;
+            border: 1px solid #e9ecef;
+            transition: all 0.1s ease;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .material-item:hover {
+            border-color: #339af0;
+            background: #e7f3ff;
+            transform: translateY(-1px);
+        }
+        .material-item img {
+            height: 50px;
+            width: auto;
+            max-width: 80px;
+            object-fit: contain;
+            pointer-events: none;
+            display: block;
+            background: white;
+        }
+        .material-item .label {
+            font-size: 11px;
+            color: #6c757d;
+            margin-top: 3px;
+            line-height: 1.2;
+            word-break: break-all;
+        }
+        /* 中间画布区 */
+        .panel-canvas {
+            flex: 1;
+            position: relative;
+            background: #f0f2f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            min-width: 400px;
+        }
+        #canvasWrapper {
+            position: relative;
+            display: inline-block;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+            background: white;
+            touch-action: none;
+        }
+        #bgCanvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            pointer-events: none;
+        }
+        #overlayContainer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        .draggable-material {
+            position: absolute;
+            pointer-events: auto;
+            cursor: grab;
+            touch-action: none;
+            will-change: transform;
+            z-index: 10;
+        }
+        .draggable-material:active {
+            cursor: grabbing;
+        }
+        .draggable-material img {
+            display: block;
+            width: auto;
+            height: auto;
+            pointer-events: none;
+            image-rendering: auto;
+        }
+        /* 右侧操作/参考区 */
+        .panel-controls {
+            width: 280px;
+            min-width: 200px;
+            background: #ffffff;
+            border-left: 1px solid #dee2e6;
+            padding: 16px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            overflow-y: auto;
+        }
+        .control-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 500;
+            background: #f1f3f5;
+            color: #212529;
+            cursor: pointer;
+            transition: 0.15s;
+            flex: 1 0 auto;
+            text-align: center;
+        }
+        .btn-primary {
+            background: #339af0;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #228be6;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #ced4da;
+        }
+        .btn-outline:hover {
+            background: #f1f3f5;
+        }
+        .btn-danger {
+            background: #fa5252;
+            color: white;
+        }
+        .btn-danger:hover {
+            background: #e03131;
+        }
+        .reference-section {
+            margin-top: 6px;
+        }
+        .reference-section h3 {
+            font-size: 14px;
+            font-weight: 500;
+            color: #343a40;
+            margin-bottom: 8px;
+        }
+        #sampleImage {
+            max-width: 100%;
+            max-height: 240px;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+            display: block;
+            object-fit: contain;
+            background: #f8f9fa;
+        }
+        .empty-hint {
+            color: #868e96;
+            font-size: 14px;
+            text-align: center;
+            padding: 20px 0;
+        }
+        @media (max-width: 900px) {
+            .panel-materials { width: 180px; min-width: 120px; }
+            .panel-controls { width: 200px; min-width: 130px; }
+        }
+        @media (max-width: 700px) {
+            .main-layout { flex-direction: column; }
+            .panel-materials { width: 100%; min-width: unset; flex-direction: row; flex-wrap: wrap; max-height: 160px; border-right: none; border-bottom: 1px solid #dee2e6; }
+            .panel-controls { width: 100%; min-width: unset; border-left: none; border-top: 1px solid #dee2e6; flex-direction: row; flex-wrap: wrap; }
+            .panel-canvas { min-width: 300px; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <header>
+        <h1>🏋️ 拼图工坊</h1>
+        <select id="projectSelect" aria-label="选择运动项目">
+            <!-- 由js动态填充 -->
+        </select>
+        <span style="font-size:14px;color:#868e96;">素材区点击添加 · 拖拽调整</span>
+    </header>
+    <div class="main-layout">
+        <!-- 素材区 -->
+        <div class="panel-materials" id="materialPanel">
+            <!-- 由js动态渲染 -->
+        </div>
+        <!-- 画布区 -->
+        <div class="panel-canvas">
+            <div id="canvasWrapper">
+                <canvas id="bgCanvas"></canvas>
+                <div id="overlayContainer"></div>
+            </div>
+        </div>
+        <!-- 操作/参考区 -->
+        <div class="panel-controls">
+            <div class="control-buttons">
+                <button class="btn btn-outline" id="undoBtn">↩ 撤销</button>
+                <button class="btn btn-outline" id="resetBtn">🗑 重置</button>
+                <button class="btn btn-primary" id="downloadBtn">⬇ 下载 JPG</button>
+            </div>
+            <div class="reference-section">
+                <h3>📌 参考样图</h3>
+                <img id="sampleImage" src="" alt="样图预览" />
+                <p style="font-size:12px;color:#868e96;margin-top:4px;">对照右侧样图摆放素材</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ---------- 配置 ----------
+        const MATERIALS_PATH = './materials/';
+        const PROJECT_LIST = [
+            { id: 'huabing', label: '滑冰' },
+            { id: 'mingxiang', label: '冥想' },
+            { id: 'palouti', label: '爬楼梯' },
+            { id: 'panyan', label: '攀岩' },
+            { id: 'paobu', label: '跑步' },
+            { id: 'pingpangqiu', label: '乒乓球' },
+            { id: 'pulati', label: '普拉提' },
+            { id: 'shineipaobu', label: '室内跑步' },
+            { id: 'wudao', label: '舞蹈' },
+            { id: 'xingzou', label: '行走' },
+            { id: 'youyong', label: '游泳' },
+            { id: 'yujia', label: '瑜伽' },
+            { id: 'yumaoqiu', label: '羽毛球' }
+        ];
+
+        // 素材定义：分组 + 文件列表
+        const MATERIAL_GROUPS = [
+            {
+                title: 'b系列',
+                prefix: 'b',
+                items: [
+                    { file: 'b0.jpg', label: 'b0' }, { file: 'b1.jpg', label: 'b1' }, { file: 'b2.jpg', label: 'b2' }, { file: 'b3.jpg', label: 'b3' },
+                    { file: 'b4.jpg', label: 'b4' }, { file: 'b5.jpg', label: 'b5' }, { file: 'b6.jpg', label: 'b6' }, { file: 'b7.jpg', label: 'b7' },
+                    { file: 'b8.jpg', label: 'b8' }, { file: 'b9.jpg', label: 'b9' },
+                    { file: 'bgl.jpg', label: 'bgl' }, { file: 'bm..jpg', label: 'bm..' }, { file: 'm..jpg', label: 'm..' },
+                    { file: 'm.jpg', label: 'm' }, { file: 'qk.jpg', label: 'qk' }, { file: 'qks.jpg', label: 'qks' },
+                    { file: 'tang.jpg', label: 'tang' }, { file: 'wa.jpg', label: 'wa' }
+                ]
+            },
+            {
+                title: '数字/汉字',
+                prefix: '',
+                items: [
+                    { file: '0.jpg', label: '0' }, { file: '1.jpg', label: '1' }, { file: '2.jpg', label: '2' }, { file: '3.jpg', label: '3' },
+                    { file: '4.jpg', label: '4' }, { file: '5.jpg', label: '5' }, { file: '6.jpg', label: '6' }, { file: '7.jpg', label: '7' },
+                    { file: '8.jpg', label: '8' }, { file: '9.jpg', label: '9' },
+                    { file: 'ceng.jpg', label: 'ceng' }, { file: 'ge.jpg', label: 'ge' }, { file: 'hm.jpg', label: 'hm' },
+                    { file: 'mi.jpg', label: 'mi' }, { file: 'ps1.jpg', label: 'ps1' }, { file: 'ps2.jpg', label: 'ps2' },
+                    { file: 'qk.jpg', label: 'qk' }, { file: 'qks.jpg', label: 'qks' }, { file: 'tang.jpg', label: 'tang' }, { file: 'wa.jpg', label: 'wa' }
+                ]
+            }
+        ];
+
+        // DOM 引用
+        const projectSelect = document.getElementById('projectSelect');
+        const materialPanel = document.getElementById('materialPanel');
+        const bgCanvas = document.getElementById('bgCanvas');
+        const overlayContainer = document.getElementById('overlayContainer');
+        const canvasWrapper = document.getElementById('canvasWrapper');
+        const sampleImg = document.getElementById('sampleImage');
+        const undoBtn = document.getElementById('undoBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        // 状态
+        let currentProject = null;          // 当前项目id
+        let bgImage = null;                 // 底图 Image 对象
+        let placedMaterials = [];           // 已放置的素材记录 [{ element, imgNaturalW, imgNaturalH }]
+        let dragState = null;              // 拖拽状态 { el, offsetX, offsetY, startX, startY }
+
+        // ---------- 初始化项目选择 ----------
+        function initProjects() {
+            PROJECT_LIST.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = p.label;
+                projectSelect.appendChild(opt);
+            });
+            projectSelect.addEventListener('change', () => {
+                loadProject(projectSelect.value);
+            });
+            // 默认选中第一个
+            if (PROJECT_LIST.length > 0) {
+                projectSelect.value = PROJECT_LIST[0].id;
+                loadProject(PROJECT_LIST[0].id);
+            }
+        }
+
+        // ---------- 加载项目 ----------
+        function loadProject(projectId) {
+            if (!projectId) return;
+            currentProject = projectId;
+            // 清除已有素材
+            clearAllMaterials();
+
+            // 加载底图
+            const bgPath = `${MATERIALS_PATH}${projectId}.jpg`;
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = function() {
+                bgImage = img;
+                // 设置canvas尺寸为图片原始尺寸
+                bgCanvas.width = img.naturalWidth;
+                bgCanvas.height = img.naturalHeight;
+                const ctx = bgCanvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                // 更新wrapper尺寸适应canvas
+                canvasWrapper.style.width = bgCanvas.width + 'px';
+                canvasWrapper.style.height = bgCanvas.height + 'px';
+                // 加载样图
+                const samplePath = `${MATERIALS_PATH}${projectId}1.jpg`;
+                sampleImg.src = samplePath;
+                sampleImg.onerror = () => { sampleImg.src = ''; };
+            };
+            img.onerror = function() {
+                console.warn('底图加载失败:', bgPath);
+                // 清空画布提示
+                const ctx = bgCanvas.getContext('2d');
+                ctx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+                bgImage = null;
+                sampleImg.src = '';
+            };
+            img.src = bgPath;
+        }
+
+        // ---------- 渲染素材区 ----------
+        function renderMaterials() {
+            materialPanel.innerHTML = '';
+            MATERIAL_GROUPS.forEach(group => {
+                const titleDiv = document.createElement('div');
+                titleDiv.className = 'material-group-title';
+                titleDiv.textContent = group.title;
+                materialPanel.appendChild(titleDiv);
+
+                const grid = document.createElement('div');
+                grid.className = 'material-grid';
+
+                group.items.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'material-item';
+                    const img = document.createElement('img');
+                    const src = `${MATERIALS_PATH}${item.file}`;
+                    img.src = src;
+                    img.alt = item.label;
+                    img.loading = 'lazy';
+                    // 错误占位
+                    img.onerror = function() {
+                        this.style.display = 'none';
+                    };
+                    div.appendChild(img);
+                    const labelSpan = document.createElement('span');
+                    labelSpan.className = 'label';
+                    labelSpan.textContent = item.label;
+                    div.appendChild(labelSpan);
+                    // 点击事件：添加素材副本到画布
+                    div.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        addMaterialToCanvas(src, item.label);
+                    });
+                    grid.appendChild(div);
+                });
+                materialPanel.appendChild(grid);
+            });
+        }
+
+        // ---------- 添加素材到画布（副本） ----------
+        function addMaterialToCanvas(src, label) {
+            if (!currentProject || !bgImage) {
+                alert('请先选择一个运动项目，等待底图加载完成');
+                return;
+            }
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = function() {
+                // 创建包裹容器
+                const wrapper = document.createElement('div');
+                wrapper.className = 'draggable-material';
+                // 设置尺寸为原始像素
+                wrapper.style.width = img.naturalWidth + 'px';
+                wrapper.style.height = img.naturalHeight + 'px';
+                // 初始位置：画布中央 (相对于overlayContainer)
+                const containerRect = overlayContainer.getBoundingClientRect();
+                const wrapperRect = { width: img.naturalWidth, height: img.naturalHeight };
+                // 计算居中坐标 (相对overlayContainer左上)
+                let left = (bgCanvas.width - img.naturalWidth) / 2;
+                let top = (bgCanvas.height - img.naturalHeight) / 2;
+                // 边界修正
+                left = Math.max(0, Math.min(left, bgCanvas.width - img.naturalWidth));
+                top = Math.max(0, Math.min(top, bgCanvas.height - img.naturalHeight));
+                wrapper.style.left = left + 'px';
+                wrapper.style.top = top + 'px';
+
+                const cloneImg = img.cloneNode(true);
+                cloneImg.style.width = '100%';
+                cloneImg.style.height = '100%';
+                cloneImg.draggable = false;
+                wrapper.appendChild(cloneImg);
+
+                // 存储自然宽高用于导出
+                const record = {
+                    element: wrapper,
+                    imgNaturalW: img.naturalWidth,
+                    imgNaturalH: img.naturalHeight,
+                    naturalSrc: src
+                };
+
+                // 插入到overlay，后添加在上层
+                overlayContainer.appendChild(wrapper);
+                placedMaterials.push(record);
+
+                // 绑定拖拽事件 (支持鼠标+触摸)
+                makeDraggable(wrapper, record);
+
+                // 自动将新素材置于顶层 (z-index递增)
+                const allItems = overlayContainer.querySelectorAll('.draggable-material');
+                allItems.forEach((el, idx) => {
+                    el.style.zIndex = 10 + idx;
+                });
+            };
+            img.onerror = function() {
+                console.warn('素材加载失败:', src);
+            };
+            img.src = src;
+        }
+
+        // ---------- 拖拽系统 (鼠标+触摸) ----------
+        function makeDraggable(element, record) {
+            // 使用指针事件统一处理
+            let isDragging = false;
+            let startX, startY, origLeft, origTop;
+
+            function onStart(clientX, clientY) {
+                if (isDragging) return;
+                // 获取当前left/top (可能为百分比或px, 但我们是px)
+                const left = parseFloat(element.style.left) || 0;
+                const top = parseFloat(element.style.top) || 0;
+                origLeft = left;
+                origTop = top;
+                startX = clientX;
+                startY = clientY;
+                isDragging = true;
+                element.style.cursor = 'grabbing';
+                element.style.zIndex = 1000; // 临时提升
+            }
+
+            function onMove(clientX, clientY) {
+                if (!isDragging) return;
+                const dx = clientX - startX;
+                const dy = clientY - startY;
+                let newLeft = origLeft + dx;
+                let newTop = origTop + dy;
+                // 边界限制 (不能超出底图范围)
+                const maxLeft = bgCanvas.width - record.imgNaturalW;
+                const maxTop = bgCanvas.height - record.imgNaturalH;
+                newLeft = Math.max(0, Math.min(newLeft, maxLeft));
+                newTop = Math.max(0, Math.min(newTop, maxTop));
+                element.style.left = newLeft + 'px';
+                element.style.top = newTop + 'px';
+            }
+
+            function onEnd() {
+                if (!isDragging) return;
+                isDragging = false;
+                element.style.cursor = 'grab';
+                // 恢复z-index为合理值 (保持在最上层附近)
+                const allItems = overlayContainer.querySelectorAll('.draggable-material');
+                let maxZ = 10;
+                allItems.forEach(el => {
+                    const z = parseInt(el.style.zIndex) || 10;
+                    if (z > maxZ) maxZ = z;
+                });
+                element.style.zIndex = maxZ + 1;
+            }
+
+            // 鼠标事件
+            element.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                onStart(e.clientX, e.clientY);
+            });
+            document.addEventListener('mousemove', (e) => {
+                onMove(e.clientX, e.clientY);
+            });
+            document.addEventListener('mouseup', () => {
+                onEnd();
+            });
+
+            // 触摸事件
+            element.addEventListener('touchstart', (e) => {
+                const touch = e.touches[0];
+                if (!touch) return;
+                e.preventDefault();
+                onStart(touch.clientX, touch.clientY);
+            }, { passive: false });
+            element.addEventListener('touchmove', (e) => {
+                const touch = e.touches[0];
+                if (!touch) return;
+                e.preventDefault();
+                onMove(touch.clientX, touch.clientY);
+            }, { passive: false });
+            element.addEventListener('touchend', (e) => {
+                e.preventDefault();
+                onEnd();
+            }, { passive: false });
+            element.addEventListener('touchcancel', (e) => {
+                e.preventDefault();
+                onEnd();
+            }, { passive: false });
+        }
+
+        // ---------- 撤销 ----------
+        function undoLastMaterial() {
+            if (placedMaterials.length === 0) return;
+            const last = placedMaterials.pop();
+            if (last.element && last.element.parentNode) {
+                last.element.parentNode.removeChild(last.element);
+            }
+        }
+
+        // ---------- 重置 ----------
+        function clearAllMaterials() {
+            while (placedMaterials.length > 0) {
+                const item = placedMaterials.pop();
+                if (item.element && item.element.parentNode) {
+                    item.element.parentNode.removeChild(item.element);
+                }
+            }
+            overlayContainer.innerHTML = ''; // 确保完全清除
+        }
+
+        // ---------- 下载 JPG ----------
+        function downloadAsJpg() {
+            if (!currentProject || !bgImage) {
+                alert('请先加载底图');
+                return;
+            }
+            // 创建一个离屏canvas，尺寸与底图原始分辨率一致
+            const exportCanvas = document.createElement('canvas');
+            exportCanvas.width = bgCanvas.width;
+            exportCanvas.height = bgCanvas.height;
+            const ctx = exportCanvas.getContext('2d');
+
+            // 绘制底图
+            ctx.drawImage(bgImage, 0, 0);
+
+            // 绘制所有素材 (按照z-index顺序)
+            const allElements = overlayContainer.querySelectorAll('.draggable-material');
+            // 按z-index排序
+            const sorted = Array.from(allElements).sort((a, b) => {
+                const za = parseInt(a.style.zIndex) || 10;
+                const zb = parseInt(b.style.zIndex) || 10;
+                return za - zb;
+            });
+
+            // 由于素材是绝对定位，需要获取其相对于overlay的位置
+            sorted.forEach(el => {
+                const imgEl = el.querySelector('img');
+                if (!imgEl) return;
+                const left = parseFloat(el.style.left) || 0;
+                const top = parseFloat(el.style.top) || 0;
+                const w = imgEl.naturalWidth || el.offsetWidth;
+                const h = imgEl.naturalHeight || el.offsetHeight;
+                // 绘制素材图像 (需要重新加载图片到canvas？为了避免跨域问题，我们直接从src绘制)
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.src = imgEl.src;
+                // 同步绘制：使用当前已经加载的图片绘制
+                try {
+                    ctx.drawImage(imgEl, left, top, w, h);
+                } catch (e) {
+                    // fallback: 使用clone
+                    const tempImg = new Image();
+                    tempImg.crossOrigin = 'anonymous';
+                    tempImg.onload = function() {
+                        ctx.drawImage(tempImg, left, top, w, h);
+                    };
+                    tempImg.src = imgEl.src;
+                }
+            });
+
+            // 由于drawImage异步问题，改用更可靠的方法：等待所有图片重绘
+            // 这里采用简单方式：直接使用已有的img元素绘制，大多数情况正常
+            // 为了确保正确，我们稍后使用promise重绘
+            // 但为了简洁，我们先用上述方法，并增加一个小延迟以确保绘制完成？
+            // 更好的做法：收集所有素材图片，等全部加载完再绘制。
+            // 这里做简化处理：使用setTimeout保证绘制完成
+            setTimeout(() => {
+                // 重新绘制一次确保素材完整 (因为上面的try可能没生效)
+                const finalCtx = exportCanvas.getContext('2d');
+                finalCtx.clearRect(0, 0, exportCanvas.width, exportCanvas.height);
+                finalCtx.drawImage(bgImage, 0, 0);
+                sorted.forEach(el => {
+                    const imgEl = el.querySelector('img');
+                    if (!imgEl) return;
+                    const left = parseFloat(el.style.left) || 0;
+                    const top = parseFloat(el.style.top) || 0;
+                    const w = imgEl.naturalWidth || el.offsetWidth;
+                    const h = imgEl.naturalHeight || el.offsetHeight;
+                    finalCtx.drawImage(imgEl, left, top, w, h);
+                });
+                // 导出
+                const link = document.createElement('a');
+                link.download = `${currentProject}_完成.jpg`;
+                link.href = exportCanvas.toDataURL('image/jpeg', 0.92);
+                link.click();
+            }, 100);
+        }
+
+        // ---------- 绑定UI事件 ----------
+        undoBtn.addEventListener('click', undoLastMaterial);
+        resetBtn.addEventListener('click', () => {
+            if (confirm('确定要清空所有素材吗？')) {
+                clearAllMaterials();
+            }
+        });
+        downloadBtn.addEventListener('click', downloadAsJpg);
+
+        // ---------- 启动 ----------
+        renderMaterials();
+        initProjects();
+    })();
+</script>
+</body>
+</html>
