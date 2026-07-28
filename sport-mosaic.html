@@ -104,13 +104,13 @@
         .custom-section-title { font-size: 13px; color: #333; font-weight: 600; display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
         .custom-section-title .dot { width: 6px; height: 6px; border-radius: 50%; background: #1677ff; display: inline-block; }
         .custom-row { display: flex; align-items: center; gap: 8px; }
-        .custom-row label { font-size: 12px; color: #666; min-width: 48px; flex-shrink: 0; font-weight: 500; }
-        .custom-row input[type="text"], .custom-row select, .custom-row input[type="time"], .custom-row input[type="number"] { flex: 1; padding: 6px 10px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 12px; outline: none; background: #fff; color: #333; }
+        .custom-row label { font-size: 12px; color: #666; min-width: 45px; flex-shrink: 0; font-weight: 500; }
+        .custom-row input[type="text"], .custom-row select, .custom-row input[type="time"] { flex: 1; padding: 6px 10px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 12px; outline: none; background: #fff; color: #333; }
         .custom-row input:focus, .custom-row select:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,.1); }
         /* 修复时间选择器溢出：缩小flex比例 + 限制最大宽度 */
-        .custom-row input[type="time"] { flex: 0.48; min-width: 0; max-width: 78px; padding: 6px 4px; }
+        .custom-row input[type="time"] { flex: 0.42; min-width: 56px; max-width: 68px; padding: 6px 4px; }
         .time-group { display: flex; gap: 4px; flex: 1; }
-        .time-group input { flex: 1; min-width: 0; }
+        .time-group input { flex: 1; min-width: 46px; max-width: 64px; padding: 6px 4px; text-align: center; }
 
         /* 头像 */
         .avatar-upload-area { display: flex; align-items: center; gap: 10px; }
@@ -160,7 +160,7 @@
             .reference-img-wrapper { min-height: 200px; }
             .canvas-panel { min-width: unset; flex: 1; }
             .action-buttons { flex: 1; }
-            .custom-section { min-width: 260px; }
+            .custom-section { min-width: 240px; }
             .track-upload-float { top: 8px; right: 8px; }
         }
     </style>
@@ -259,11 +259,11 @@
             <div class="custom-row">
                 <label>日期</label>
                 <div class="time-group">
-                    <input type="number" id="dateYearInput" min="2000" max="2100" value="2025" title="年" style="flex:.8;min-width:0;">
-                    <span style="line-height:28px;color:#999;font-size:12px;">/</span>
-                    <input type="number" id="dateMonthInput" min="1" max="12" value="6" title="月" style="flex:.6;min-width:0;">
-                    <span style="line-height:28px;color:#999;font-size:12px;">/</span>
-                    <input type="number" id="dateDayInput" min="1" max="31" value="4" title="日" style="flex:.6;min-width:0;">
+                    <input type="text" id="dateYearInput" maxlength="4" value="2025" title="年" style="flex:0.65;min-width:38px;max-width:52px;padding:6px 2px;text-align:center;">
+                    <span style="line-height:28px;color:#bbb;font-size:12px;">/</span>
+                    <input type="text" id="dateMonthInput" maxlength="2" value="6" title="月" style="flex:0.5;min-width:30px;max-width:40px;padding:6px 2px;text-align:center;">
+                    <span style="line-height:28px;color:#bbb;font-size:12px;">/</span>
+                    <input type="text" id="dateDayInput" maxlength="2" value="4" title="日" style="flex:0.5;min-width:30px;max-width:40px;padding:6px 2px;text-align:center;">
                 </div>
             </div>
 
@@ -272,7 +272,7 @@
                 <label>时间</label>
                 <div class="time-group">
                     <input type="time" id="startTimeInput" value="16:08" title="开始时间">
-                    <span style="line-height:28px;color:#999;font-size:12px;">-</span>
+                    <span style="line-height:28px;color:#bbb;font-size:12px;">-</span>
                     <input type="time" id="endTimeInput" value="16:43" title="结束时间">
                 </div>
             </div>
@@ -321,8 +321,8 @@
 
     // ---- 固定默认值（v1.6 硬编码） ----
     const DEFAULT_AVATAR_SIZE = 96;
-    const DEFAULT_USERNAME_SIZE = 43;
-    const DEFAULT_DATE_SIZE = 39;
+    const DEFAULT_USERNAME_SIZE = 33;
+    const DEFAULT_DATE_SIZE = 19;
     const DEFAULT_USERNAME_TEXT = '用户名61515321';
     const DEFAULT_DATE_FORMAT = 'YYYY/MM/DD';
 
@@ -393,22 +393,22 @@
         avatar: {
             type: 'avatar',
             img: null,
-            x: 30, y: 30,
+            x: 26, y: 23,
             size: DEFAULT_AVATAR_SIZE,
             selected: false,
         },
         username: {
             type: 'username',
             text: DEFAULT_USERNAME_TEXT,
-            x: 140, y: 35,
+            x: 138, y: 30,
             fontSize: DEFAULT_USERNAME_SIZE,
-            fontWeight: 500,
-            color: '#000000',
+            fontWeight: 580,
+            color: '#111111',
             selected: false,
         },
         date: {
             type: 'date',
-            x: 30, y: 140,
+            x: 27, y: 135,
             fontSize: DEFAULT_DATE_SIZE,
             color: '#888888',
             selected: false,
@@ -443,7 +443,7 @@
     const trackHint = document.getElementById('trackHint');
 
     // ==================== Toast ====================
-    function showToast(msg, duration = 1800) {
+    function showToast(msg, duration = 1500) {
         const t = document.getElementById('toast');
         t.textContent = msg;
         t.classList.add('show');
@@ -452,15 +452,15 @@
 
     // ==================== 日期格式化（固定 YYYY/MM/DD） ====================
     function getDateStr() {
-        const year = parseInt(document.getElementById('dateYearInput').value) || 2025;
-        const month = parseInt(document.getElementById('dateMonthInput').value) || 6;
-        const day = parseInt(document.getElementById('dateDayInput').value) || 4;
+        const year = document.getElementById('dateYearInput').value || '2025';
+        const month = document.getElementById('dateMonthInput').value || '6';
+        const day = document.getElementById('dateDayInput').value || '4';
         const M = String(month).padStart(2, '0');
         const D = String(day).padStart(2, '0');
         const datePart = `${year}/${M}/${D}`;
         const startT = document.getElementById('startTimeInput').value || '16:08';
         const endT = document.getElementById('endTimeInput').value || '16:43';
-        return `${datePart} ${startT} - ${endT}`;
+        return `${datePart} ${startT}-${endT}`;
     }
 
     // ==================== 初始化 ====================
@@ -554,16 +554,16 @@
 
         // 重置三个元素到默认位置（保留用户上传的头像）
         const savedAvatarImg = customElements.avatar.img;
-        customElements.avatar.x = 30; customElements.avatar.y = 30;
+        customElements.avatar.x = 26; customElements.avatar.y = 23;
         customElements.avatar.size = DEFAULT_AVATAR_SIZE;
         customElements.avatar.selected = false;
         if (savedAvatarImg) customElements.avatar.img = savedAvatarImg;
 
-        customElements.username.x = 140; customElements.username.y = 35;
+        customElements.username.x = 136; customElements.username.y = 29;
         customElements.username.fontSize = DEFAULT_USERNAME_SIZE;
         customElements.username.selected = false;
 
-        customElements.date.x = 30; customElements.date.y = 140;
+        customElements.date.x = 27; customElements.date.y = 133;
         customElements.date.fontSize = DEFAULT_DATE_SIZE;
         customElements.date.selected = false;
 
@@ -589,942 +589,4 @@
             renderCanvas(); updateButtonState();
             statusBar.textContent = `✅ 已加载 ${projectId}  |  ${canvasWidth}×${canvasHeight}`;
         } catch (err) {
-            console.error('加载失败:', err);
-            statusBar.textContent = `❌ 加载 ${projectId} 失败`;
-            baseImage = null; sampleImage = null;
-            canvas.width = 800; canvas.height = 600;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            referenceWrapper.innerHTML = '<span class="placeholder-text">加载失败</span>';
-            referenceWrapper.onclick = null;
-        }
-    }
-
-    function loadImage(src) {
-        return new Promise((resolve, reject) => {
-            const img = new Image(); img.crossOrigin = 'anonymous';
-            img.onload = () => resolve(img); img.onerror = () => reject(new Error(`无法加载: ${src}`)); img.src = src;
-        });
-    }
-
-    // ==================== 添加素材 ====================
-    function addMaterialToCanvas(file) {
-        if (!baseImage) { statusBar.textContent = '⚠️ 请先选择运动项目'; return; }
-        const img = new Image(); img.crossOrigin = 'anonymous';
-        img.onload = () => {
-            const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
-            const item = { img, x: Math.round((canvasWidth - w) / 2), y: Math.round((canvasHeight - h) / 2), w, h, file };
-            placedItems.push(item); selectedIndex = placedItems.length - 1; selectedCustom = null;
-            deselectTrack();
-            renderCanvas(); updateButtonState();
-            statusBar.textContent = `➕ 添加: ${file}  (共${placedItems.length}个)`;
-        };
-        img.onerror = () => { statusBar.textContent = `❌ 素材加载失败: ${file}`; };
-        img.src = MATERIALS_PATH + file;
-    }
-
-    // ==================== 渲染 ====================
-    function renderCanvas() {
-        if (!baseImage) { ctx.clearRect(0, 0, canvas.width, canvas.height); return; }
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        // 1. 底图
-        ctx.drawImage(baseImage, 0, 0, canvasWidth, canvasHeight);
-
-        // 2. 跑步轨迹图（在底图之上，普通素材之下）
-        drawTrackImage();
-
-        // 3. 普通素材
-        for (let i = 0; i < placedItems.length; i++) {
-            const item = placedItems[i];
-            ctx.drawImage(item.img, item.x, item.y, item.w, item.h);
-            if (i === selectedIndex) drawSelectionRect(item.x, item.y, item.w, item.h);
-        }
-
-        // 4. 三个自定义元素
-        drawAvatar();
-        drawUsername();
-        drawDate();
-
-        // 5. 对齐辅助线
-        if (guideV !== null || guideH !== null) {
-            ctx.save(); ctx.setLineDash([8, 6]); ctx.lineWidth = 1;
-            if (guideV !== null) { ctx.strokeStyle = guideVAligned ? '#ff4d4f' : '#91caff'; ctx.beginPath(); ctx.moveTo(guideV + .5, 0); ctx.lineTo(guideV + .5, canvasHeight); ctx.stroke(); }
-            if (guideH !== null) { ctx.strokeStyle = guideHAligned ? '#ff4d4f' : '#91caff'; ctx.beginPath(); ctx.moveTo(0, guideH + .5); ctx.lineTo(canvasWidth, guideH + .5); ctx.stroke(); }
-            ctx.restore();
-        }
-    }
-
-    function drawSelectionRect(x, y, w, h) {
-        ctx.save(); ctx.strokeStyle = '#1677ff'; ctx.lineWidth = 2; ctx.setLineDash([6, 3]);
-        const pad = 2; ctx.strokeRect(x - pad, y - pad, w + pad * 2, h + pad * 2); ctx.setLineDash([]);
-        ctx.fillStyle = '#1677ff'; const s = 6;
-        [[x-pad,y-pad],[x+w+pad,y-pad],[x-pad,y+h+pad],[x+w+pad,y+h+pad]].forEach(([cx,cy]) => ctx.fillRect(cx-s/2, cy-s/2, s, s));
-        ctx.restore();
-    }
-
-    // ---- 绘制跑步轨迹图 ----
-    function drawTrackImage() {
-        if (!trackImage) return;
-
-        const drawW = trackOrigW * trackScale;
-        const drawH = trackOrigH * trackScale;
-
-        ctx.save();
-        ctx.drawImage(trackImage, trackX, trackY, drawW, drawH);
-
-        // 选中框 + 缩放手柄
-        if (trackSelected) {
-            const pad = 3;
-            // 虚线框
-            ctx.strokeStyle = '#1677ff'; ctx.lineWidth = 2; ctx.setLineDash([6, 3]);
-            ctx.strokeRect(trackX - pad, trackY - pad, drawW + pad * 2, drawH + pad * 2);
-            ctx.setLineDash([]);
-
-            // 四角方块（蓝色）
-            ctx.fillStyle = '#1677ff'; const s = 6;
-            [[trackX-pad,trackY-pad],[trackX+drawW+pad,trackY-pad],[trackX-pad,trackY+drawH+pad],[trackX+drawW+pad,trackY+drawH+pad]].forEach(([cx,cy]) => ctx.fillRect(cx-s/2, cy-s/2, s, s));
-
-            // 右下角缩放手柄（绿色实心圆 + 白色箭头图标）
-            const handleX = trackX + drawW + pad;
-            const handleY = trackY + drawH + pad;
-            const hs = TRACK_RESIZE_HANDLE_SIZE;
-
-            // 阴影
-            ctx.beginPath(); ctx.arc(handleX, handleY, hs/2 + 1, 0, Math.PI * 2);
-            ctx.fillStyle = 'rgba(0,0,0,0.15)'; ctx.fill();
-
-            // 绿色圆底
-            ctx.beginPath(); ctx.arc(handleX, handleY, hs/2, 0, Math.PI * 2);
-            ctx.fillStyle = '#52c41a'; ctx.fill();
-            ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
-
-            // 缩放箭头图标 ↘
-            ctx.fillStyle = '#fff'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
-            const ax = handleX - 2, ay = handleY - 2;
-            ctx.beginPath();
-            ctx.moveTo(ax - 3, ay + 1); ctx.lineTo(ax + 1, ay + 1); ctx.lineTo(ax + 1, ay - 3);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(ax + 1, ay - 3); ctx.lineTo(ax + 4, ay - 3); ctx.lineTo(ax + 1, ay + 1);
-            ctx.closePath(); ctx.fill();
-
-            // 存储手柄位置供命中检测使用
-            trackResizeHandlePos = { x: handleX, y: handleY, size: hs };
-        } else {
-            trackResizeHandlePos = null;
-        }
-
-        ctx.restore();
-    }
-
-    // ---- 绘制头像 ----
-    function drawAvatar() {
-        const a = customElements.avatar;
-        const d = a.size;
-        const cx = a.x + d / 2, cy = a.y + d / 2;
-
-        ctx.save();
-        ctx.beginPath(); ctx.arc(cx, cy, d / 2, 0, Math.PI * 2); ctx.closePath();
-        ctx.save(); ctx.clip();
-
-        if (a.img) {
-            const img = a.img;
-            const aspect = img.naturalWidth / img.naturalHeight;
-            let sx, sy, sw, sh;
-            if (aspect > 1) { sh = img.naturalHeight; sw = sh; sx = (img.naturalWidth - sw) / 2; sy = 0; }
-            else { sw = img.naturalWidth; sh = sw; sx = 0; sy = (img.naturalHeight - sh) / 2; }
-            ctx.drawImage(img, sx, sy, sw, sh, a.x, a.y, d, d);
-        } else {
-            ctx.fillStyle = '#CCCCCC'; ctx.fillRect(a.x, a.y, d, d);
-            ctx.fillStyle = '#999999';
-            ctx.beginPath(); ctx.arc(cx, cy - d * 0.1, d * 0.2, 0, Math.PI * 2); ctx.fill();
-            ctx.beginPath(); ctx.arc(cx, cy + d * 0.3, d * 0.3, Math.PI, 0, false); ctx.fill();
-        }
-        ctx.restore();
-
-        // 绿色边框
-        ctx.beginPath(); ctx.arc(cx, cy, d / 2, 0, Math.PI * 2);
-        ctx.strokeStyle = '#00C853'; ctx.lineWidth = 2; ctx.stroke();
-
-        // 选中框
-        if (a.selected) drawSelectionRect(a.x, a.y, d, d);
-
-        ctx.restore();
-    }
-
-    // ---- 绘制用户名 ----
-    function drawUsername() {
-        const u = customElements.username;
-        const text = u.text || DEFAULT_USERNAME_TEXT;
-        ctx.save();
-        ctx.font = `${u.fontWeight} ${u.fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-        ctx.fillStyle = u.color;
-        ctx.textBaseline = 'top';
-        ctx.fillText(text, u.x, u.y);
-
-        if (u.selected) {
-            const w = ctx.measureText(text).width;
-            drawSelectionRect(u.x, u.y, w, u.fontSize);
-        }
-        ctx.restore();
-    }
-
-    // ---- 绘制日期 ----
-    function drawDate() {
-        const d = customElements.date;
-        const text = getDateStr();
-        ctx.save();
-        ctx.font = `${d.fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-        ctx.fillStyle = d.color;
-        ctx.textBaseline = 'top';
-        ctx.fillText(text, d.x, d.y);
-
-        if (d.selected) {
-            const w = ctx.measureText(text).width;
-            drawSelectionRect(d.x, d.y, w, d.fontSize);
-        }
-        ctx.restore();
-    }
-
-    // ==================== 自定义控件绑定 ====================
-    function initCustomControls() {
-        // 头像上传
-        document.getElementById('uploadAvatarBtn').addEventListener('click', () => document.getElementById('avatarInput').click());
-        document.getElementById('avatarInput').addEventListener('change', e => {
-            const file = e.target.files[0]; if (!file) return;
-            const reader = new FileReader();
-            reader.onload = ev => {
-                const img = new Image();
-                img.onload = () => {
-                    customElements.avatar.img = img;
-                    document.getElementById('avatarPreviewCircle').innerHTML = `<img src="${ev.target.result}" alt="头像">`;
-                    renderCanvas(); showToast('头像已上传');
-                };
-                img.src = ev.target.result;
-            };
-            reader.readAsDataURL(file);
-        });
-
-        // 删除头像
-        document.getElementById('removeAvatarBtn').addEventListener('click', () => {
-            customElements.avatar.img = null;
-            document.getElementById('avatarPreviewCircle').innerHTML = '<span class="default-icon">👤</span>';
-            document.getElementById('avatarInput').value = '';
-            renderCanvas(); showToast('头像已删除');
-        });
-
-        // 用户名
-        document.getElementById('usernameInput').addEventListener('input', e => {
-            customElements.username.text = e.target.value.trim() || DEFAULT_USERNAME_TEXT;
-            renderCanvas();
-        });
-
-        // 年月日
-        ['dateYearInput','dateMonthInput','dateDayInput'].forEach(id => {
-            document.getElementById(id).addEventListener('input', () => renderCanvas());
-        });
-
-        // 时间
-        document.getElementById('startTimeInput').addEventListener('change', () => renderCanvas());
-        document.getElementById('endTimeInput').addEventListener('change', () => renderCanvas());
-    }
-
-    // ==================== 跑步轨迹图上传 ====================
-    function initTrackUpload() {
-        // 点击上传按钮
-        trackUploadBtn.addEventListener('click', () => {
-            trackImageInput.click();
-        });
-
-        // 文件选择
-        trackImageInput.addEventListener('change', e => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = ev => {
-                const img = new Image();
-                img.onload = () => {
-                    trackImage = img;
-                    trackOrigW = img.naturalWidth || img.width;
-                    trackOrigH = img.naturalHeight || img.height;
-
-                    // 初始缩放：让图片宽度为画布的 40%
-                    const targetW = canvasWidth * 0.4;
-                    trackScale = targetW / trackOrigW;
-
-                    // 居中
-                    const drawW = trackOrigW * trackScale;
-                    const drawH = trackOrigH * trackScale;
-                    trackX = Math.round((canvasWidth - drawW) / 2);
-                    trackY = Math.round((canvasHeight - drawH) / 2);
-
-                    // 更新按钮状态
-                    trackUploadBtn.classList.add('has-image');
-                    trackBtnMain.textContent = '✅ 轨迹已上传';
-                    trackBtnSub.textContent = '滚轮/手柄缩放 · 拖拽移动 · +/-微调';
-                    trackRemoveBtn.classList.add('active');
-                    trackHint.classList.add('active');
-
-                    renderCanvas();
-                    updateButtonState();
-                    showToast('轨迹图已上传，居中显示');
-                    statusBar.textContent = `🗺️ 轨迹图已上传 (${trackOrigW}×${trackOrigH}) - 滚轮/手柄缩放/拖拽移动`;
-                };
-                img.onerror = () => { showToast('图片加载失败'); };
-                img.src = ev.target.result;
-            };
-            reader.readAsDataURL(file);
-            // 重置 input 以便重复选择同一文件
-            e.target.value = '';
-        });
-
-        // 清除轨迹图
-        trackRemoveBtn.addEventListener('click', () => {
-            resetTrackImage();
-            renderCanvas();
-            updateButtonState();
-            showToast('轨迹图已清除');
-            statusBar.textContent = '🗺️ 轨迹图已清除，恢复默认底图';
-        });
-    }
-
-    function resetTrackImage() {
-        trackImage = null;
-        trackX = 0;
-        trackY = 0;
-        trackScale = 1;
-        trackOrigW = 0;
-        trackOrigH = 0;
-        trackSelected = false;
-        isTrackDragging = false;
-        isTrackResizing = false;
-        trackResizeHandlePos = null;
-
-        // 重置按钮状态
-        trackUploadBtn.classList.remove('has-image');
-        trackBtnMain.textContent = '上传跑步轨迹';
-        trackBtnSub.textContent = '仅限跑步 · 支持JPG/PNG';
-        trackRemoveBtn.classList.remove('active');
-        trackHint.classList.remove('active');
-
-        // 恢复鼠标样式
-        canvasWrapper.classList.remove('resizing', 'track-moving');
-    }
-
-    function deselectTrack() {
-        trackSelected = false;
-    }
-
-    // ==================== 轨迹图命中检测 ====================
-    function hitTrackImage(cx, cy) {
-        if (!trackImage) return false;
-        const drawW = trackOrigW * trackScale;
-        const drawH = trackOrigH * trackScale;
-        return cx >= trackX && cx <= trackX + drawW && cy >= trackY && cy <= trackY + drawH;
-    }
-
-    // 检测是否命中缩放手柄
-    function hitTrackResizeHandle(cx, cy) {
-        if (!trackImage || !trackSelected || !trackResizeHandlePos) return false;
-        const hp = trackResizeHandlePos;
-        const hs = hp.size + 4; // 扩大命中区域，更容易点中
-        return cx >= hp.x - hs/2 && cx <= hp.x + hs/2 && cy >= hp.y - hs/2 && cy <= hp.y + hs/2;
-    }
-
-    function getTrackDrawRect() {
-        const drawW = trackOrigW * trackScale;
-        const drawH = trackOrigH * trackScale;
-        return { x: trackX, y: trackY, w: drawW, h: drawH };
-    }
-
-    // ==================== 撤销/重置 ====================
-    function undoLastItem() {
-        if (placedItems.length === 0) return;
-        const removed = placedItems.pop();
-        if (selectedIndex >= placedItems.length) selectedIndex = placedItems.length - 1;
-        renderCanvas(); updateButtonState();
-        statusBar.textContent = `↩️ 撤销: ${removed.file}  (剩余${placedItems.length}个)`;
-    }
-
-    function resetAll() {
-        if (placedItems.length === 0 && !trackImage) return;
-        if (!confirm('确定要清空画布上所有素材吗？')) return;
-        placedItems = []; selectedIndex = -1; selectedCustom = null;
-        guideV = null; guideH = null;
-        resetTrackImage();
-        renderCanvas(); updateButtonState();
-        statusBar.textContent = '🗑️ 已重置';
-    }
-
-    // ==================== 导出 JPG ====================
-    function downloadJpg() {
-        if (!baseImage || !currentProject) { statusBar.textContent = '⚠️ 请先选择项目'; return; }
-        const ec = document.createElement('canvas');
-        ec.width = canvasWidth; ec.height = canvasHeight;
-        const ecCtx = ec.getContext('2d');
-
-        ecCtx.fillStyle = '#fff'; ecCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-        ecCtx.drawImage(baseImage, 0, 0, canvasWidth, canvasHeight);
-
-        // 导出轨迹图
-        if (trackImage) {
-            const drawW = trackOrigW * trackScale;
-            const drawH = trackOrigH * trackScale;
-            ecCtx.drawImage(trackImage, trackX, trackY, drawW, drawH);
-        }
-
-        // 导出普通素材
-        for (const item of placedItems) ecCtx.drawImage(item.img, item.x, item.y, item.w, item.h);
-
-        exportAvatar(ecCtx);
-        exportUsername(ecCtx);
-        exportDate(ecCtx);
-
-        const link = document.createElement('a');
-        link.download = `${currentProject}_完成.jpg`;
-        link.href = ec.toDataURL('image/jpeg', JPG_QUALITY);
-        link.click();
-        statusBar.textContent = `⬇️ 已导出: ${currentProject}_完成.jpg`;
-        showToast(`已导出 ${currentProject}_完成.jpg`);
-    }
-
-    function exportAvatar(targetCtx) {
-        const a = customElements.avatar;
-        const d = a.size; const cx = a.x + d/2, cy = a.y + d/2;
-        targetCtx.save();
-        targetCtx.beginPath(); targetCtx.arc(cx, cy, d/2, 0, Math.PI*2); targetCtx.closePath();
-        targetCtx.save(); targetCtx.clip();
-        if (a.img) {
-            const img = a.img; const aspect = img.naturalWidth / img.naturalHeight;
-            let sx, sy, sw, sh;
-            if (aspect > 1) { sh = img.naturalHeight; sw = sh; sx = (img.naturalWidth - sw)/2; sy = 0; }
-            else { sw = img.naturalWidth; sh = sw; sx = 0; sy = (img.naturalHeight - sh)/2; }
-            targetCtx.drawImage(img, sx, sy, sw, sh, a.x, a.y, d, d);
-        } else {
-            targetCtx.fillStyle = '#CCCCCC'; targetCtx.fillRect(a.x, a.y, d, d);
-        }
-        targetCtx.restore();
-        targetCtx.beginPath(); targetCtx.arc(cx, cy, d/2, 0, Math.PI*2);
-        targetCtx.strokeStyle = '#00C853'; targetCtx.lineWidth = 2; targetCtx.stroke();
-        targetCtx.restore();
-    }
-
-    function exportUsername(targetCtx) {
-        const u = customElements.username;
-        targetCtx.save();
-        targetCtx.font = `${u.fontWeight} ${u.fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
-        targetCtx.fillStyle = u.color; targetCtx.textBaseline = 'top';
-        targetCtx.fillText(u.text || DEFAULT_USERNAME_TEXT, u.x, u.y);
-        targetCtx.restore();
-    }
-
-    function exportDate(targetCtx) {
-        const d = customElements.date;
-        const text = getDateStr();
-        targetCtx.save();
-        targetCtx.font = `${d.fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
-        targetCtx.fillStyle = d.color; targetCtx.textBaseline = 'top';
-        targetCtx.fillText(text, d.x, d.y);
-        targetCtx.restore();
-    }
-
-    // ==================== 命中检测 ====================
-    function getCanvasCoords(clientX, clientY) {
-        const rect = canvas.getBoundingClientRect();
-        return { x: (clientX - rect.left) * (canvas.width / rect.width), y: (clientY - rect.top) * (canvas.height / rect.height) };
-    }
-
-    function findHitItem(cx, cy) {
-        for (let i = placedItems.length - 1; i >= 0; i--) {
-            const it = placedItems[i];
-            if (cx >= it.x && cx <= it.x + it.w && cy >= it.y && cy <= it.y + it.h) return i;
-        }
-        return -1;
-    }
-
-    function hitCustomElement(cx, cy) {
-        const a = customElements.avatar;
-        if (cx >= a.x && cx <= a.x + a.size && cy >= a.y && cy <= a.y + a.size) return 'avatar';
-
-        const u = customElements.username;
-        ctx.save();
-        ctx.font = `${u.fontWeight} ${u.fontSize}px sans-serif`;
-        const uw = ctx.measureText(u.text || DEFAULT_USERNAME_TEXT).width;
-        ctx.restore();
-        if (cx >= u.x && cx <= u.x + uw && cy >= u.y && cy <= u.y + u.fontSize) return 'username';
-
-        const d = customElements.date;
-        ctx.save();
-        ctx.font = `${d.fontSize}px sans-serif`;
-        const dw = ctx.measureText(getDateStr()).width;
-        ctx.restore();
-        if (cx >= d.x && cx <= d.x + dw && cy >= d.y && cy <= d.y + d.fontSize) return 'date';
-
-        return null;
-    }
-
-    // ==================== 拖拽（普通素材） ====================
-    function startCustomDrag(type, cx, cy) {
-        customDragInfo = { type, offsetX: cx - customElements[type].x, offsetY: cy - customElements[type].y };
-        Object.keys(customElements).forEach(k => customElements[k].selected = false);
-        customElements[type].selected = true;
-        selectedCustom = type;
-        selectedIndex = -1;
-        deselectTrack();
-        renderCanvas();
-    }
-
-    function moveCustomDrag(cx, cy) {
-        if (!customDragInfo) return;
-        const el = customElements[customDragInfo.type];
-        let nx = cx - customDragInfo.offsetX;
-        let ny = cy - customDragInfo.offsetY;
-        nx = Math.max(0, Math.min(nx, canvasWidth - 10));
-        ny = Math.max(0, Math.min(ny, canvasHeight - 10));
-        el.x = Math.round(nx); el.y = Math.round(ny);
-        renderCanvas();
-    }
-
-    function endCustomDrag() {
-        customDragInfo = null;
-    }
-
-    function startDrag(index, cx, cy) {
-        isDragging = true; dragIndex = index; selectedIndex = index;
-        const item = placedItems[index];
-        dragOffsetX = cx - item.x; dragOffsetY = cy - item.y;
-        const [dragged] = placedItems.splice(index, 1);
-        placedItems.push(dragged);
-        dragIndex = placedItems.length - 1; selectedIndex = dragIndex;
-        Object.keys(customElements).forEach(k => customElements[k].selected = false);
-        selectedCustom = null;
-        deselectTrack();
-        renderCanvas();
-    }
-
-    function moveDrag(cx, cy) {
-        if (!isDragging || dragIndex < 0) return;
-        const item = placedItems[dragIndex];
-        let rx = cx - dragOffsetX, ry = cy - dragOffsetY;
-        let sx = rx, sy = ry, gv = null, gh = null, va = false, ha = false;
-        for (let i = 0; i < placedItems.length; i++) {
-            if (i === dragIndex) continue;
-            const o = placedItems[i];
-            if (Math.abs(rx - o.x) <= SNAP_THRESHOLD) { sx = o.x; gv = sx; va = true; }
-            if (Math.abs(rx + item.w - (o.x + o.w)) <= SNAP_THRESHOLD) { sx = o.x + o.w - item.w; gv = sx; va = true; }
-            if (Math.abs(rx - (o.x + o.w)) <= SNAP_THRESHOLD) { sx = o.x + o.w; gv = sx; va = true; }
-            if (Math.abs(ry - o.y) <= SNAP_THRESHOLD) { sy = o.y; gh = sy + item.h; ha = true; }
-            if (Math.abs(ry + item.h - (o.y + o.h)) <= SNAP_THRESHOLD) { sy = o.y + o.h - item.h; gh = sy + item.h; ha = true; }
-        }
-        item.x = Math.round(sx); item.y = Math.round(sy);
-        guideV = gv; guideH = gh; guideVAligned = va; guideHAligned = ha;
-        snapIndicator.classList.toggle('active', va || ha);
-        renderCanvas();
-    }
-
-    function endDrag() {
-        if (isDragging) {
-            isDragging = false; dragIndex = -1;
-            guideV = null; guideH = null; guideVAligned = false; guideHAligned = false;
-            snapIndicator.classList.remove('active');
-            renderCanvas();
-        }
-    }
-
-    // ==================== 轨迹图拖拽 ====================
-    function startTrackDrag(cx, cy) {
-        isTrackDragging = true;
-        trackSelected = true;
-        trackDragOffsetX = cx - trackX;
-        trackDragOffsetY = cy - trackY;
-        // 取消其他选中
-        selectedIndex = -1;
-        selectedCustom = null;
-        Object.keys(customElements).forEach(k => customElements[k].selected = false);
-        canvasWrapper.classList.add('track-moving');
-        renderCanvas();
-    }
-
-    function moveTrackDrag(cx, cy) {
-        if (!isTrackDragging) return;
-        let nx = cx - trackDragOffsetX;
-        let ny = cy - trackDragOffsetY;
-        const drawW = trackOrigW * trackScale;
-        const drawH = trackOrigH * trackScale;
-        nx = Math.max(-drawW * 0.5, Math.min(nx, canvasWidth - drawW * 0.5));
-        ny = Math.max(-drawH * 0.5, Math.min(ny, canvasHeight - drawH * 0.5));
-        trackX = Math.round(nx);
-        trackY = Math.round(ny);
-        renderCanvas();
-    }
-
-    function endTrackDrag() {
-        isTrackDragging = false;
-        canvasWrapper.classList.remove('track-moving');
-    }
-
-    // ==================== 轨迹图缩放手柄拖拽（核心新功能） ====================
-    function startTrackResize(cx, cy) {
-        isTrackResizing = true;
-        trackSelected = true;
-        trackResizeStartX = cx;
-        trackResizeStartY = cy;
-        trackResizeStartScale = trackScale;
-        trackResizeStartW = trackOrigW * trackScale;
-        trackResizeStartH = trackOrigH * trackScale;
-        // 取消其他选中
-        selectedIndex = -1;
-        selectedCustom = null;
-        Object.keys(customElements).forEach(k => customElements[k].selected = false);
-        canvasWrapper.classList.add('resizing');
-        renderCanvas();
-    }
-
-    function moveTrackResize(cx, cy) {
-        if (!isTrackResizing) return;
-
-        // 以轨迹图左上角为锚点，计算鼠标拖拽出的宽高
-        const anchorX = trackX;
-        const anchorY = trackY;
-
-        let newW = cx - anchorX;
-        let newH = cy - anchorY;
-
-        // 基于宽高比计算等比缩放（取宽度和高度方向算出的较小缩放比，防止溢出）
-        let scaleByW = newW / trackOrigW;
-        let scaleByH = newH / trackOrigH;
-        let newScale = Math.min(scaleByW, scaleByH);
-
-        // 限制缩放范围
-        newScale = Math.max(TRACK_MIN_SCALE, Math.min(newScale, TRACK_MAX_SCALE));
-
-        // 用对角距离做平滑补偿（拖拽体验更自然）
-        const dx = cx - trackResizeStartX;
-        const dy = cy - trackResizeStartY;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const startDist = Math.sqrt(trackResizeStartW * trackResizeStartW + trackResizeStartH * trackResizeStartH);
-        if (startDist > 10) {
-            const distScale = (dist / startDist) * trackResizeStartScale;
-            const blended = newScale * 0.7 + distScale * 0.3;
-            newScale = Math.max(TRACK_MIN_SCALE, Math.min(blended, TRACK_MAX_SCALE));
-        }
-
-        trackScale = newScale;
-        renderCanvas();
-    }
-
-    function endTrackResize() {
-        if (isTrackResizing) {
-            isTrackResizing = false;
-            canvasWrapper.classList.remove('resizing');
-            const drawW = Math.round(trackOrigW * trackScale);
-            const drawH = Math.round(trackOrigH * trackScale);
-            statusBar.textContent = `🗺️ 轨迹图缩放完成: ${Math.round(trackScale * 100)}% (${drawW}×${drawH}px)`;
-        }
-    }
-
-    // ==================== 滚轮缩放轨迹图 ====================
-    function onWheel(e) {
-        if (!trackImage) return;
-        // 检查鼠标是否在画布内
-        const rect = canvas.getBoundingClientRect();
-        if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) return;
-
-        e.preventDefault();
-        const c = getCanvasCoords(e.clientX, e.clientY);
-
-        // 如果轨迹图未被选中，先选中它
-        if (!trackSelected) {
-            trackSelected = true;
-            selectedIndex = -1;
-            selectedCustom = null;
-            Object.keys(customElements).forEach(k => customElements[k].selected = false);
-        }
-
-        const delta = e.deltaY > 0 ? 0.9 : 1.1;
-        const oldScale = trackScale;
-        let newScale = trackScale * delta;
-
-        // 限制缩放范围
-        newScale = Math.max(TRACK_MIN_SCALE, Math.min(newScale, TRACK_MAX_SCALE));
-
-        // 以鼠标位置为缩放中心
-        const mouseX = c.x;
-        const mouseY = c.y;
-        trackX = Math.round(mouseX - (mouseX - trackX) * (newScale / oldScale));
-        trackY = Math.round(mouseY - (mouseY - trackY) * (newScale / oldScale));
-        trackScale = newScale;
-
-        const drawW = Math.round(trackOrigW * trackScale);
-        const drawH = Math.round(trackOrigH * trackScale);
-        statusBar.textContent = `🗺️ 轨迹图缩放: ${Math.round(trackScale * 100)}%  (${drawW}×${drawH}px)`;
-        renderCanvas();
-    }
-
-    // ==================== 键盘缩放轨迹图（新功能） ====================
-    function scaleTrackByKey(factor) {
-        if (!trackImage || !trackSelected) return;
-        const oldScale = trackScale;
-        let newScale = trackScale * factor;
-        newScale = Math.max(TRACK_MIN_SCALE, Math.min(newScale, TRACK_MAX_SCALE));
-
-        // 以轨迹图中心为缩放锚点
-        const drawW = trackOrigW * oldScale;
-        const drawH = trackOrigH * oldScale;
-        const centerX = trackX + drawW / 2;
-        const centerY = trackY + drawH / 2;
-
-        trackX = Math.round(centerX - (trackOrigW * newScale) / 2);
-        trackY = Math.round(centerY - (trackOrigH * newScale) / 2);
-        trackScale = newScale;
-
-        const newDrawW = Math.round(trackOrigW * trackScale);
-        const newDrawH = Math.round(trackOrigH * trackScale);
-        statusBar.textContent = `🗺️ 轨迹图缩放: ${Math.round(trackScale * 100)}% (${newDrawW}×${newDrawH}px)`;
-        renderCanvas();
-    }
-
-    // ==================== 指针事件 ====================
-    function onPointerDown(e) {
-        if (!baseImage) return;
-        const c = getCanvasCoords(e.clientX, e.clientY);
-
-        // 优先检测缩放手柄（最高优先级）
-        if (trackImage && trackSelected && hitTrackResizeHandle(c.x, c.y)) {
-            startTrackResize(c.x, c.y);
-            e.preventDefault();
-            statusBar.textContent = `🗺️ 拖拽右下角手柄等比缩放轨迹图...`;
-            return;
-        }
-
-        // 检测轨迹图本体
-        if (hitTrackImage(c.x, c.y)) {
-            startTrackDrag(c.x, c.y);
-            e.preventDefault();
-            statusBar.textContent = `🗺️ 拖拽轨迹图中... (滚轮/手柄缩放)`;
-            return;
-        }
-
-        const hit = hitCustomElement(c.x, c.y);
-        if (hit) {
-            startCustomDrag(hit, c.x, c.y);
-            e.preventDefault();
-            statusBar.textContent = `✏️ 选中: ${hit === 'avatar' ? '头像' : hit === 'username' ? '用户名' : '日期'}（独立拖拽中）`;
-            deselectTrack();
-            return;
-        }
-
-        const itemHit = findHitItem(c.x, c.y);
-        if (itemHit >= 0) { startDrag(itemHit, c.x, c.y); e.preventDefault(); deselectTrack(); }
-        else { selectedIndex = -1; selectedCustom = null; Object.keys(customElements).forEach(k => customElements[k].selected = false); deselectTrack(); renderCanvas(); }
-    }
-
-    function onPointerMove(e) {
-        // 优先处理缩放手柄拖拽
-        if (isTrackResizing) {
-            const c = getCanvasCoords(e.clientX, e.clientY);
-            moveTrackResize(c.x, c.y);
-            e.preventDefault();
-            return;
-        }
-        if (isTrackDragging) { const c = getCanvasCoords(e.clientX, e.clientY); moveTrackDrag(c.x, c.y); e.preventDefault(); return; }
-        if (customDragInfo) { const c = getCanvasCoords(e.clientX, e.clientY); moveCustomDrag(c.x, c.y); e.preventDefault(); return; }
-        if (!isDragging) return;
-        const c = getCanvasCoords(e.clientX, e.clientY); moveDrag(c.x, c.y); e.preventDefault();
-    }
-
-    function onPointerUp() { endTrackResize(); endTrackDrag(); endCustomDrag(); endDrag(); }
-
-    // 鼠标悬停在手柄上时切换光标
-    function onCanvasMouseMove(e) {
-        if (isTrackResizing || isTrackDragging) return;
-        if (!trackImage || !trackSelected) {
-            canvasWrapper.classList.remove('resizing');
-            return;
-        }
-        const c = getCanvasCoords(e.clientX, e.clientY);
-        if (hitTrackResizeHandle(c.x, c.y)) {
-            canvasWrapper.classList.add('resizing');
-        } else {
-            canvasWrapper.classList.remove('resizing');
-        }
-    }
-
-    function onTouchStart(e) {
-        if (!baseImage) return;
-        const t = e.touches[0]; if (!t) return;
-        const c = getCanvasCoords(t.clientX, t.clientY);
-
-        // 优先检测缩放手柄
-        if (trackImage && trackSelected && hitTrackResizeHandle(c.x, c.y)) {
-            startTrackResize(c.x, c.y);
-            e.preventDefault();
-            return;
-        }
-
-        if (hitTrackImage(c.x, c.y)) { startTrackDrag(c.x, c.y); e.preventDefault(); return; }
-
-        const hit = hitCustomElement(c.x, c.y);
-        if (hit) { startCustomDrag(hit, c.x, c.y); e.preventDefault(); deselectTrack(); return; }
-        const itemHit = findHitItem(c.x, c.y);
-        if (itemHit >= 0) { startDrag(itemHit, c.x, c.y); e.preventDefault(); deselectTrack(); }
-    }
-
-    function onTouchMove(e) {
-        if (isTrackResizing) { const t = e.touches[0]; if (!t) return; const c = getCanvasCoords(t.clientX, t.clientY); moveTrackResize(c.x, c.y); e.preventDefault(); return; }
-        if (isTrackDragging) { const t = e.touches[0]; if (!t) return; const c = getCanvasCoords(t.clientX, t.clientY); moveTrackDrag(c.x, c.y); e.preventDefault(); return; }
-        if (customDragInfo) { const t = e.touches[0]; if (!t) return; const c = getCanvasCoords(t.clientX, t.clientY); moveCustomDrag(c.x, c.y); e.preventDefault(); return; }
-        if (!isDragging) return;
-        const t = e.touches[0]; if (!t) return; const c = getCanvasCoords(t.clientX, t.clientY); moveDrag(c.x, c.y); e.preventDefault();
-    }
-
-    function onTouchEnd() { endTrackResize(); endTrackDrag(); endCustomDrag(); endDrag(); }
-
-    // ==================== 键盘（增强版） ====================
-    function onKeyDown(e) {
-        if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
-
-        if (e.key === 'Escape') {
-            refzoomOverlay.classList.remove('active');
-            selectedIndex = -1; selectedCustom = null;
-            Object.keys(customElements).forEach(k => customElements[k].selected = false);
-            deselectTrack();
-            renderCanvas();
-            return;
-        }
-
-        const step = e.shiftKey ? 10 : 1;
-
-        // ===== 轨迹图操作（最高优先级） =====
-        if (trackSelected && trackImage) {
-            let handled = true;
-
-            switch (e.key) {
-                // 方向键微移动
-                case 'ArrowLeft': trackX -= step; break;
-                case 'ArrowRight': trackX += step; break;
-                case 'ArrowUp': trackY -= step; break;
-                case 'ArrowDown': trackY += step; break;
-
-                // 键盘缩放（大步）
-                case '+': case '=': scaleTrackByKey(1.1); break;
-                case '-': case '_': scaleTrackByKey(0.9); break;
-
-                // 精细缩放（小步）
-                case ']': scaleTrackByKey(1.02); break;
-                case '[': scaleTrackByKey(0.98); break;
-
-                // 删除
-                case 'Delete':
-                case 'Backspace':
-                    resetTrackImage();
-                    renderCanvas();
-                    showToast('轨迹图已删除');
-                    statusBar.textContent = '🗺️ 轨迹图已删除，恢复默认底图';
-                    handled = false;
-                    break;
-                default: handled = false;
-            }
-
-            if (handled) {
-                e.preventDefault();
-                const drawW = trackOrigW * trackScale;
-                const drawH = trackOrigH * trackScale;
-                // 限制位置不超出画布太多
-                trackX = Math.max(-drawW * 0.5, Math.min(trackX, canvasWidth - drawW * 0.5));
-                trackY = Math.max(-drawH * 0.5, Math.min(trackY, canvasHeight - drawH * 0.5));
-                renderCanvas();
-
-                if (e.key.startsWith('Arrow')) {
-                    statusBar.textContent = `🗺️ 轨迹图: (${trackX}, ${trackY}) 步长${step}px 缩放${Math.round(trackScale*100)}%`;
-                } else {
-                    statusBar.textContent = `🗺️ 轨迹图缩放: ${Math.round(trackScale * 100)}% (${Math.round(drawW)}×${Math.round(drawH)}px)`;
-                }
-            }
-            return;
-        }
-
-        // 自定义元素微调
-        if (selectedCustom) {
-            const el = customElements[selectedCustom];
-            let handled = true;
-            switch (e.key) {
-                case 'ArrowLeft': el.x -= step; break;
-                case 'ArrowRight': el.x += step; break;
-                case 'ArrowUp': el.y -= step; break;
-                case 'ArrowDown': el.y += step; break;
-                case 'Delete':
-                case 'Backspace':
-                    if (selectedCustom === 'avatar') { el.img = null; document.getElementById('avatarPreviewCircle').innerHTML = '<span class="default-icon">👤</span>'; showToast('头像已删除'); }
-                    else if (selectedCustom === 'username') { el.text = DEFAULT_USERNAME_TEXT; document.getElementById('usernameInput').value = DEFAULT_USERNAME_TEXT; showToast('用户名已恢复默认'); }
-                    else if (selectedCustom === 'date') { showToast('日期不可删除，请修改年月日'); handled = false; }
-                    selectedCustom = null; el.selected = false;
-                    break;
-                default: handled = false;
-            }
-            if (handled) {
-                e.preventDefault();
-                el.x = Math.max(0, Math.min(el.x, canvasWidth - 5));
-                el.y = Math.max(0, Math.min(el.y, canvasHeight - 5));
-                renderCanvas();
-                statusBar.textContent = `✏️ ${selectedCustom}: (${el.x}, ${el.y}) 步长${step}px`;
-            }
-            return;
-        }
-
-        // 普通素材微调
-        if (selectedIndex < 0 || selectedIndex >= placedItems.length) return;
-        const item = placedItems[selectedIndex];
-        let handled = true;
-        switch (e.key) {
-            case 'ArrowLeft': item.x -= step; break;
-            case 'ArrowRight': item.x += step; break;
-            case 'ArrowUp': item.y -= step; break;
-            case 'ArrowDown': item.y += step; break;
-            case 'Delete': case 'Backspace':
-                placedItems.splice(selectedIndex, 1);
-                selectedIndex = placedItems.length > 0 ? placedItems.length - 1 : -1;
-                updateButtonState();
-                statusBar.textContent = `🗑️ 删除选中素材 (剩余${placedItems.length}个)`;
-                break;
-            default: handled = false;
-        }
-        if (handled) {
-            e.preventDefault();
-            item.x = Math.max(0, Math.min(item.x, canvasWidth - item.w));
-            item.y = Math.max(0, Math.min(item.y, canvasHeight - item.h));
-            renderCanvas();
-            if (e.key.startsWith('Arrow')) statusBar.textContent = `✏️ 微调: (${item.x}, ${item.y}) 步长${step}px`;
-        }
-    }
-
-    // ==================== 画布缩放 ====================
-    function fitCanvasToViewport() {
-        const panel = document.getElementById('canvasPanel');
-        const padding = 20;
-        const availW = panel.clientWidth - padding * 2;
-        const availH = panel.clientHeight - padding * 2 - 50;
-        zoom = Math.min(availW / canvasWidth, availH / canvasHeight);
-        zoom = Math.min(zoom, 8); zoom = Math.max(zoom, 0.15);
-        applyZoom();
-    }
-
-    function applyZoom() {
-        canvasWrapper.style.transform = `scale(${zoom})`;
-        canvasWrapper.style.transformOrigin = 'center center';
-        document.getElementById('zoomLabel').textContent = Math.round(zoom * 100) + '%';
-    }
-
-    // ==================== 按钮状态 ====================
-    function updateButtonState() {
-        undoBtn.disabled = placedItems.length === 0;
-        resetBtn.disabled = placedItems.length === 0 && !trackImage;
-        downloadBtn.disabled = !baseImage;
-    }
-
-    // ==================== 启动 ====================
-    init();
-</script>
-</body>
-</html>
+            console.error('
