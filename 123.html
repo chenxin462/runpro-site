@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>运动截图拼图工具 v1.7</title>
+    <title>运动截图拼图工具 v1.8</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -70,19 +70,6 @@
         .track-hint { position: absolute; bottom: 14px; left: 14px; z-index: 20; background: rgba(0,0,0,.55); color: #fff; font-size: 11px; padding: 4px 12px; border-radius: 6px; display: none; pointer-events: none; }
         .track-hint.active { display: block; }
 
-        /* 轨迹图缩放手柄（8个方向） */
-        .track-resize-handle { position: absolute; width: 12px; height: 12px; background: #1677ff; border: 2px solid #fff; border-radius: 50%; z-index: 26; display: none; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
-        .track-resize-handle.active { display: block; }
-        .track-resize-handle:hover { background: #4096ff; transform: scale(1.2); }
-        .track-resize-handle.nw { cursor: nwse-resize; }
-        .track-resize-handle.n  { cursor: ns-resize; }
-        .track-resize-handle.ne { cursor: nesw-resize; }
-        .track-resize-handle.e  { cursor: ew-resize; }
-        .track-resize-handle.se { cursor: nwse-resize; }
-        .track-resize-handle.s  { cursor: ns-resize; }
-        .track-resize-handle.sw { cursor: nesw-resize; }
-        .track-resize-handle.w  { cursor: ew-resize; }
-
         /* 右侧面板 */
         .right-panel { width: 300px; min-width: 260px; background: #fff; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.06); display: flex; flex-direction: column; padding: 14px; gap: 12px; flex-shrink: 0; overflow-y: auto; }
         .right-panel::-webkit-scrollbar { width: 4px; }
@@ -120,8 +107,9 @@
         .custom-row label { font-size: 12px; color: #666; min-width: 48px; flex-shrink: 0; font-weight: 500; }
         .custom-row input[type="text"], .custom-row select, .custom-row input[type="time"], .custom-row input[type="number"] { flex: 1; padding: 6px 10px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 12px; outline: none; background: #fff; color: #333; }
         .custom-row input:focus, .custom-row select:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,.1); }
-        .custom-row input[type="time"] { flex: 0.55; min-width: 0; }
-        .time-group { display: flex; gap: 6px; flex: 1; }
+        /* 修复时间选择器溢出：缩小flex比例 + 限制最大宽度 */
+        .custom-row input[type="time"] { flex: 0.48; min-width: 0; max-width: 78px; padding: 6px 4px; }
+        .time-group { display: flex; gap: 4px; flex: 1; }
         .time-group input { flex: 1; min-width: 0; }
 
         /* 头像 */
@@ -132,7 +120,9 @@
         .avatar-btns { display: flex; gap: 6px; flex-wrap: wrap; }
         .avatar-btns .btn { padding: 5px 12px; font-size: 12px; }
 
-        .hint-text { font-size: 10px; color: #999; line-height: 1.5; }
+        /* 提示文字：加粗 */
+        .hint-text { font-size: 11px; color: #666; line-height: 1.6; font-weight: 700; }
+        .hint-text .normal { font-weight: 400; color: #999; }
         .status-bar { padding: 8px 14px; background: #f7f8fa; border-radius: 8px; font-size: 12px; color: #777; text-align: center; border: 1px solid #f0f0f0; flex-shrink: 0; }
 
         /* 浮层 */
@@ -152,6 +142,10 @@
         /* Toast */
         .toast { position: fixed; top: 60px; left: 50%; transform: translateX(-50%) translateY(-20px); background: #333; color: #fff; padding: 8px 20px; border-radius: 8px; font-size: 13px; opacity: 0; transition: all .3s; z-index: 2000; pointer-events: none; }
         .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+        /* 轨迹图缩放手柄 - 鼠标样式 */
+        .canvas-wrapper.resizing { cursor: nwse-resize; }
+        .canvas-wrapper.track-moving { cursor: move; }
 
         /* 响应式 */
         @media (max-width: 1200px) {
@@ -180,7 +174,7 @@
 <div class="toast" id="toast"></div>
 
 <div class="header">
-    <h1>🏃 运动截图拼图 <span class="version-tag">v1.7</span></h1>
+    <h1>🏃 运动截图拼图 <span class="version-tag">v1.8</span></h1>
     <div class="project-selector">
         <label for="projectSelect">项目：</label>
         <select id="projectSelect"></select>
@@ -215,15 +209,6 @@
         <div class="snap-indicator" id="snapIndicator">↔ 已对齐</div>
         <div class="canvas-wrapper" id="canvasWrapper">
             <canvas id="baseCanvas"></canvas>
-            <!-- 轨迹图8方向缩放手柄 -->
-            <div class="track-resize-handle nw" id="th-nw" data-dir="nw"></div>
-            <div class="track-resize-handle n"  id="th-n"  data-dir="n"></div>
-            <div class="track-resize-handle ne" id="th-ne" data-dir="ne"></div>
-            <div class="track-resize-handle e"  id="th-e"  data-dir="e"></div>
-            <div class="track-resize-handle se" id="th-se" data-dir="se"></div>
-            <div class="track-resize-handle s"  id="th-s"  data-dir="s"></div>
-            <div class="track-resize-handle sw" id="th-sw" data-dir="sw"></div>
-            <div class="track-resize-handle w"  id="th-w"  data-dir="w"></div>
         </div>
         <div class="zoom-controls" id="zoomControls">
             <button class="zoom-btn" id="zoomOut" title="缩小">−</button>
@@ -231,7 +216,7 @@
             <button class="zoom-btn" id="zoomIn" title="放大">+</button>
             <button class="zoom-btn" id="zoomFit" title="适应窗口">⤢</button>
         </div>
-        <div class="track-hint" id="trackHint">拖拽手柄/滚轮缩放 · 方向键微调 · 拖拽移动位置</div>
+        <div class="track-hint" id="trackHint">滚轮缩放轨迹图 · 拖拽移动位置 · 右下角手柄拖拽缩放</div>
     </div>
 
     <!-- 右侧操作区 -->
@@ -293,9 +278,8 @@
             </div>
 
             <div class="hint-text">
-                💡 头像/用户名/日期三个元素各自独立，可在画布上分别拖拽移动<br>
-                💡 点击选中后方向键微调，Delete 删除选中元素，Esc 取消选中<br>
-                💡 大小已固定：头像96px / 用户名43px / 日期39px
+                💡 <strong>头像/用户名/日期三个元素各自独立，可在画布上分别拖拽移动</strong><br>
+                💡 <strong>点击选中后方向键微调，Delete 删除选中元素，Esc 取消选中</strong>
             </div>
         </div>
 
@@ -311,8 +295,10 @@
         </div>
 
         <div class="shortcut-hint">
-            <kbd>←↑↓→</kbd> 移动/微调1px · <kbd>Shift</kbd>+方向键 10px<br>
-            轨迹图：拖拽手柄等比缩放 · 滚轮缩放 · <kbd>Delete</kbd> 删除 · <kbd>Esc</kbd> 取消选中
+            <kbd>←↑↓→</kbd> 移动1px · <kbd>Shift</kbd>+方向键 移动10px<br>
+            <kbd>+/-</kbd> 缩放轨迹图 · <kbd>[</kbd>/<kbd>]</kbd> 微调缩放<br>
+            <kbd>Delete</kbd> 删除选中 · <kbd>Esc</kbd> 取消选中<br>
+            <kbd>拖拽右下角</kbd> 等比缩放轨迹图
         </div>
         <div class="status-bar" id="statusBar">就绪</div>
     </div>
@@ -326,6 +312,12 @@
     const MATERIALS_PATH = './materials/';
     const JPG_QUALITY = 0.92;
     const SNAP_THRESHOLD = 10;
+
+    // 轨迹图缩放手柄尺寸
+    const TRACK_RESIZE_HANDLE_SIZE = 14;
+    // 轨迹图缩放限制
+    const TRACK_MIN_SCALE = 0.02;
+    const TRACK_MAX_SCALE = 15;
 
     // ---- 固定默认值（v1.6 硬编码） ----
     const DEFAULT_AVATAR_SIZE = 96;
@@ -374,27 +366,27 @@
     let zoom = 1;
 
     // ---- 跑步轨迹图状态 ----
-    let trackImage = null;        // 轨迹图片对象
-    let trackX = 0;               // 轨迹图在画布上的 x
-    let trackY = 0;               // 轨迹图在画布上的 y
-    let trackScale = 1;           // 轨迹图缩放比例
-    let trackOrigW = 0;           // 轨迹图原始宽度
-    let trackOrigH = 0;           // 轨迹图原始高度
-    let trackSelected = false;    // 是否选中
-    let isTrackDragging = false;  // 是否正在拖拽轨迹图
-    let trackDragOffsetX = 0;     // 拖拽偏移
-    let trackDragOffsetY = 0;     // 拖拽偏移
+    let trackImage = null;
+    let trackX = 0;
+    let trackY = 0;
+    let trackScale = 1;
+    let trackOrigW = 0;
+    let trackOrigH = 0;
+    let trackSelected = false;
+    let isTrackDragging = false;
+    let trackDragOffsetX = 0;
+    let trackDragOffsetY = 0;
 
-    // 轨迹图缩放手柄状态
-    let isTrackResizing = false;  // 是否正在拖拽手柄缩放
-    let resizeDir = '';            // 当前拖拽的手柄方向
-    let resizeStartX = 0;         // 拖拽起始鼠标位置
-    let resizeStartY = 0;
-    let resizeStartScale = 1;     // 拖拽起始缩放比
-    let resizeStartW = 0;         // 拖拽起始绘制宽度
-    let resizeStartH = 0;         // 拖拽起始绘制高度
-    let resizeStartTrackX = 0;    // 拖拽起始轨迹图X
-    let resizeStartTrackY = 0;    // 拖拽起始轨迹图Y
+    // 轨迹图缩放手柄拖拽状态
+    let isTrackResizing = false;
+    let trackResizeStartX = 0;
+    let trackResizeStartY = 0;
+    let trackResizeStartScale = 1;
+    let trackResizeStartW = 0;
+    let trackResizeStartH = 0;
+
+    // 存储当前帧的手柄位置（供命中检测）
+    let trackResizeHandlePos = null;
 
     // ---- 三个独立的自定义元素（硬编码默认值） ----
     let customElements = {
@@ -497,6 +489,12 @@
         // 滚轮缩放轨迹图
         canvas.addEventListener('wheel', onWheel, { passive: false });
 
+        // 鼠标在画布上移动时检测缩放手柄悬停
+        canvas.addEventListener('mousemove', onCanvasMouseMove);
+        canvas.addEventListener('mouseleave', () => {
+            if (!isTrackResizing) canvasWrapper.classList.remove('resizing');
+        });
+
         refzoomOverlay.addEventListener('click', () => refzoomOverlay.classList.remove('active'));
         document.addEventListener('keydown', onKeyDown);
 
@@ -508,7 +506,6 @@
 
         initCustomControls();
         initTrackUpload();
-        initTrackResizeHandles();
 
         if (PROJECTS.length > 0) {
             projectSelect.value = PROJECTS[0].id;
@@ -675,18 +672,46 @@
         ctx.save();
         ctx.drawImage(trackImage, trackX, trackY, drawW, drawH);
 
-        // 选中框 + 手柄
+        // 选中框 + 缩放手柄
         if (trackSelected) {
+            const pad = 3;
+            // 虚线框
             ctx.strokeStyle = '#1677ff'; ctx.lineWidth = 2; ctx.setLineDash([6, 3]);
-            const pad = 3; ctx.strokeRect(trackX - pad, trackY - pad, drawW + pad * 2, drawH + pad * 2); ctx.setLineDash([]);
-            // 四角方块（Canvas内绘制，仅视觉）
+            ctx.strokeRect(trackX - pad, trackY - pad, drawW + pad * 2, drawH + pad * 2);
+            ctx.setLineDash([]);
+
+            // 四角方块（蓝色）
             ctx.fillStyle = '#1677ff'; const s = 6;
             [[trackX-pad,trackY-pad],[trackX+drawW+pad,trackY-pad],[trackX-pad,trackY+drawH+pad],[trackX+drawW+pad,trackY+drawH+pad]].forEach(([cx,cy]) => ctx.fillRect(cx-s/2, cy-s/2, s, s));
 
-            // 同步DOM手柄位置
-            positionTrackHandles(trackX - pad, trackY - pad, drawW + pad * 2, drawH + pad * 2);
+            // 右下角缩放手柄（绿色实心圆 + 白色箭头图标）
+            const handleX = trackX + drawW + pad;
+            const handleY = trackY + drawH + pad;
+            const hs = TRACK_RESIZE_HANDLE_SIZE;
+
+            // 阴影
+            ctx.beginPath(); ctx.arc(handleX, handleY, hs/2 + 1, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0,0,0,0.15)'; ctx.fill();
+
+            // 绿色圆底
+            ctx.beginPath(); ctx.arc(handleX, handleY, hs/2, 0, Math.PI * 2);
+            ctx.fillStyle = '#52c41a'; ctx.fill();
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+
+            // 缩放箭头图标 ↘
+            ctx.fillStyle = '#fff'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
+            const ax = handleX - 2, ay = handleY - 2;
+            ctx.beginPath();
+            ctx.moveTo(ax - 3, ay + 1); ctx.lineTo(ax + 1, ay + 1); ctx.lineTo(ax + 1, ay - 3);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(ax + 1, ay - 3); ctx.lineTo(ax + 4, ay - 3); ctx.lineTo(ax + 1, ay + 1);
+            ctx.closePath(); ctx.fill();
+
+            // 存储手柄位置供命中检测使用
+            trackResizeHandlePos = { x: handleX, y: handleY, size: hs };
         } else {
-            hideTrackHandles();
+            trackResizeHandlePos = null;
         }
 
         ctx.restore();
@@ -837,14 +862,14 @@
                     // 更新按钮状态
                     trackUploadBtn.classList.add('has-image');
                     trackBtnMain.textContent = '✅ 轨迹已上传';
-                    trackBtnSub.textContent = '点击替换 · 滚轮缩放 · 拖拽移动';
+                    trackBtnSub.textContent = '滚轮/手柄缩放 · 拖拽移动 · +/-微调';
                     trackRemoveBtn.classList.add('active');
                     trackHint.classList.add('active');
 
                     renderCanvas();
                     updateButtonState();
                     showToast('轨迹图已上传，居中显示');
-                    statusBar.textContent = `🗺️ 轨迹图已上传 (${trackOrigW}×${trackOrigH}) - 滚轮缩放/拖拽移动`;
+                    statusBar.textContent = `🗺️ 轨迹图已上传 (${trackOrigW}×${trackOrigH}) - 滚轮/手柄缩放/拖拽移动`;
                 };
                 img.onerror = () => { showToast('图片加载失败'); };
                 img.src = ev.target.result;
@@ -874,7 +899,7 @@
         trackSelected = false;
         isTrackDragging = false;
         isTrackResizing = false;
-        resizeDir = '';
+        trackResizeHandlePos = null;
 
         // 重置按钮状态
         trackUploadBtn.classList.remove('has-image');
@@ -882,8 +907,9 @@
         trackBtnSub.textContent = '仅限跑步 · 支持JPG/PNG';
         trackRemoveBtn.classList.remove('active');
         trackHint.classList.remove('active');
-        // 隐藏所有缩放手柄
-        hideTrackHandles();
+
+        // 恢复鼠标样式
+        canvasWrapper.classList.remove('resizing', 'track-moving');
     }
 
     function deselectTrack() {
@@ -896,6 +922,14 @@
         const drawW = trackOrigW * trackScale;
         const drawH = trackOrigH * trackScale;
         return cx >= trackX && cx <= trackX + drawW && cy >= trackY && cy <= trackY + drawH;
+    }
+
+    // 检测是否命中缩放手柄
+    function hitTrackResizeHandle(cx, cy) {
+        if (!trackImage || !trackSelected || !trackResizeHandlePos) return false;
+        const hp = trackResizeHandlePos;
+        const hs = hp.size + 4; // 扩大命中区域，更容易点中
+        return cx >= hp.x - hs/2 && cx <= hp.x + hs/2 && cy >= hp.y - hs/2 && cy <= hp.y + hs/2;
     }
 
     function getTrackDrawRect() {
@@ -1108,6 +1142,7 @@
         selectedIndex = -1;
         selectedCustom = null;
         Object.keys(customElements).forEach(k => customElements[k].selected = false);
+        canvasWrapper.classList.add('track-moving');
         renderCanvas();
     }
 
@@ -1126,220 +1161,67 @@
 
     function endTrackDrag() {
         isTrackDragging = false;
+        canvasWrapper.classList.remove('track-moving');
     }
 
-    // ==================== 轨迹图缩放手柄 ====================
-    function getHandleEls() {
-        return {
-            nw: document.getElementById('th-nw'),
-            n:  document.getElementById('th-n'),
-            ne: document.getElementById('th-ne'),
-            e:  document.getElementById('th-e'),
-            se: document.getElementById('th-se'),
-            s:  document.getElementById('th-s'),
-            sw: document.getElementById('th-sw'),
-            w:  document.getElementById('th-w'),
-        };
-    }
-
-    // 把8个手柄定位到选中框（参数是选中框的x,y,w,h，单位：画布像素）
-    function positionTrackHandles(bx, by, bw, bh) {
-        const handles = getHandleEls();
-        // 将画布坐标转换为canvas-wrapper内的屏幕像素
-        const rect = canvas.getBoundingClientRect();
-        const sx = rect.left;  // wrapper与canvas同位置
-        const sy = rect.top;
-        const cw = rect.width;
-        const ch = rect.height;
-        const scaleX = cw / canvas.width;
-        const scaleY = ch / canvas.height;
-
-        const x = sx + bx * scaleX;
-        const y = sy + by * scaleY;
-        const w = bw * scaleX;
-        const h = bh * scaleY;
-
-        const pos = {
-            nw: [x - 6,        y - 6],
-            n:  [x + w/2 - 6,  y - 6],
-            ne: [x + w - 6,     y - 6],
-            e:  [x + w - 6,     y + h/2 - 6],
-            se: [x + w - 6,     y + h - 6],
-            s:  [x + w/2 - 6,   y + h - 6],
-            sw: [x - 6,         y + h - 6],
-            w:  [x - 6,         y + h/2 - 6],
-        };
-
-        Object.entries(pos).forEach(([k, [hx, hy]]) => {
-            const el = handles[k];
-            el.style.left = hx + 'px';
-            el.style.top  = hy + 'px';
-            el.classList.add('active');
-        });
-    }
-
-    function hideTrackHandles() {
-        const handles = getHandleEls();
-        Object.values(handles).forEach(el => el.classList.remove('active'));
-    }
-
-    // 初始化手柄事件
-    function initTrackResizeHandles() {
-        const handles = getHandleEls();
-        Object.entries(handles).forEach(([dir, el]) => {
-            el.addEventListener('mousedown', e => {
-                if (!trackImage || !trackSelected) return;
-                e.preventDefault(); e.stopPropagation();
-                startTrackResize(dir, e.clientX, e.clientY);
-            });
-            el.addEventListener('touchstart', e => {
-                if (!trackImage || !trackSelected) return;
-                e.preventDefault(); e.stopPropagation();
-                const t = e.touches[0];
-                startTrackResize(dir, t.clientX, t.clientY);
-            }, { passive: false });
-        });
-        window.addEventListener('mousemove', onTrackResizeMove);
-        window.addEventListener('mouseup', endTrackResize);
-        window.addEventListener('touchmove', onTrackResizeTouchMove, { passive: false });
-        window.addEventListener('touchend', endTrackResize);
-        window.addEventListener('touchcancel', endTrackResize);
-        // 窗口尺寸变化时重定位
-        window.addEventListener('resize', () => { if (trackSelected && trackImage) updateTrackHandlePositions(); });
-        // 画布缩放变化时也重定位
-        const obs = new MutationObserver(() => { if (trackSelected && trackImage) updateTrackHandlePositions(); });
-        obs.observe(document.getElementById('canvasWrapper'), { attributes: true, attributeFilter: ['style'] });
-    }
-
-    function updateTrackHandlePositions() {
-        const drawW = trackOrigW * trackScale;
-        const drawH = trackOrigH * trackScale;
-        const pad = 3;
-        positionTrackHandles(trackX - pad, trackY - pad, drawW + pad * 2, drawH + pad * 2);
-    }
-
-    function startTrackResize(dir, cx, cy) {
+    // ==================== 轨迹图缩放手柄拖拽（核心新功能） ====================
+    function startTrackResize(cx, cy) {
         isTrackResizing = true;
-        resizeDir = dir;
-        resizeStartX = cx;
-        resizeStartY = cy;
-        resizeStartScale = trackScale;
-        resizeStartW = trackOrigW * trackScale;
-        resizeStartH = trackOrigH * trackScale;
-        resizeStartTrackX = trackX;
-        resizeStartTrackY = trackY;
+        trackSelected = true;
+        trackResizeStartX = cx;
+        trackResizeStartY = cy;
+        trackResizeStartScale = trackScale;
+        trackResizeStartW = trackOrigW * trackScale;
+        trackResizeStartH = trackOrigH * trackScale;
         // 取消其他选中
         selectedIndex = -1;
         selectedCustom = null;
         Object.keys(customElements).forEach(k => customElements[k].selected = false);
-        statusBar.textContent = `🗺️ 缩放轨迹图中... (等比缩放中)`;
-    }
-
-    function computeResize(cx, cy) {
-        // 根据方向和鼠标位移，计算新的 scale（始终等比）
-        const dx = cx - resizeStartX;
-        const dy = cy - resizeStartY;
-        const rect = canvas.getBoundingClientRect();
-        const pxPerCanvasX = rect.width / canvas.width;
-        const pxPerCanvasY = rect.height / canvas.height;
-
-        let factor = 1;
-        // 用主要移动方向决定缩放量
-        switch (resizeDir) {
-            case 'e':  factor = 1 + dx / (resizeStartW * pxPerCanvasX); break;
-            case 'w':  factor = 1 - dx / (resizeStartW * pxPerCanvasX); break;
-            case 's':  factor = 1 + dy / (resizeStartH * pxPerCanvasY); break;
-            case 'n':  factor = 1 - dy / (resizeStartH * pxPerCanvasY); break;
-            case 'se': factor = 1 + (dx / (resizeStartW * pxPerCanvasX) + dy / (resizeStartH * pxPerCanvasY)) / 2; break;
-            case 'nw': factor = 1 - (dx / (resizeStartW * pxPerCanvasX) + dy / (resizeStartH * pxPerCanvasY)) / 2; break;
-            case 'ne': factor = 1 + (dx / (resizeStartW * pxPerCanvasX) - dy / (resizeStartH * pxPerCanvasY)) / 2; break;
-            case 'sw': factor = 1 + (-dx / (resizeStartW * pxPerCanvasX) + dy / (resizeStartH * pxPerCanvasY)) / 2; break;
-        }
-
-        let newScale = resizeStartScale * factor;
-        const minScale = 0.05;
-        const maxScale = 10;
-        newScale = Math.max(minScale, Math.min(newScale, maxScale));
-        return newScale;
-    }
-
-    function applyResize(newScale) {
-        const oldW = trackOrigW * trackScale;
-        const oldH = trackOrigH * trackScale;
-        const newW = trackOrigW * newScale;
-        const newH = trackOrigH * newScale;
-
-        // 根据方向调整 trackX/trackY，使缩放锚点固定
-        let nx = resizeStartTrackX;
-        let ny = resizeStartTrackY;
-        switch (resizeDir) {
-            case 'e':  ny = resizeStartTrackY; break; // 左锚
-            case 'w':  nx = resizeStartTrackX + (oldW - newW); ny = resizeStartTrackY; break; // 右锚
-            case 's':  nx = resizeStartTrackX; break; // 上锚
-            case 'n':  nx = resizeStartTrackX; ny = resizeStartTrackY + (oldH - newH); break; // 下锚
-            case 'se': break; // 左上锚
-            case 'nw': nx = resizeStartTrackX + (oldW - newW); ny = resizeStartTrackY + (oldH - newH); break; // 右下锚
-            case 'ne': nx = resizeStartTrackX + (oldW - newW); ny = resizeStartTrackY; break; // 左下锚
-            case 'sw': nx = resizeStartTrackX; ny = resizeStartTrackY + (oldH - newH); break; // 右上锚
-        }
-
-        // 边界限制
-        const minX = -newW * 0.5;
-        const maxX = canvasWidth - newW * 0.5;
-        const minY = -newH * 0.5;
-        const maxY = canvasHeight - newH * 0.5;
-        nx = Math.max(minX, Math.min(nx, maxX));
-        ny = Math.max(minY, Math.min(ny, maxY));
-
-        trackX = Math.round(nx);
-        trackY = Math.round(ny);
-        trackScale = newScale;
+        canvasWrapper.classList.add('resizing');
+        renderCanvas();
     }
 
     function moveTrackResize(cx, cy) {
         if (!isTrackResizing) return;
-        const newScale = computeResize(cx, cy);
-        applyResize(newScale);
+
+        // 以轨迹图左上角为锚点，计算鼠标拖拽出的宽高
+        const anchorX = trackX;
+        const anchorY = trackY;
+
+        let newW = cx - anchorX;
+        let newH = cy - anchorY;
+
+        // 基于宽高比计算等比缩放（取宽度和高度方向算出的较小缩放比，防止溢出）
+        let scaleByW = newW / trackOrigW;
+        let scaleByH = newH / trackOrigH;
+        let newScale = Math.min(scaleByW, scaleByH);
+
+        // 限制缩放范围
+        newScale = Math.max(TRACK_MIN_SCALE, Math.min(newScale, TRACK_MAX_SCALE));
+
+        // 用对角距离做平滑补偿（拖拽体验更自然）
+        const dx = cx - trackResizeStartX;
+        const dy = cy - trackResizeStartY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const startDist = Math.sqrt(trackResizeStartW * trackResizeStartW + trackResizeStartH * trackResizeStartH);
+        if (startDist > 10) {
+            const distScale = (dist / startDist) * trackResizeStartScale;
+            const blended = newScale * 0.7 + distScale * 0.3;
+            newScale = Math.max(TRACK_MIN_SCALE, Math.min(blended, TRACK_MAX_SCALE));
+        }
+
+        trackScale = newScale;
         renderCanvas();
-        const drawW = Math.round(trackOrigW * trackScale);
-        const drawH = Math.round(trackOrigH * trackScale);
-        statusBar.textContent = `🗺️ 缩放: ${Math.round(trackScale*100)}%  (${drawW}×${drawH}px)  方向:${resizeDir}`;
-    }
-
-    function onTrackResizeMove(e) {
-        if (!isTrackResizing) return;
-        e.preventDefault();
-        moveTrackResize(e.clientX, e.clientY);
-    }
-
-    function onTrackResizeTouchMove(e) {
-        if (!isTrackResizing) return;
-        e.preventDefault();
-        const t = e.touches[0]; if (!t) return;
-        moveTrackResize(t.clientX, t.clientY);
     }
 
     function endTrackResize() {
         if (isTrackResizing) {
             isTrackResizing = false;
-            resizeDir = '';
-            statusBar.textContent = `🗺️ 缩放完成: ${Math.round(trackScale*100)}%`;
+            canvasWrapper.classList.remove('resizing');
+            const drawW = Math.round(trackOrigW * trackScale);
+            const drawH = Math.round(trackOrigH * trackScale);
+            statusBar.textContent = `🗺️ 轨迹图缩放完成: ${Math.round(trackScale * 100)}% (${drawW}×${drawH}px)`;
         }
-    }
-
-    // 键盘+/-缩放后，以轨迹图中心为锚点保持位置稳定
-    function updateTrackAfterKbScale() {
-        const oldW = trackOrigW * trackScale;
-        const oldH = trackOrigH * trackScale;
-        // 简单钳制到画布范围
-        const minX = -oldW * 0.5, maxX = canvasWidth - oldW * 0.5;
-        const minY = -oldH * 0.5, maxY = canvasHeight - oldH * 0.5;
-        trackX = Math.max(minX, Math.min(trackX, maxX));
-        trackY = Math.max(minY, Math.min(trackY, maxY));
-        renderCanvas();
-        const drawW = Math.round(trackOrigW * trackScale);
-        const drawH = Math.round(trackOrigH * trackScale);
-        statusBar.textContent = `🗺️ 缩放: ${Math.round(trackScale*100)}%  (${drawW}×${drawH}px)`;
     }
 
     // ==================== 滚轮缩放轨迹图 ====================
@@ -1365,9 +1247,7 @@
         let newScale = trackScale * delta;
 
         // 限制缩放范围
-        const minScale = 0.05;
-        const maxScale = 10;
-        newScale = Math.max(minScale, Math.min(newScale, maxScale));
+        newScale = Math.max(TRACK_MIN_SCALE, Math.min(newScale, TRACK_MAX_SCALE));
 
         // 以鼠标位置为缩放中心
         const mouseX = c.x;
@@ -1382,16 +1262,47 @@
         renderCanvas();
     }
 
+    // ==================== 键盘缩放轨迹图（新功能） ====================
+    function scaleTrackByKey(factor) {
+        if (!trackImage || !trackSelected) return;
+        const oldScale = trackScale;
+        let newScale = trackScale * factor;
+        newScale = Math.max(TRACK_MIN_SCALE, Math.min(newScale, TRACK_MAX_SCALE));
+
+        // 以轨迹图中心为缩放锚点
+        const drawW = trackOrigW * oldScale;
+        const drawH = trackOrigH * oldScale;
+        const centerX = trackX + drawW / 2;
+        const centerY = trackY + drawH / 2;
+
+        trackX = Math.round(centerX - (trackOrigW * newScale) / 2);
+        trackY = Math.round(centerY - (trackOrigH * newScale) / 2);
+        trackScale = newScale;
+
+        const newDrawW = Math.round(trackOrigW * trackScale);
+        const newDrawH = Math.round(trackOrigH * trackScale);
+        statusBar.textContent = `🗺️ 轨迹图缩放: ${Math.round(trackScale * 100)}% (${newDrawW}×${newDrawH}px)`;
+        renderCanvas();
+    }
+
     // ==================== 指针事件 ====================
     function onPointerDown(e) {
         if (!baseImage) return;
         const c = getCanvasCoords(e.clientX, e.clientY);
 
-        // 优先检测轨迹图
+        // 优先检测缩放手柄（最高优先级）
+        if (trackImage && trackSelected && hitTrackResizeHandle(c.x, c.y)) {
+            startTrackResize(c.x, c.y);
+            e.preventDefault();
+            statusBar.textContent = `🗺️ 拖拽右下角手柄等比缩放轨迹图...`;
+            return;
+        }
+
+        // 检测轨迹图本体
         if (hitTrackImage(c.x, c.y)) {
             startTrackDrag(c.x, c.y);
             e.preventDefault();
-            statusBar.textContent = `🗺️ 拖拽轨迹图中... (滚轮缩放)`;
+            statusBar.textContent = `🗺️ 拖拽轨迹图中... (滚轮/手柄缩放)`;
             return;
         }
 
@@ -1410,18 +1321,47 @@
     }
 
     function onPointerMove(e) {
+        // 优先处理缩放手柄拖拽
+        if (isTrackResizing) {
+            const c = getCanvasCoords(e.clientX, e.clientY);
+            moveTrackResize(c.x, c.y);
+            e.preventDefault();
+            return;
+        }
         if (isTrackDragging) { const c = getCanvasCoords(e.clientX, e.clientY); moveTrackDrag(c.x, c.y); e.preventDefault(); return; }
         if (customDragInfo) { const c = getCanvasCoords(e.clientX, e.clientY); moveCustomDrag(c.x, c.y); e.preventDefault(); return; }
         if (!isDragging) return;
         const c = getCanvasCoords(e.clientX, e.clientY); moveDrag(c.x, c.y); e.preventDefault();
     }
 
-    function onPointerUp() { endTrackDrag(); endCustomDrag(); endDrag(); }
+    function onPointerUp() { endTrackResize(); endTrackDrag(); endCustomDrag(); endDrag(); }
+
+    // 鼠标悬停在手柄上时切换光标
+    function onCanvasMouseMove(e) {
+        if (isTrackResizing || isTrackDragging) return;
+        if (!trackImage || !trackSelected) {
+            canvasWrapper.classList.remove('resizing');
+            return;
+        }
+        const c = getCanvasCoords(e.clientX, e.clientY);
+        if (hitTrackResizeHandle(c.x, c.y)) {
+            canvasWrapper.classList.add('resizing');
+        } else {
+            canvasWrapper.classList.remove('resizing');
+        }
+    }
 
     function onTouchStart(e) {
         if (!baseImage) return;
         const t = e.touches[0]; if (!t) return;
         const c = getCanvasCoords(t.clientX, t.clientY);
+
+        // 优先检测缩放手柄
+        if (trackImage && trackSelected && hitTrackResizeHandle(c.x, c.y)) {
+            startTrackResize(c.x, c.y);
+            e.preventDefault();
+            return;
+        }
 
         if (hitTrackImage(c.x, c.y)) { startTrackDrag(c.x, c.y); e.preventDefault(); return; }
 
@@ -1432,15 +1372,16 @@
     }
 
     function onTouchMove(e) {
+        if (isTrackResizing) { const t = e.touches[0]; if (!t) return; const c = getCanvasCoords(t.clientX, t.clientY); moveTrackResize(c.x, c.y); e.preventDefault(); return; }
         if (isTrackDragging) { const t = e.touches[0]; if (!t) return; const c = getCanvasCoords(t.clientX, t.clientY); moveTrackDrag(c.x, c.y); e.preventDefault(); return; }
         if (customDragInfo) { const t = e.touches[0]; if (!t) return; const c = getCanvasCoords(t.clientX, t.clientY); moveCustomDrag(c.x, c.y); e.preventDefault(); return; }
         if (!isDragging) return;
         const t = e.touches[0]; if (!t) return; const c = getCanvasCoords(t.clientX, t.clientY); moveDrag(c.x, c.y); e.preventDefault();
     }
 
-    function onTouchEnd() { endTrackDrag(); endCustomDrag(); endDrag(); }
+    function onTouchEnd() { endTrackResize(); endTrackDrag(); endCustomDrag(); endDrag(); }
 
-    // ==================== 键盘 ====================
+    // ==================== 键盘（增强版） ====================
     function onKeyDown(e) {
         if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
 
@@ -1455,16 +1396,26 @@
 
         const step = e.shiftKey ? 10 : 1;
 
-        // 轨迹图微调
+        // ===== 轨迹图操作（最高优先级） =====
         if (trackSelected && trackImage) {
             let handled = true;
+
             switch (e.key) {
+                // 方向键微移动
                 case 'ArrowLeft': trackX -= step; break;
                 case 'ArrowRight': trackX += step; break;
                 case 'ArrowUp': trackY -= step; break;
                 case 'ArrowDown': trackY += step; break;
-                case '+': case '=': trackScale = Math.min(trackScale * 1.1, 10); updateTrackAfterKbScale(); break;
-                case '-': case '_': trackScale = Math.max(trackScale / 1.1, 0.05); updateTrackAfterKbScale(); break;
+
+                // 键盘缩放（大步）
+                case '+': case '=': scaleTrackByKey(1.1); break;
+                case '-': case '_': scaleTrackByKey(0.9); break;
+
+                // 精细缩放（小步）
+                case ']': scaleTrackByKey(1.02); break;
+                case '[': scaleTrackByKey(0.98); break;
+
+                // 删除
                 case 'Delete':
                 case 'Backspace':
                     resetTrackImage();
@@ -1475,14 +1426,21 @@
                     break;
                 default: handled = false;
             }
+
             if (handled) {
                 e.preventDefault();
                 const drawW = trackOrigW * trackScale;
                 const drawH = trackOrigH * trackScale;
+                // 限制位置不超出画布太多
                 trackX = Math.max(-drawW * 0.5, Math.min(trackX, canvasWidth - drawW * 0.5));
                 trackY = Math.max(-drawH * 0.5, Math.min(trackY, canvasHeight - drawH * 0.5));
                 renderCanvas();
-                statusBar.textContent = `🗺️ 轨迹图: (${trackX}, ${trackY}) 步长${step}px 缩放${Math.round(trackScale*100)}%`;
+
+                if (e.key.startsWith('Arrow')) {
+                    statusBar.textContent = `🗺️ 轨迹图: (${trackX}, ${trackY}) 步长${step}px 缩放${Math.round(trackScale*100)}%`;
+                } else {
+                    statusBar.textContent = `🗺️ 轨迹图缩放: ${Math.round(trackScale * 100)}% (${Math.round(drawW)}×${Math.round(drawH)}px)`;
+                }
             }
             return;
         }
