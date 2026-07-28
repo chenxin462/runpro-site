@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>运动截图拼图工具 v1.6</title>
+    <title>运动截图拼图工具 v1.7</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -50,6 +50,25 @@
         .zoom-btn { width: 34px; height: 34px; border: 1px solid #d9d9d9; border-radius: 6px; background: #fff; color: #555; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; }
         .zoom-btn:hover { border-color: #1677ff; color: #1677ff; }
         .zoom-label { display: flex; align-items: center; padding: 0 8px; font-size: 12px; color: #888; min-width: 48px; justify-content: center; }
+
+        /* 跑步轨迹上传按钮 - 画布右上角浮动 */
+        .track-upload-float { position: absolute; top: 12px; right: 12px; z-index: 25; display: none; flex-direction: column; gap: 6px; }
+        .track-upload-float.active { display: flex; }
+        .track-upload-btn { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: rgba(255,255,255,0.92); border: 1px solid #d9d9d9; border-radius: 10px; cursor: pointer; transition: all .2s; backdrop-filter: blur(6px); box-shadow: 0 2px 10px rgba(0,0,0,.08); font-size: 13px; color: #333; font-weight: 500; }
+        .track-upload-btn:hover { border-color: #1677ff; color: #1677ff; box-shadow: 0 2px 14px rgba(22,119,255,.15); transform: translateY(-1px); }
+        .track-upload-btn .track-icon { font-size: 18px; }
+        .track-upload-btn .track-text { display: flex; flex-direction: column; align-items: flex-start; }
+        .track-upload-btn .track-text .main { font-size: 13px; font-weight: 600; }
+        .track-upload-btn .track-text .sub { font-size: 10px; color: #999; font-weight: 400; margin-top: 1px; }
+        .track-upload-btn.has-image { border-color: #52c41a; background: rgba(246,255,237,0.92); }
+        .track-upload-btn.has-image .sub { color: #52c41a; }
+        .track-remove-btn { display: none; align-items: center; justify-content: center; padding: 6px 12px; background: rgba(255,77,79,0.08); border: 1px solid #ffccc7; border-radius: 8px; cursor: pointer; font-size: 12px; color: #ff4d4f; transition: all .15s; }
+        .track-remove-btn:hover { background: rgba(255,77,79,0.15); border-color: #ff4d4f; }
+        .track-remove-btn.active { display: flex; }
+
+        /* 轨迹图缩放提示 */
+        .track-hint { position: absolute; bottom: 14px; left: 14px; z-index: 20; background: rgba(0,0,0,.55); color: #fff; font-size: 11px; padding: 4px 12px; border-radius: 6px; display: none; pointer-events: none; }
+        .track-hint.active { display: block; }
 
         /* 右侧面板 */
         .right-panel { width: 300px; min-width: 260px; background: #fff; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.06); display: flex; flex-direction: column; padding: 14px; gap: 12px; flex-shrink: 0; overflow-y: auto; }
@@ -135,6 +154,7 @@
             .canvas-panel { min-width: unset; flex: 1; }
             .action-buttons { flex: 1; }
             .custom-section { min-width: 260px; }
+            .track-upload-float { top: 8px; right: 8px; }
         }
     </style>
 </head>
@@ -147,7 +167,7 @@
 <div class="toast" id="toast"></div>
 
 <div class="header">
-    <h1>🏃 运动截图拼图 <span class="version-tag">v1.6</span></h1>
+    <h1>🏃 运动截图拼图 <span class="version-tag">v1.7</span></h1>
     <div class="project-selector">
         <label for="projectSelect">项目：</label>
         <select id="projectSelect"></select>
@@ -167,6 +187,18 @@
 
     <!-- 画布区 -->
     <div class="canvas-panel" id="canvasPanel">
+        <!-- 跑步轨迹上传按钮（画布右上角浮动） -->
+        <div class="track-upload-float" id="trackUploadFloat">
+            <div class="track-upload-btn" id="trackUploadBtn">
+                <span class="track-icon">🗺️</span>
+                <span class="track-text">
+                    <span class="main" id="trackBtnMain">上传跑步轨迹</span>
+                    <span class="sub" id="trackBtnSub">仅限跑步 · 支持JPG/PNG</span>
+                </span>
+            </div>
+            <div class="track-remove-btn" id="trackRemoveBtn">✕ 清除轨迹图</div>
+        </div>
+
         <div class="snap-indicator" id="snapIndicator">↔ 已对齐</div>
         <div class="canvas-wrapper" id="canvasWrapper">
             <canvas id="baseCanvas"></canvas>
@@ -177,6 +209,7 @@
             <button class="zoom-btn" id="zoomIn" title="放大">+</button>
             <button class="zoom-btn" id="zoomFit" title="适应窗口">⤢</button>
         </div>
+        <div class="track-hint" id="trackHint">滚轮缩放轨迹图 · 拖拽移动位置</div>
     </div>
 
     <!-- 右侧操作区 -->
@@ -263,6 +296,9 @@
     </div>
 </div>
 
+<!-- 隐藏的文件输入 -->
+<input type="file" id="trackImageInput" accept="image/*" style="display:none;">
+
 <script>
     // ==================== 配置 ====================
     const MATERIALS_PATH = './materials/';
@@ -315,20 +351,32 @@
     let guideVAligned = false, guideHAligned = false;
     let zoom = 1;
 
+    // ---- 跑步轨迹图状态 ----
+    let trackImage = null;        // 轨迹图片对象
+    let trackX = 0;               // 轨迹图在画布上的 x
+    let trackY = 0;               // 轨迹图在画布上的 y
+    let trackScale = 1;           // 轨迹图缩放比例
+    let trackOrigW = 0;           // 轨迹图原始宽度
+    let trackOrigH = 0;           // 轨迹图原始高度
+    let trackSelected = false;    // 是否选中
+    let isTrackDragging = false;  // 是否正在拖拽轨迹图
+    let trackDragOffsetX = 0;     // 拖拽偏移
+    let trackDragOffsetY = 0;     // 拖拽偏移
+
     // ---- 三个独立的自定义元素（硬编码默认值） ----
     let customElements = {
         avatar: {
             type: 'avatar',
             img: null,
             x: 30, y: 30,
-            size: DEFAULT_AVATAR_SIZE,  // 固定 96px
+            size: DEFAULT_AVATAR_SIZE,
             selected: false,
         },
         username: {
             type: 'username',
-            text: DEFAULT_USERNAME_TEXT,  // 固定默认值
+            text: DEFAULT_USERNAME_TEXT,
             x: 140, y: 35,
-            fontSize: DEFAULT_USERNAME_SIZE,  // 固定 43px
+            fontSize: DEFAULT_USERNAME_SIZE,
             fontWeight: 500,
             color: '#000000',
             selected: false,
@@ -336,7 +384,7 @@
         date: {
             type: 'date',
             x: 30, y: 140,
-            fontSize: DEFAULT_DATE_SIZE,  // 固定 39px
+            fontSize: DEFAULT_DATE_SIZE,
             color: '#888888',
             selected: false,
         }
@@ -359,6 +407,15 @@
     const refzoomImg = document.getElementById('refzoomImg');
     const snapIndicator = document.getElementById('snapIndicator');
     const canvasWrapper = document.getElementById('canvasWrapper');
+
+    // 轨迹图相关 DOM
+    const trackUploadFloat = document.getElementById('trackUploadFloat');
+    const trackUploadBtn = document.getElementById('trackUploadBtn');
+    const trackBtnMain = document.getElementById('trackBtnMain');
+    const trackBtnSub = document.getElementById('trackBtnSub');
+    const trackRemoveBtn = document.getElementById('trackRemoveBtn');
+    const trackImageInput = document.getElementById('trackImageInput');
+    const trackHint = document.getElementById('trackHint');
 
     // ==================== Toast ====================
     function showToast(msg, duration = 1800) {
@@ -404,6 +461,9 @@
         window.addEventListener('touchend', onTouchEnd, { passive: false });
         window.addEventListener('touchcancel', onTouchEnd, { passive: false });
 
+        // 滚轮缩放轨迹图
+        canvas.addEventListener('wheel', onWheel, { passive: false });
+
         refzoomOverlay.addEventListener('click', () => refzoomOverlay.classList.remove('active'));
         document.addEventListener('keydown', onKeyDown);
 
@@ -414,6 +474,7 @@
         window.addEventListener('resize', () => { if (baseImage) fitCanvasToViewport(); });
 
         initCustomControls();
+        initTrackUpload();
 
         if (PROJECTS.length > 0) {
             projectSelect.value = PROJECTS[0].id;
@@ -449,6 +510,16 @@
         currentProject = projectId;
         placedItems = []; selectedIndex = -1; selectedCustom = null;
         isDragging = false; dragIndex = -1; guideV = null; guideH = null;
+
+        // 重置轨迹图
+        resetTrackImage();
+
+        // 控制轨迹上传按钮显示
+        if (projectId === 'paobu') {
+            trackUploadFloat.classList.add('active');
+        } else {
+            trackUploadFloat.classList.remove('active');
+        }
 
         // 重置三个元素到默认位置（保留用户上传的头像）
         const savedAvatarImg = customElements.avatar.img;
@@ -512,6 +583,7 @@
             const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
             const item = { img, x: Math.round((canvasWidth - w) / 2), y: Math.round((canvasHeight - h) / 2), w, h, file };
             placedItems.push(item); selectedIndex = placedItems.length - 1; selectedCustom = null;
+            deselectTrack();
             renderCanvas(); updateButtonState();
             statusBar.textContent = `➕ 添加: ${file}  (共${placedItems.length}个)`;
         };
@@ -527,19 +599,22 @@
         // 1. 底图
         ctx.drawImage(baseImage, 0, 0, canvasWidth, canvasHeight);
 
-        // 2. 普通素材
+        // 2. 跑步轨迹图（在底图之上，普通素材之下）
+        drawTrackImage();
+
+        // 3. 普通素材
         for (let i = 0; i < placedItems.length; i++) {
             const item = placedItems[i];
             ctx.drawImage(item.img, item.x, item.y, item.w, item.h);
             if (i === selectedIndex) drawSelectionRect(item.x, item.y, item.w, item.h);
         }
 
-        // 3. 三个自定义元素
+        // 4. 三个自定义元素
         drawAvatar();
         drawUsername();
         drawDate();
 
-        // 4. 对齐辅助线
+        // 5. 对齐辅助线
         if (guideV !== null || guideH !== null) {
             ctx.save(); ctx.setLineDash([8, 6]); ctx.lineWidth = 1;
             if (guideV !== null) { ctx.strokeStyle = guideVAligned ? '#ff4d4f' : '#91caff'; ctx.beginPath(); ctx.moveTo(guideV + .5, 0); ctx.lineTo(guideV + .5, canvasHeight); ctx.stroke(); }
@@ -553,6 +628,28 @@
         const pad = 2; ctx.strokeRect(x - pad, y - pad, w + pad * 2, h + pad * 2); ctx.setLineDash([]);
         ctx.fillStyle = '#1677ff'; const s = 6;
         [[x-pad,y-pad],[x+w+pad,y-pad],[x-pad,y+h+pad],[x+w+pad,y+h+pad]].forEach(([cx,cy]) => ctx.fillRect(cx-s/2, cy-s/2, s, s));
+        ctx.restore();
+    }
+
+    // ---- 绘制跑步轨迹图 ----
+    function drawTrackImage() {
+        if (!trackImage) return;
+
+        const drawW = trackOrigW * trackScale;
+        const drawH = trackOrigH * trackScale;
+
+        ctx.save();
+        ctx.drawImage(trackImage, trackX, trackY, drawW, drawH);
+
+        // 选中框
+        if (trackSelected) {
+            ctx.strokeStyle = '#1677ff'; ctx.lineWidth = 2; ctx.setLineDash([6, 3]);
+            const pad = 3; ctx.strokeRect(trackX - pad, trackY - pad, drawW + pad * 2, drawH + pad * 2); ctx.setLineDash([]);
+            // 四角方块
+            ctx.fillStyle = '#1677ff'; const s = 6;
+            [[trackX-pad,trackY-pad],[trackX+drawW+pad,trackY-pad],[trackX-pad,trackY+drawH+pad],[trackX+drawW+pad,trackY+drawH+pad]].forEach(([cx,cy]) => ctx.fillRect(cx-s/2, cy-s/2, s, s));
+        }
+
         ctx.restore();
     }
 
@@ -668,6 +765,102 @@
         document.getElementById('endTimeInput').addEventListener('change', () => renderCanvas());
     }
 
+    // ==================== 跑步轨迹图上传 ====================
+    function initTrackUpload() {
+        // 点击上传按钮
+        trackUploadBtn.addEventListener('click', () => {
+            trackImageInput.click();
+        });
+
+        // 文件选择
+        trackImageInput.addEventListener('change', e => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = ev => {
+                const img = new Image();
+                img.onload = () => {
+                    trackImage = img;
+                    trackOrigW = img.naturalWidth || img.width;
+                    trackOrigH = img.naturalHeight || img.height;
+
+                    // 初始缩放：让图片宽度为画布的 40%
+                    const targetW = canvasWidth * 0.4;
+                    trackScale = targetW / trackOrigW;
+
+                    // 居中
+                    const drawW = trackOrigW * trackScale;
+                    const drawH = trackOrigH * trackScale;
+                    trackX = Math.round((canvasWidth - drawW) / 2);
+                    trackY = Math.round((canvasHeight - drawH) / 2);
+
+                    // 更新按钮状态
+                    trackUploadBtn.classList.add('has-image');
+                    trackBtnMain.textContent = '✅ 轨迹已上传';
+                    trackBtnSub.textContent = '点击替换 · 滚轮缩放 · 拖拽移动';
+                    trackRemoveBtn.classList.add('active');
+                    trackHint.classList.add('active');
+
+                    renderCanvas();
+                    updateButtonState();
+                    showToast('轨迹图已上传，居中显示');
+                    statusBar.textContent = `🗺️ 轨迹图已上传 (${trackOrigW}×${trackOrigH}) - 滚轮缩放/拖拽移动`;
+                };
+                img.onerror = () => { showToast('图片加载失败'); };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+            // 重置 input 以便重复选择同一文件
+            e.target.value = '';
+        });
+
+        // 清除轨迹图
+        trackRemoveBtn.addEventListener('click', () => {
+            resetTrackImage();
+            renderCanvas();
+            updateButtonState();
+            showToast('轨迹图已清除');
+            statusBar.textContent = '🗺️ 轨迹图已清除，恢复默认底图';
+        });
+    }
+
+    function resetTrackImage() {
+        trackImage = null;
+        trackX = 0;
+        trackY = 0;
+        trackScale = 1;
+        trackOrigW = 0;
+        trackOrigH = 0;
+        trackSelected = false;
+        isTrackDragging = false;
+
+        // 重置按钮状态
+        trackUploadBtn.classList.remove('has-image');
+        trackBtnMain.textContent = '上传跑步轨迹';
+        trackBtnSub.textContent = '仅限跑步 · 支持JPG/PNG';
+        trackRemoveBtn.classList.remove('active');
+        trackHint.classList.remove('active');
+    }
+
+    function deselectTrack() {
+        trackSelected = false;
+    }
+
+    // ==================== 轨迹图命中检测 ====================
+    function hitTrackImage(cx, cy) {
+        if (!trackImage) return false;
+        const drawW = trackOrigW * trackScale;
+        const drawH = trackOrigH * trackScale;
+        return cx >= trackX && cx <= trackX + drawW && cy >= trackY && cy <= trackY + drawH;
+    }
+
+    function getTrackDrawRect() {
+        const drawW = trackOrigW * trackScale;
+        const drawH = trackOrigH * trackScale;
+        return { x: trackX, y: trackY, w: drawW, h: drawH };
+    }
+
     // ==================== 撤销/重置 ====================
     function undoLastItem() {
         if (placedItems.length === 0) return;
@@ -678,10 +871,11 @@
     }
 
     function resetAll() {
-        if (placedItems.length === 0) return;
+        if (placedItems.length === 0 && !trackImage) return;
         if (!confirm('确定要清空画布上所有素材吗？')) return;
         placedItems = []; selectedIndex = -1; selectedCustom = null;
         guideV = null; guideH = null;
+        resetTrackImage();
         renderCanvas(); updateButtonState();
         statusBar.textContent = '🗑️ 已重置';
     }
@@ -695,6 +889,15 @@
 
         ecCtx.fillStyle = '#fff'; ecCtx.fillRect(0, 0, canvasWidth, canvasHeight);
         ecCtx.drawImage(baseImage, 0, 0, canvasWidth, canvasHeight);
+
+        // 导出轨迹图
+        if (trackImage) {
+            const drawW = trackOrigW * trackScale;
+            const drawH = trackOrigH * trackScale;
+            ecCtx.drawImage(trackImage, trackX, trackY, drawW, drawH);
+        }
+
+        // 导出普通素材
         for (const item of placedItems) ecCtx.drawImage(item.img, item.x, item.y, item.w, item.h);
 
         exportAvatar(ecCtx);
@@ -784,13 +987,14 @@
         return null;
     }
 
-    // ==================== 拖拽 ====================
+    // ==================== 拖拽（普通素材） ====================
     function startCustomDrag(type, cx, cy) {
         customDragInfo = { type, offsetX: cx - customElements[type].x, offsetY: cy - customElements[type].y };
         Object.keys(customElements).forEach(k => customElements[k].selected = false);
         customElements[type].selected = true;
         selectedCustom = type;
         selectedIndex = -1;
+        deselectTrack();
         renderCanvas();
     }
 
@@ -818,6 +1022,7 @@
         dragIndex = placedItems.length - 1; selectedIndex = dragIndex;
         Object.keys(customElements).forEach(k => customElements[k].selected = false);
         selectedCustom = null;
+        deselectTrack();
         renderCanvas();
     }
 
@@ -850,49 +1055,133 @@
         }
     }
 
+    // ==================== 轨迹图拖拽 ====================
+    function startTrackDrag(cx, cy) {
+        isTrackDragging = true;
+        trackSelected = true;
+        trackDragOffsetX = cx - trackX;
+        trackDragOffsetY = cy - trackY;
+        // 取消其他选中
+        selectedIndex = -1;
+        selectedCustom = null;
+        Object.keys(customElements).forEach(k => customElements[k].selected = false);
+        renderCanvas();
+    }
+
+    function moveTrackDrag(cx, cy) {
+        if (!isTrackDragging) return;
+        let nx = cx - trackDragOffsetX;
+        let ny = cy - trackDragOffsetY;
+        const drawW = trackOrigW * trackScale;
+        const drawH = trackOrigH * trackScale;
+        nx = Math.max(-drawW * 0.5, Math.min(nx, canvasWidth - drawW * 0.5));
+        ny = Math.max(-drawH * 0.5, Math.min(ny, canvasHeight - drawH * 0.5));
+        trackX = Math.round(nx);
+        trackY = Math.round(ny);
+        renderCanvas();
+    }
+
+    function endTrackDrag() {
+        isTrackDragging = false;
+    }
+
+    // ==================== 滚轮缩放轨迹图 ====================
+    function onWheel(e) {
+        if (!trackImage) return;
+        // 检查鼠标是否在画布内
+        const rect = canvas.getBoundingClientRect();
+        if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) return;
+
+        e.preventDefault();
+        const c = getCanvasCoords(e.clientX, e.clientY);
+
+        // 如果轨迹图未被选中，先选中它
+        if (!trackSelected) {
+            trackSelected = true;
+            selectedIndex = -1;
+            selectedCustom = null;
+            Object.keys(customElements).forEach(k => customElements[k].selected = false);
+        }
+
+        const delta = e.deltaY > 0 ? 0.9 : 1.1;
+        const oldScale = trackScale;
+        let newScale = trackScale * delta;
+
+        // 限制缩放范围
+        const minScale = 0.05;
+        const maxScale = 10;
+        newScale = Math.max(minScale, Math.min(newScale, maxScale));
+
+        // 以鼠标位置为缩放中心
+        const mouseX = c.x;
+        const mouseY = c.y;
+        trackX = Math.round(mouseX - (mouseX - trackX) * (newScale / oldScale));
+        trackY = Math.round(mouseY - (mouseY - trackY) * (newScale / oldScale));
+        trackScale = newScale;
+
+        const drawW = Math.round(trackOrigW * trackScale);
+        const drawH = Math.round(trackOrigH * trackScale);
+        statusBar.textContent = `🗺️ 轨迹图缩放: ${Math.round(trackScale * 100)}%  (${drawW}×${drawH}px)`;
+        renderCanvas();
+    }
+
     // ==================== 指针事件 ====================
     function onPointerDown(e) {
         if (!baseImage) return;
         const c = getCanvasCoords(e.clientX, e.clientY);
+
+        // 优先检测轨迹图
+        if (hitTrackImage(c.x, c.y)) {
+            startTrackDrag(c.x, c.y);
+            e.preventDefault();
+            statusBar.textContent = `🗺️ 拖拽轨迹图中... (滚轮缩放)`;
+            return;
+        }
 
         const hit = hitCustomElement(c.x, c.y);
         if (hit) {
             startCustomDrag(hit, c.x, c.y);
             e.preventDefault();
             statusBar.textContent = `✏️ 选中: ${hit === 'avatar' ? '头像' : hit === 'username' ? '用户名' : '日期'}（独立拖拽中）`;
+            deselectTrack();
             return;
         }
 
         const itemHit = findHitItem(c.x, c.y);
-        if (itemHit >= 0) { startDrag(itemHit, c.x, c.y); e.preventDefault(); }
-        else { selectedIndex = -1; selectedCustom = null; Object.keys(customElements).forEach(k => customElements[k].selected = false); renderCanvas(); }
+        if (itemHit >= 0) { startDrag(itemHit, c.x, c.y); e.preventDefault(); deselectTrack(); }
+        else { selectedIndex = -1; selectedCustom = null; Object.keys(customElements).forEach(k => customElements[k].selected = false); deselectTrack(); renderCanvas(); }
     }
 
     function onPointerMove(e) {
+        if (isTrackDragging) { const c = getCanvasCoords(e.clientX, e.clientY); moveTrackDrag(c.x, c.y); e.preventDefault(); return; }
         if (customDragInfo) { const c = getCanvasCoords(e.clientX, e.clientY); moveCustomDrag(c.x, c.y); e.preventDefault(); return; }
         if (!isDragging) return;
         const c = getCanvasCoords(e.clientX, e.clientY); moveDrag(c.x, c.y); e.preventDefault();
     }
 
-    function onPointerUp() { endCustomDrag(); endDrag(); }
+    function onPointerUp() { endTrackDrag(); endCustomDrag(); endDrag(); }
 
     function onTouchStart(e) {
         if (!baseImage) return;
         const t = e.touches[0]; if (!t) return;
         const c = getCanvasCoords(t.clientX, t.clientY);
+
+        if (hitTrackImage(c.x, c.y)) { startTrackDrag(c.x, c.y); e.preventDefault(); return; }
+
         const hit = hitCustomElement(c.x, c.y);
-        if (hit) { startCustomDrag(hit, c.x, c.y); e.preventDefault(); return; }
+        if (hit) { startCustomDrag(hit, c.x, c.y); e.preventDefault(); deselectTrack(); return; }
         const itemHit = findHitItem(c.x, c.y);
-        if (itemHit >= 0) { startDrag(itemHit, c.x, c.y); e.preventDefault(); }
+        if (itemHit >= 0) { startDrag(itemHit, c.x, c.y); e.preventDefault(); deselectTrack(); }
     }
 
     function onTouchMove(e) {
+        if (isTrackDragging) { const t = e.touches[0]; if (!t) return; const c = getCanvasCoords(t.clientX, t.clientY); moveTrackDrag(c.x, c.y); e.preventDefault(); return; }
         if (customDragInfo) { const t = e.touches[0]; if (!t) return; const c = getCanvasCoords(t.clientX, t.clientY); moveCustomDrag(c.x, c.y); e.preventDefault(); return; }
         if (!isDragging) return;
         const t = e.touches[0]; if (!t) return; const c = getCanvasCoords(t.clientX, t.clientY); moveDrag(c.x, c.y); e.preventDefault();
     }
 
-    function onTouchEnd() { endCustomDrag(); endDrag(); }
+    function onTouchEnd() { endTrackDrag(); endCustomDrag(); endDrag(); }
 
     // ==================== 键盘 ====================
     function onKeyDown(e) {
@@ -902,11 +1191,42 @@
             refzoomOverlay.classList.remove('active');
             selectedIndex = -1; selectedCustom = null;
             Object.keys(customElements).forEach(k => customElements[k].selected = false);
+            deselectTrack();
             renderCanvas();
             return;
         }
 
         const step = e.shiftKey ? 10 : 1;
+
+        // 轨迹图微调
+        if (trackSelected && trackImage) {
+            let handled = true;
+            switch (e.key) {
+                case 'ArrowLeft': trackX -= step; break;
+                case 'ArrowRight': trackX += step; break;
+                case 'ArrowUp': trackY -= step; break;
+                case 'ArrowDown': trackY += step; break;
+                case 'Delete':
+                case 'Backspace':
+                    resetTrackImage();
+                    renderCanvas();
+                    showToast('轨迹图已删除');
+                    statusBar.textContent = '🗺️ 轨迹图已删除，恢复默认底图';
+                    handled = false;
+                    break;
+                default: handled = false;
+            }
+            if (handled) {
+                e.preventDefault();
+                const drawW = trackOrigW * trackScale;
+                const drawH = trackOrigH * trackScale;
+                trackX = Math.max(-drawW * 0.5, Math.min(trackX, canvasWidth - drawW * 0.5));
+                trackY = Math.max(-drawH * 0.5, Math.min(trackY, canvasHeight - drawH * 0.5));
+                renderCanvas();
+                statusBar.textContent = `🗺️ 轨迹图: (${trackX}, ${trackY}) 步长${step}px 缩放${Math.round(trackScale*100)}%`;
+            }
+            return;
+        }
 
         // 自定义元素微调
         if (selectedCustom) {
@@ -982,7 +1302,7 @@
     // ==================== 按钮状态 ====================
     function updateButtonState() {
         undoBtn.disabled = placedItems.length === 0;
-        resetBtn.disabled = placedItems.length === 0;
+        resetBtn.disabled = placedItems.length === 0 && !trackImage;
         downloadBtn.disabled = !baseImage;
     }
 
