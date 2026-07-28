@@ -786,9 +786,21 @@
                 <input type="text" id="usernameInput" placeholder="默认：未命名" maxlength="20">
             </div>
 
+            <!-- 日期 -->
+            <div class="custom-row">
+                <label>日期</label>
+                <div class="time-group">
+                    <input type="number" id="dateYearInput" min="2000" max="2100" value="2025" title="年" style="flex:0.8;min-width:0;">
+                    <span style="line-height:28px;color:#999;font-size:12px;">/</span>
+                    <input type="number" id="dateMonthInput" min="1" max="12" value="6" title="月" style="flex:0.6;min-width:0;">
+                    <span style="line-height:28px;color:#999;font-size:12px;">/</span>
+                    <input type="number" id="dateDayInput" min="1" max="31" value="4" title="日" style="flex:0.6;min-width:0;">
+                </div>
+            </div>
+
             <!-- 日期格式 -->
             <div class="custom-row">
-                <label>日期格式</label>
+                <label>格式</label>
                 <select id="dateFormatSelect">
                     <option value="YYYY/MM/DD">YYYY/MM/DD</option>
                     <option value="YYYY-MM-DD">YYYY-MM-DD</option>
@@ -809,12 +821,12 @@
             <!-- 缩放滑块 -->
             <div class="custom-row scale-row">
                 <label>缩放</label>
-                <input type="range" class="scale-slider" id="scaleSlider" min="0.5" max="2.0" step="0.1" value="1.0">
-                <span class="scale-value" id="scaleValueText">1.0x</span>
+                <input type="range" class="scale-slider" id="scaleSlider" min="1.0" max="8.0" step="0.5" value="4.0">
+                <span class="scale-value" id="scaleValueText">4.0x</span>
             </div>
 
             <div class="hint-text">
-                💡 头像/用户名/日期可在画布上拖拽移动，右下角手柄可整体缩放（0.5x~2.0x）
+                💡 头像/用户名/日期可在画布上拖拽移动，右下角手柄可整体缩放（1.0x~8.0x）
             </div>
         </div>
 
@@ -926,13 +938,16 @@
 
     // ---- 自定义信息模块状态 ----
     let customInfo = {
-        avatarImg: null,        // HTMLImageElement 或 null
+        avatarImg: null,
         username: '未命名',
         dateFormat: 'YYYY/MM/DD',
+        dateYear: 2025,
+        dateMonth: 6,
+        dateDay: 4,
         startTime: '16:08',
         endTime: '16:43',
-        scale: 1.0,
-        pos: { x: 20, y: 20 },  // 整体左上角位置（画布坐标）
+        scale: 4.0,
+        pos: { x: 20, y: 20 },
     };
     let customDragMode = false;    // 'move' | 'scale' | false
     let customDragOffset = { x: 0, y: 0 };
@@ -963,10 +978,9 @@
 
     // 日期格式化
     function formatDateStr(fmt) {
-        const now = new Date();
-        const Y = now.getFullYear();
-        const M = String(now.getMonth() + 1).padStart(2, '0');
-        const D = String(now.getDate()).padStart(2, '0');
+        const Y = customInfo.dateYear;
+        const M = String(customInfo.dateMonth).padStart(2, '0');
+        const D = String(customInfo.dateDay).padStart(2, '0');
         switch (fmt) {
             case 'YYYY-MM-DD': return `${Y}-${M}-${D}`;
             case 'MM月DD日': return `${M}月${D}日`;
@@ -1003,7 +1017,7 @@
         document.addEventListener('keydown', onKeyDown);
 
         // 画布缩放
-        document.getElementById('zoomIn').addEventListener('click', () => { zoom = Math.min(zoom * 1.2, 3); applyZoom(); });
+        document.getElementById('zoomIn').addEventListener('click', () => { zoom = Math.min(zoom * 1.2, 8); applyZoom(); });
         document.getElementById('zoomOut').addEventListener('click', () => { zoom = Math.max(zoom / 1.2, 0.15); applyZoom(); });
         document.getElementById('zoomFit').addEventListener('click', fitCanvasToViewport);
         window.addEventListener('resize', () => { if (baseImage) fitCanvasToViewport(); });
@@ -1218,12 +1232,13 @@
         const avatarD = 40 * s;
         const nameFontSize = 16 * s;
         const dateFontSize = 13 * s;
-        const gapX = 8 * s;
-        const gapY = 4 * s;
+        const gapX = 8 * s;       // 头像与用户名的水平间距
+        const gapY = 4 * s;       // 用户名与日期的垂直间距
 
         ctx.save();
 
-        // ---- 头像（圆形裁剪） ----
+        // ---- 第一行：头像 + 用户名 ----
+        // 头像（圆形裁剪）
         const cx = px + avatarD / 2;
         const cy = py + avatarD / 2;
 
@@ -1267,40 +1282,43 @@
         ctx.lineWidth = 2;
         ctx.stroke();
 
-        // ---- 用户名 ----
+        // 用户名（头像右侧，垂直居中）
         const username = customInfo.username || '未命名';
         ctx.font = `bold ${nameFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
         ctx.fillStyle = '#000000';
         ctx.textBaseline = 'middle';
         const nameX = px + avatarD + gapX;
-        const nameY = py + avatarD / 2;
+        const nameY = py + avatarD / 2;  // 头像垂直中心
         ctx.fillText(username, nameX, nameY);
 
-        // ---- 日期时间 ----
+        // ---- 第二行：日期时间（在用户名正下方，左对齐头像左边缘） ----
         const dateStr = `${formatDateStr(customInfo.dateFormat)} ${customInfo.startTime} - ${customInfo.endTime}`;
         ctx.font = `${dateFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
         ctx.fillStyle = '#888888';
         ctx.textBaseline = 'top';
-        const dateX = px;
-        const dateY = py + avatarD + gapY;
+        const dateX = px;  // 左对齐头像左边缘（即整体 pos.x）
+        const dateY = py + avatarD + gapY;  // 头像底部 + 间距
         ctx.fillText(dateStr, dateX, dateY);
 
         // ---- 缩放手柄（右下角） ----
         const nameW = ctx.measureText(username).width;
-        const totalW = avatarD + gapX + nameW;
+        const dateW = ctx.measureText(dateStr).width;
+        const contentW = Math.max(nameW, dateW);
+        const totalW = avatarD + gapX + contentW;
+        const totalH = avatarD + gapY + dateFontSize + 4;
         const handleSize = 8;
         const hx = px + totalW - handleSize / 2;
-        const hy = dateY + dateFontSize + gapY * 0.5 - handleSize / 2;
+        const hy = py + totalH - handleSize / 2;
         customHandlePos = { x: hx, y: hy, size: handleSize };
         ctx.fillStyle = 'rgba(0,0,0,0.45)';
         ctx.fillRect(hx, hy, handleSize, handleSize);
 
         // 选中时画外框
-        if (selectedIndex === -2) { // -2 表示选中自定义信息
+        if (selectedIndex === -2) {
             ctx.strokeStyle = '#1677ff';
             ctx.lineWidth = 2;
             ctx.setLineDash([6, 3]);
-            ctx.strokeRect(px - 3, py - 3, totalW + 6, (dateY - py) + dateFontSize + 6);
+            ctx.strokeRect(px - 3, py - 3, totalW + 6, totalH + 6);
             ctx.setLineDash([]);
         }
 
@@ -1321,9 +1339,15 @@
         ctx.save();
         ctx.font = `bold ${nameFontSize}px sans-serif`;
         const nameW = ctx.measureText(customInfo.username || '未命名').width;
+        ctx.font = `${dateFontSize}px sans-serif`;
+        const dateStr = `${formatDateStr(customInfo.dateFormat)} ${customInfo.startTime} - ${customInfo.endTime}`;
+        const dateW = ctx.measureText(dateStr).width;
         ctx.restore();
 
-        const totalW = avatarD + gapX + nameW;
+        // 总宽度 = 头像 + gapX + max(用户名宽, 日期宽)
+        const contentW = Math.max(nameW, dateW);
+        const totalW = avatarD + gapX + contentW;
+        // 总高度 = 头像直径 + gapY + 日期字号
         const totalH = avatarD + gapY + dateFontSize + 4;
 
         return { x: px, y: py, w: totalW, h: totalH };
@@ -1373,6 +1397,20 @@
         document.getElementById('dateFormatSelect').addEventListener('change', (e) => {
             customInfo.dateFormat = e.target.value;
             renderCanvas();
+        });
+
+        // 年月日
+        document.getElementById('dateYearInput').addEventListener('input', (e) => {
+            const v = parseInt(e.target.value);
+            if (!isNaN(v)) { customInfo.dateYear = v; renderCanvas(); }
+        });
+        document.getElementById('dateMonthInput').addEventListener('input', (e) => {
+            const v = parseInt(e.target.value);
+            if (!isNaN(v)) { customInfo.dateMonth = Math.min(12, Math.max(1, v)); renderCanvas(); }
+        });
+        document.getElementById('dateDayInput').addEventListener('input', (e) => {
+            const v = parseInt(e.target.value);
+            if (!isNaN(v)) { customInfo.dateDay = Math.min(31, Math.max(1, v)); renderCanvas(); }
         });
 
         // 时间
@@ -1487,19 +1525,23 @@
         targetCtx.lineWidth = 2;
         targetCtx.stroke();
 
-        // 用户名
+        // 用户名（头像右侧，垂直居中）
         const username = customInfo.username || '未命名';
         targetCtx.font = `bold ${nameFontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
         targetCtx.fillStyle = '#000000';
         targetCtx.textBaseline = 'middle';
-        targetCtx.fillText(username, px + avatarD + gapX, py + avatarD / 2);
+        const nameDrawX = px + avatarD + gapX;
+        const nameDrawY = py + avatarD / 2;
+        targetCtx.fillText(username, nameDrawX, nameDrawY);
 
-        // 日期
+        // 日期时间（第二行，左对齐头像左边缘 = px）
         const dateStr = `${formatDateStr(customInfo.dateFormat)} ${customInfo.startTime} - ${customInfo.endTime}`;
         targetCtx.font = `${dateFontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
         targetCtx.fillStyle = '#888888';
         targetCtx.textBaseline = 'top';
-        targetCtx.fillText(dateStr, px, py + avatarD + gapY);
+        const dateDrawX = px;  // 左对齐头像左边缘
+        const dateDrawY = py + avatarD + gapY;  // 头像底部 + 间距
+        targetCtx.fillText(dateStr, dateDrawX, dateDrawY);
 
         targetCtx.restore();
     }
