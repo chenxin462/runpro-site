@@ -121,6 +121,15 @@
             font-weight: 400;
         }
 
+        .material-panel-title .badge-key {
+            background: #f6ffed;
+            color: #52c41a;
+            font-size: 11px;
+            padding: 1px 8px;
+            border-radius: 10px;
+            font-weight: 400;
+        }
+
         .material-scroll {
             flex: 1;
             overflow-y: auto;
@@ -174,7 +183,7 @@
         }
 
         .material-item img {
-            height: 52px;          /* 缩略图稍大 */
+            height: 52px;
             width: auto;
             max-width: 72px;
             object-fit: contain;
@@ -220,9 +229,52 @@
             background: #fff;
         }
 
+        /* 缩放控件 */
+        .zoom-controls {
+            position: absolute;
+            bottom: 14px;
+            right: 14px;
+            display: flex;
+            gap: 4px;
+            z-index: 20;
+            background: rgba(255,255,255,0.9);
+            border-radius: 8px;
+            padding: 4px;
+            box-shadow: 0 1px 6px rgba(0,0,0,0.1);
+        }
+
+        .zoom-btn {
+            width: 34px; height: 34px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            background: #fff;
+            color: #555;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+        }
+
+        .zoom-btn:hover {
+            border-color: #1677ff;
+            color: #1677ff;
+        }
+
+        .zoom-label {
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+            font-size: 12px;
+            color: #888;
+            min-width: 48px;
+            justify-content: center;
+        }
+
         /* ========== 右侧：操作+样图 ========== */
         .right-panel {
-            width: 340px;          /* 加宽右侧面板 */
+            width: 340px;
             min-width: 280px;
             background: #fff;
             border-radius: 12px;
@@ -252,10 +304,13 @@
 
         .btn-default { background: #f5f5f5; color: #333; border: 1px solid #d9d9d9; }
         .btn-default:hover { background: #e8e8e8; }
+        .btn-default:disabled { opacity: 0.4; cursor: not-allowed; }
         .btn-danger { background: #ff4d4f; color: #fff; }
         .btn-danger:hover { background: #ff7875; }
+        .btn-danger:disabled { opacity: 0.4; cursor: not-allowed; }
         .btn-success { background: #52c41a; color: #fff; }
         .btn-success:hover { background: #73d13d; }
+        .btn-success:disabled { opacity: 0.4; cursor: not-allowed; }
 
         /* 样图区域 */
         .reference-section {
@@ -290,7 +345,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 280px;       /* 大幅提高最小高度 */
+            min-height: 280px;
             border: 1px solid #e8e8e8;
             padding: 6px;
             cursor: zoom-in;
@@ -403,6 +458,50 @@
             font-size: 12px;
         }
 
+        /* ========== 快捷键提示 ========== */
+        .shortcut-hint {
+            font-size: 11px;
+            color: #aaa;
+            line-height: 1.8;
+            padding: 6px 10px;
+            background: #fafafa;
+            border-radius: 6px;
+            border: 1px solid #f0f0f0;
+        }
+
+        .shortcut-hint kbd {
+            display: inline-block;
+            padding: 0 5px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-size: 10px;
+            font-family: monospace;
+            color: #555;
+            margin: 0 1px;
+        }
+
+        /* ========== 吸附提示标记 ========== */
+        .snap-indicator {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ff4d4f;
+            color: #fff;
+            font-size: 11px;
+            padding: 2px 12px;
+            border-radius: 10px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 30;
+        }
+
+        .snap-indicator.active {
+            opacity: 1;
+        }
+
         /* ========== 响应式 ========== */
         @media (max-width: 1200px) {
             .main-container {
@@ -482,24 +581,32 @@
         <div class="material-panel-title">
             🧩 素材库
             <span class="badge">点击添加</span>
-            <span class="badge-click">点击长按预览大图</span>
+            <span class="badge-click">长按预览</span>
+            <span class="badge-key">方向键微调</span>
         </div>
         <div class="material-scroll" id="materialScroll"></div>
     </div>
 
     <!-- 画布区 -->
     <div class="canvas-panel" id="canvasPanel">
+        <div class="snap-indicator" id="snapIndicator">↔ 已对齐</div>
         <div class="canvas-wrapper" id="canvasWrapper">
             <canvas id="baseCanvas"></canvas>
+        </div>
+        <div class="zoom-controls" id="zoomControls">
+            <button class="zoom-btn" id="zoomOut" title="缩小">−</button>
+            <span class="zoom-label" id="zoomLabel">100%</span>
+            <button class="zoom-btn" id="zoomIn" title="放大">+</button>
+            <button class="zoom-btn" id="zoomFit" title="适应窗口">⤢</button>
         </div>
     </div>
 
     <!-- 右侧操作区 -->
     <div class="right-panel">
         <div class="action-buttons">
-            <button class="btn btn-default" id="undoBtn" title="撤销上一个素材">↩ 撤销</button>
-            <button class="btn btn-danger" id="resetBtn">🗑 重置</button>
-            <button class="btn btn-success" id="downloadBtn">⬇ 下载 JPG</button>
+            <button class="btn btn-default" id="undoBtn" title="撤销上一个素材" disabled>↩ 撤销</button>
+            <button class="btn btn-danger" id="resetBtn" disabled>🗑 重置</button>
+            <button class="btn btn-success" id="downloadBtn" disabled>⬇ 下载 JPG</button>
         </div>
         <div class="reference-section">
             <div class="reference-title">
@@ -510,6 +617,10 @@
                 <span class="placeholder-text">请选择项目</span>
             </div>
         </div>
+        <div class="shortcut-hint">
+            <kbd>←↑↓→</kbd> 移动1px · <kbd>Shift</kbd>+方向键 移动10px<br>
+            <kbd>Delete</kbd> 删除选中 · <kbd>Esc</kbd> 取消选中
+        </div>
         <div class="status-bar" id="statusBar">就绪</div>
     </div>
 </div>
@@ -518,6 +629,7 @@
     // ==================== 配置 ====================
     const MATERIALS_PATH = './materials/';
     const JPG_QUALITY = 0.93;
+    const SNAP_THRESHOLD = 10;  // 吸附阈值 px
 
     const PROJECTS = [
         { id: 'huabing', name: '滑冰' },
@@ -585,10 +697,20 @@
     let canvasWidth = 0;
     let canvasHeight = 0;
     let placedItems = [];
+    let selectedIndex = -1;     // 选中素材索引
     let isDragging = false;
     let dragIndex = -1;
     let dragOffsetX = 0;
     let dragOffsetY = 0;
+
+    // 辅助线状态
+    let guideV = null;   // 左侧竖线 x 坐标（画布坐标）
+    let guideH = null;   // 下方横线 y 坐标（画布坐标）
+    let guideVAligned = false;  // 是否对齐
+    let guideHAligned = false;
+
+    // 缩放
+    let zoom = 1;
 
     // DOM
     const canvas = document.getElementById('baseCanvas');
@@ -605,6 +727,8 @@
     const previewLabel = document.getElementById('previewLabel');
     const refzoomOverlay = document.getElementById('refzoomOverlay');
     const refzoomImg = document.getElementById('refzoomImg');
+    const snapIndicator = document.getElementById('snapIndicator');
+    const canvasWrapper = document.getElementById('canvasWrapper');
 
     // ==================== 初始化 ====================
     function init() {
@@ -635,14 +759,18 @@
         previewOverlay.addEventListener('click', closePreview);
         refzoomOverlay.addEventListener('click', () => refzoomOverlay.classList.remove('active'));
 
-        // 键盘 ESC 关闭浮层
-        document.addEventListener('keydown', e => {
-            if (e.key === 'Escape') {
-                closePreview();
-                refzoomOverlay.classList.remove('active');
-            }
-        });
+        // 键盘事件
+        document.addEventListener('keydown', onKeyDown);
 
+        // 缩放控件
+        document.getElementById('zoomIn').addEventListener('click', () => { zoom = Math.min(zoom * 1.2, 3); applyZoom(); });
+        document.getElementById('zoomOut').addEventListener('click', () => { zoom = Math.max(zoom / 1.2, 0.15); applyZoom(); });
+        document.getElementById('zoomFit').addEventListener('click', fitCanvasToViewport);
+
+        // 窗口大小变化
+        window.addEventListener('resize', () => { if (baseImage) fitCanvasToViewport(); });
+
+        // 默认加载第一个项目
         if (PROJECTS.length > 0) {
             projectSelect.value = PROJECTS[0].id;
             loadProject(PROJECTS[0].id);
@@ -657,7 +785,7 @@
         groupBDiv.className = 'group-section';
         const titleB = document.createElement('div');
         titleB.className = 'group-title';
-        titleB.textContent = 'b 系列';
+        titleB.textContent = 'b 系列（15个）';
         groupBDiv.appendChild(titleB);
         const gridB = document.createElement('div');
         gridB.className = 'material-grid';
@@ -669,7 +797,7 @@
         groupNDiv.className = 'group-section';
         const titleN = document.createElement('div');
         titleN.className = 'group-title';
-        titleN.textContent = '数字 / 汉字';
+        titleN.textContent = '数字 / 汉字（22个）';
         groupNDiv.appendChild(titleN);
         const gridN = document.createElement('div');
         gridN.className = 'material-grid';
@@ -738,8 +866,10 @@
     async function loadProject(projectId) {
         currentProject = projectId;
         placedItems = [];
+        selectedIndex = -1;
         isDragging = false;
         dragIndex = -1;
+        guideV = null; guideH = null;
         statusBar.textContent = `⏳ 加载 ${projectId} ...`;
 
         try {
@@ -763,13 +893,14 @@
             refImg.id = 'refImg';
             referenceWrapper.appendChild(refImg);
 
-            // 点击样图 → 放大浮层
             referenceWrapper.onclick = () => {
                 refzoomImg.src = sampImg.src;
                 refzoomOverlay.classList.add('active');
             };
 
+            fitCanvasToViewport();
             renderCanvas();
+            updateButtonState();
             statusBar.textContent = `✅ 已加载 ${projectId}  |  ${canvasWidth}×${canvasHeight}`;
         } catch (err) {
             console.error('加载失败:', err);
@@ -802,13 +933,16 @@
         img.onload = () => {
             const w = img.naturalWidth || img.width;
             const h = img.naturalHeight || img.height;
-            placedItems.push({
+            const item = {
                 img,
                 x: Math.round((canvasWidth - w) / 2),
                 y: Math.round((canvasHeight - h) / 2),
                 w, h, file
-            });
+            };
+            placedItems.push(item);
+            selectedIndex = placedItems.length - 1;
             renderCanvas();
+            updateButtonState();
             statusBar.textContent = `➕ 添加: ${file}  (共${placedItems.length}个)`;
         };
         img.onerror = () => { statusBar.textContent = `❌ 素材加载失败: ${file}`; };
@@ -818,25 +952,84 @@
     // ==================== 渲染 ====================
     function renderCanvas() {
         if (!baseImage) { ctx.clearRect(0, 0, canvas.width, canvas.height); return; }
+
+        // 1. 底图
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(baseImage, 0, 0, canvasWidth, canvasHeight);
-        for (const item of placedItems) {
+
+        // 2. 已放置素材
+        for (let i = 0; i < placedItems.length; i++) {
+            const item = placedItems[i];
             ctx.drawImage(item.img, item.x, item.y, item.w, item.h);
+
+            // 3. 选中高亮（虚线框 + 四角方块）
+            if (i === selectedIndex) {
+                ctx.save();
+                ctx.strokeStyle = '#1677ff';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([6, 3]);
+                const pad = 2;
+                ctx.strokeRect(item.x - pad, item.y - pad, item.w + pad * 2, item.h + pad * 2);
+
+                // 四角标记
+                ctx.setLineDash([]);
+                ctx.fillStyle = '#1677ff';
+                const s = 6;
+                const corners = [
+                    [item.x - pad, item.y - pad],
+                    [item.x + item.w + pad, item.y - pad],
+                    [item.x - pad, item.y + item.h + pad],
+                    [item.x + item.w + pad, item.y + item.h + pad],
+                ];
+                corners.forEach(([cx, cy]) => {
+                    ctx.fillRect(cx - s / 2, cy - s / 2, s, s);
+                });
+                ctx.restore();
+            }
+        }
+
+        // 4. 对齐辅助线（拖拽时显示）
+        if (guideV !== null || guideH !== null) {
+            ctx.save();
+            ctx.setLineDash([8, 6]);
+            ctx.lineWidth = 1;
+
+            if (guideV !== null) {
+                ctx.strokeStyle = guideVAligned ? '#ff4d4f' : '#91caff';
+                ctx.beginPath();
+                ctx.moveTo(guideV + 0.5, 0);
+                ctx.lineTo(guideV + 0.5, canvasHeight);
+                ctx.stroke();
+            }
+            if (guideH !== null) {
+                ctx.strokeStyle = guideHAligned ? '#ff4d4f' : '#91caff';
+                ctx.beginPath();
+                ctx.moveTo(0, guideH + 0.5);
+                ctx.lineTo(canvasWidth, guideH + 0.5);
+                ctx.stroke();
+            }
+            ctx.restore();
         }
     }
 
     // ==================== 撤销/重置 ====================
     function undoLastItem() {
-        if (placedItems.length === 0) { statusBar.textContent = '⚠️ 没有可撤销的素材'; return; }
+        if (placedItems.length === 0) return;
         const removed = placedItems.pop();
+        if (selectedIndex >= placedItems.length) selectedIndex = placedItems.length - 1;
         renderCanvas();
+        updateButtonState();
         statusBar.textContent = `↩️ 撤销: ${removed.file}  (剩余${placedItems.length}个)`;
     }
 
     function resetAll() {
+        if (placedItems.length === 0) return;
+        if (!confirm('确定要清空画布上所有素材吗？')) return;
         placedItems = [];
-        isDragging = false;
-        dragIndex = -1;
+        selectedIndex = -1;
+        guideV = null; guideH = null;
         renderCanvas();
+        updateButtonState();
         statusBar.textContent = '🗑️ 已重置';
     }
 
@@ -847,6 +1040,10 @@
         const ec = document.createElement('canvas');
         ec.width = canvasWidth; ec.height = canvasHeight;
         const ecCtx = ec.getContext('2d');
+
+        // 白底（JPG 无透明）
+        ecCtx.fillStyle = '#fff';
+        ecCtx.fillRect(0, 0, canvasWidth, canvasHeight);
         ecCtx.drawImage(baseImage, 0, 0, canvasWidth, canvasHeight);
         for (const item of placedItems) ecCtx.drawImage(item.img, item.x, item.y, item.w, item.h);
 
@@ -857,7 +1054,7 @@
         statusBar.textContent = `⬇️ 已下载: ${currentProject}_完成.jpg`;
     }
 
-    // ==================== 拖拽 ====================
+    // ==================== 拖拽（含吸附+辅助线）====================
     function getCanvasCoords(clientX, clientY) {
         const rect = canvas.getBoundingClientRect();
         return {
@@ -867,6 +1064,7 @@
     }
 
     function findHitItem(cx, cy) {
+        // 从上到下找（后放置的在上层）
         for (let i = placedItems.length - 1; i >= 0; i--) {
             const it = placedItems[i];
             if (cx >= it.x && cx <= it.x + it.w && cy >= it.y && cy <= it.y + it.h) return i;
@@ -876,37 +1074,110 @@
 
     function startDrag(index, cx, cy) {
         if (index < 0) return;
-        isDragging = true; dragIndex = index;
+        isDragging = true;
+        dragIndex = index;
+        selectedIndex = index;
         const item = placedItems[index];
-        dragOffsetX = cx - item.x; dragOffsetY = cy - item.y;
+        dragOffsetX = cx - item.x;
+        dragOffsetY = cy - item.y;
+
+        // 提到最上层
         const [dragged] = placedItems.splice(index, 1);
         placedItems.push(dragged);
         dragIndex = placedItems.length - 1;
+        selectedIndex = dragIndex;
+
         renderCanvas();
     }
 
     function moveDrag(cx, cy) {
         if (!isDragging || dragIndex < 0) return;
         const item = placedItems[dragIndex];
-        item.x = Math.round(cx - dragOffsetX);
-        item.y = Math.round(cy - dragOffsetY);
+
+        let rawX = cx - dragOffsetX;
+        let rawY = cy - dragOffsetY;
+
+        // ---- 水平吸附检测 ----
+        let snappedX = rawX;
+        let snappedY = rawY;
+        let vGuide = null, hGuide = null;
+        let vAligned = false, hAligned = false;
+
+        for (let i = 0; i < placedItems.length; i++) {
+            if (i === dragIndex) continue;
+            const other = placedItems[i];
+
+            // 左边缘 ↔ 其他左边缘
+            if (Math.abs(rawX - other.x) <= SNAP_THRESHOLD) {
+                snappedX = other.x; vGuide = snappedX; vAligned = true;
+            }
+            // 右边缘 ↔ 其他右边缘
+            if (Math.abs((rawX + item.w) - (other.x + other.w)) <= SNAP_THRESHOLD) {
+                snappedX = other.x + other.w - item.w; vGuide = snappedX; vAligned = true;
+            }
+            // 左边缘 ↔ 其他右边缘
+            if (Math.abs(rawX - (other.x + other.w)) <= SNAP_THRESHOLD) {
+                snappedX = other.x + other.w; vGuide = snappedX; vAligned = true;
+            }
+
+            // 上边缘 ↔ 其他上边缘
+            if (Math.abs(rawY - other.y) <= SNAP_THRESHOLD) {
+                snappedY = other.y; hGuide = snappedY + item.h; hAligned = true;
+            }
+            // 下边缘 ↔ 其他下边缘（基线对齐）
+            if (Math.abs((rawY + item.h) - (other.y + other.h)) <= SNAP_THRESHOLD) {
+                snappedY = other.y + other.h - item.h; hGuide = snappedY + item.h; hAligned = true;
+            }
+        }
+
+        item.x = Math.round(snappedX);
+        item.y = Math.round(snappedY);
+
+        // 辅助线状态
+        guideV = vGuide; guideH = hGuide;
+        guideVAligned = vAligned; guideHAligned = hAligned;
+
+        // 吸附提示
+        if (vAligned || hAligned) {
+            snapIndicator.classList.add('active');
+        } else {
+            snapIndicator.classList.remove('active');
+        }
+
         renderCanvas();
     }
 
     function endDrag() {
-        if (isDragging) { isDragging = false; dragIndex = -1; }
+        if (isDragging) {
+            isDragging = false;
+            dragIndex = -1;
+            guideV = null;
+            guideH = null;
+            guideVAligned = false;
+            guideHAligned = false;
+            snapIndicator.classList.remove('active');
+            renderCanvas();
+        }
     }
 
     function onPointerDown(e) {
         if (!baseImage) return;
         const c = getCanvasCoords(e.clientX, e.clientY);
         const hit = findHitItem(c.x, c.y);
-        if (hit >= 0) { startDrag(hit, c.x, c.y); e.preventDefault(); }
+        if (hit >= 0) {
+            startDrag(hit, c.x, c.y);
+            e.preventDefault();
+        } else {
+            // 点击空白 → 取消选中
+            selectedIndex = -1;
+            renderCanvas();
+        }
     }
     function onPointerMove(e) {
         if (!isDragging) return;
         const c = getCanvasCoords(e.clientX, e.clientY);
-        moveDrag(c.x, c.y); e.preventDefault();
+        moveDrag(c.x, c.y);
+        e.preventDefault();
     }
     function onPointerUp() { endDrag(); }
 
@@ -915,15 +1186,94 @@
         const t = e.touches[0]; if (!t) return;
         const c = getCanvasCoords(t.clientX, t.clientY);
         const hit = findHitItem(c.x, c.y);
-        if (hit >= 0) { startDrag(hit, c.x, c.y); e.preventDefault(); }
+        if (hit >= 0) {
+            startDrag(hit, c.x, c.y);
+            e.preventDefault();
+        }
     }
     function onTouchMove(e) {
         if (!isDragging) return;
         const t = e.touches[0]; if (!t) return;
         const c = getCanvasCoords(t.clientX, t.clientY);
-        moveDrag(c.x, c.y); e.preventDefault();
+        moveDrag(c.x, c.y);
+        e.preventDefault();
     }
     function onTouchEnd() { endDrag(); }
+
+    // ==================== 键盘微调 ====================
+    function onKeyDown(e) {
+        // 如果焦点在 select 上，不拦截
+        if (e.target.tagName === 'SELECT') return;
+
+        // Esc 关闭浮层
+        if (e.key === 'Escape') {
+            closePreview();
+            refzoomOverlay.classList.remove('active');
+            if (selectedIndex >= 0) {
+                selectedIndex = -1;
+                renderCanvas();
+            }
+            return;
+        }
+
+        if (selectedIndex < 0 || selectedIndex >= placedItems.length) return;
+
+        const item = placedItems[selectedIndex];
+        const step = e.shiftKey ? 10 : 1;
+        let handled = true;
+
+        switch (e.key) {
+            case 'ArrowLeft':  item.x -= step; break;
+            case 'ArrowRight': item.x += step; break;
+            case 'ArrowUp':    item.y -= step; break;
+            case 'ArrowDown':  item.y += step; break;
+            case 'Delete':
+            case 'Backspace':
+                placedItems.splice(selectedIndex, 1);
+                selectedIndex = placedItems.length > 0 ? placedItems.length - 1 : -1;
+                updateButtonState();
+                statusBar.textContent = `🗑️ 删除选中素材  (剩余${placedItems.length}个)`;
+                break;
+            default: handled = false;
+        }
+
+        if (handled) {
+            e.preventDefault();
+            // 边界限制
+            item.x = Math.max(0, Math.min(item.x, canvasWidth - item.w));
+            item.y = Math.max(0, Math.min(item.y, canvasHeight - item.h));
+            renderCanvas();
+            if (e.key.startsWith('Arrow')) {
+                statusBar.textContent = `✏️ 微调: (${item.x}, ${item.y})  步长${step}px`;
+            }
+        }
+    }
+
+    // ==================== 缩放 ====================
+    function fitCanvasToViewport() {
+        const panel = document.getElementById('canvasPanel');
+        const padding = 40;
+        const availW = panel.clientWidth - padding * 2;
+        const availH = panel.clientHeight - padding * 2 - 50;
+        const scaleX = availW / canvasWidth;
+        const scaleY = availH / canvasHeight;
+        zoom = Math.min(scaleX, scaleY, 1);
+        applyZoom();
+    }
+
+    function applyZoom() {
+        canvasWrapper.style.transform = `scale(${zoom})`;
+        canvasWrapper.style.transformOrigin = 'center center';
+        document.getElementById('zoomLabel').textContent = Math.round(zoom * 100) + '%';
+    }
+
+    // ==================== 按钮状态 ====================
+    function updateButtonState() {
+        const hasItems = placedItems.length > 0;
+        undoBtn.disabled = !hasItems;
+        resetBtn.disabled = !hasItems;
+        downloadBtn.disabled = !baseImage;
+    }
 
     // ==================== 启动 ====================
     init();
