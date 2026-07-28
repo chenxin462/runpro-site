@@ -112,15 +112,6 @@
             font-weight: 400;
         }
 
-        .material-panel-title .badge-click {
-            background: #fff7e6;
-            color: #fa8c16;
-            font-size: 11px;
-            padding: 1px 8px;
-            border-radius: 10px;
-            font-weight: 400;
-        }
-
         .material-panel-title .badge-key {
             background: #f6ffed;
             color: #52c41a;
@@ -162,7 +153,7 @@
             align-items: center;
             background: #f8f9fa;
             border-radius: 8px;
-            padding: 10px 4px 6px;
+            padding: 6px 3px 4px;
             cursor: pointer;
             transition: all 0.15s ease;
             border: 1px solid #eee;
@@ -183,19 +174,19 @@
         }
 
         .material-item img {
-            height: 52px;
+            height: 36px;
             width: auto;
-            max-width: 72px;
+            max-width: 50px;
             object-fit: contain;
             pointer-events: none;
             display: block;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
         }
 
         .material-label {
-            font-size: 11px;
+            font-size: 10px;
             color: #666;
-            line-height: 1.3;
+            line-height: 1.2;
             text-align: center;
             font-weight: 500;
         }
@@ -382,47 +373,6 @@
             flex-shrink: 0;
         }
 
-        /* ========== 素材大图预览浮层 ========== */
-        .preview-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.55);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            gap: 16px;
-            cursor: zoom-out;
-        }
-
-        .preview-overlay.active {
-            display: flex;
-        }
-
-        .preview-overlay img {
-            max-width: 80vw;
-            max-height: 70vh;
-            object-fit: contain;
-            border-radius: 8px;
-            box-shadow: 0 4px 30px rgba(0,0,0,0.3);
-            background: #fff;
-            padding: 8px;
-        }
-
-        .preview-overlay .preview-label {
-            color: #fff;
-            font-size: 15px;
-            background: rgba(0,0,0,0.4);
-            padding: 4px 16px;
-            border-radius: 20px;
-        }
-
-        .preview-overlay .preview-hint {
-            color: rgba(255,255,255,0.7);
-            font-size: 12px;
-        }
-
         /* ========== 样图放大浮层 ========== */
         .refzoom-overlay {
             display: none;
@@ -529,7 +479,7 @@
                 grid-template-columns: repeat(6, 72px);
                 gap: 6px;
             }
-            .material-item img { height: 40px; max-width: 60px; }
+            .material-item img { height: 30px; max-width: 44px; }
             .right-panel {
                 width: 100%;
                 min-width: unset;
@@ -551,13 +501,6 @@
 </head>
 <body>
 
-<!-- 素材大图预览浮层 -->
-<div class="preview-overlay" id="previewOverlay">
-    <img id="previewImg" src="" alt="预览">
-    <div class="preview-label" id="previewLabel"></div>
-    <div class="preview-hint">点击任意位置关闭 · 点击素材库可直接添加到画布</div>
-</div>
-
 <!-- 样图放大浮层 -->
 <div class="refzoom-overlay" id="refzoomOverlay">
     <img id="refzoomImg" src="" alt="样图放大">
@@ -578,7 +521,6 @@
         <div class="material-panel-title">
             🧩 素材库
             <span class="badge">点击添加</span>
-            <span class="badge-click">长按预览</span>
             <span class="badge-key">方向键微调</span>
         </div>
         <div class="material-scroll" id="materialScroll"></div>
@@ -719,9 +661,6 @@
     const undoBtn = document.getElementById('undoBtn');
     const resetBtn = document.getElementById('resetBtn');
     const downloadBtn = document.getElementById('downloadBtn');
-    const previewOverlay = document.getElementById('previewOverlay');
-    const previewImg = document.getElementById('previewImg');
-    const previewLabel = document.getElementById('previewLabel');
     const refzoomOverlay = document.getElementById('refzoomOverlay');
     const refzoomImg = document.getElementById('refzoomImg');
     const snapIndicator = document.getElementById('snapIndicator');
@@ -752,8 +691,7 @@
         window.addEventListener('touchend', onTouchEnd, { passive: false });
         window.addEventListener('touchcancel', onTouchEnd, { passive: false });
 
-        // 预览浮层关闭
-        previewOverlay.addEventListener('click', closePreview);
+        // 样图放大浮层关闭
         refzoomOverlay.addEventListener('click', () => refzoomOverlay.classList.remove('active'));
 
         // 键盘事件
@@ -825,38 +763,7 @@
             addMaterialToCanvas(file);
         });
 
-        // 长按 500ms → 弹出大图预览
-        let pressTimer = null;
-        const startPress = (e) => {
-            e.preventDefault();
-            pressTimer = setTimeout(() => {
-                openPreview(MATERIALS_PATH + file, label);
-            }, 500);
-        };
-        const cancelPress = () => {
-            if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
-        };
-
-        div.addEventListener('mousedown', startPress);
-        div.addEventListener('mouseup', cancelPress);
-        div.addEventListener('mouseleave', cancelPress);
-        div.addEventListener('touchstart', startPress, { passive: false });
-        div.addEventListener('touchend', cancelPress);
-        div.addEventListener('touchcancel', cancelPress);
-
         return div;
-    }
-
-    // ==================== 大图预览 ====================
-    function openPreview(src, label) {
-        previewImg.src = src;
-        previewLabel.textContent = label;
-        previewOverlay.classList.add('active');
-    }
-
-    function closePreview() {
-        previewOverlay.classList.remove('active');
-        previewImg.src = '';
     }
 
     // ==================== 项目加载 ====================
@@ -1207,7 +1114,6 @@
 
         // Esc 关闭浮层
         if (e.key === 'Escape') {
-            closePreview();
             refzoomOverlay.classList.remove('active');
             if (selectedIndex >= 0) {
                 selectedIndex = -1;
