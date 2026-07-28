@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>运动截图拼图工具 v1.5</title>
+    <title>运动截图拼图工具 v1.6</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -52,7 +52,7 @@
         .zoom-label { display: flex; align-items: center; padding: 0 8px; font-size: 12px; color: #888; min-width: 48px; justify-content: center; }
 
         /* 右侧面板 */
-        .right-panel { width: 300px; min-width: 260px; background: #fff; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.06); display: flex; flex-direction: column; padding: 14px; gap: 12px; flex-shrink: 0; }
+        .right-panel { width: 300px; min-width: 260px; background: #fff; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.06); display: flex; flex-direction: column; padding: 14px; gap: 12px; flex-shrink: 0; overflow-y: auto; }
         .right-panel::-webkit-scrollbar { width: 4px; }
         .right-panel::-webkit-scrollbar-thumb { background: #d0d0d0; border-radius: 4px; }
         .action-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -72,40 +72,33 @@
         .btn-outline:hover { border-color: #1677ff; color: #1677ff; }
 
         /* 样图 */
-        .reference-section { flex: 1; display: flex; flex-direction: column; min-height: 180px; }
+        .reference-section { flex: 1; display: flex; flex-direction: column; min-height: 280px; }
         .reference-title { font-size: 13px; color: #555; margin-bottom: 8px; font-weight: 600; display: flex; align-items: center; gap: 6px; justify-content: space-between; }
         .reference-title .zoom-hint { font-size: 11px; color: #999; font-weight: 400; }
-        .reference-img-wrapper { flex: 1; overflow: hidden; border-radius: 10px; background: #fafafa; display: flex; align-items: center; justify-content: center; min-height: 240px; border: 1px solid #e8e8e8; padding: 6px; cursor: zoom-in; position: relative; }
+        .reference-img-wrapper { flex: 1; overflow: hidden; border-radius: 10px; background: #fafafa; display: flex; align-items: center; justify-content: center; min-height: 320px; border: 1px solid #e8e8e8; padding: 8px; cursor: zoom-in; position: relative; }
         .reference-img-wrapper:hover { border-color: #91caff; background: #f0f7ff; }
         .reference-img-wrapper img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; display: block; border-radius: 4px; box-shadow: 0 1px 6px rgba(0,0,0,.06); }
         .placeholder-text { color: #bbb; font-size: 14px; }
 
-        /* 自定义信息面板 */
+        /* 自定义信息面板 - 精简版 */
         .custom-section { border: 1px solid #e8e8e8; border-radius: 10px; padding: 12px; background: #fafcff; display: flex; flex-direction: column; gap: 10px; }
         .custom-section-title { font-size: 13px; color: #333; font-weight: 600; display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
         .custom-section-title .dot { width: 6px; height: 6px; border-radius: 50%; background: #1677ff; display: inline-block; }
         .custom-row { display: flex; align-items: center; gap: 8px; }
-        .custom-row label { font-size: 12px; color: #666; min-width: 56px; flex-shrink: 0; }
+        .custom-row label { font-size: 12px; color: #666; min-width: 48px; flex-shrink: 0; font-weight: 500; }
         .custom-row input[type="text"], .custom-row select, .custom-row input[type="time"], .custom-row input[type="number"] { flex: 1; padding: 6px 10px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 12px; outline: none; background: #fff; color: #333; }
         .custom-row input:focus, .custom-row select:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,.1); }
-        .custom-row input[type="time"] { flex: 0.6; }
+        .custom-row input[type="time"] { flex: 0.55; min-width: 0; }
         .time-group { display: flex; gap: 6px; flex: 1; }
-        .time-group input { flex: 1; }
+        .time-group input { flex: 1; min-width: 0; }
 
         /* 头像 */
         .avatar-upload-area { display: flex; align-items: center; gap: 10px; }
-        .avatar-preview-circle { width: 42px; height: 42px; border-radius: 50%; border: 2px solid #00C853; background: #CCCCCC; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .avatar-preview-circle { width: 44px; height: 44px; border-radius: 50%; border: 2px solid #00C853; background: #CCCCCC; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .avatar-preview-circle img { width: 100%; height: 100%; object-fit: cover; }
         .avatar-preview-circle .default-icon { font-size: 18px; color: #999; }
         .avatar-btns { display: flex; gap: 6px; flex-wrap: wrap; }
         .avatar-btns .btn { padding: 5px 12px; font-size: 12px; }
-
-        /* 缩放滑块 */
-        .scale-row { display: flex; align-items: center; gap: 8px; }
-        .scale-row label { font-size: 12px; color: #666; min-width: 56px; }
-        .scale-slider { flex: 1; -webkit-appearance: none; height: 4px; border-radius: 2px; background: #d9d9d9; outline: none; }
-        .scale-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #1677ff; cursor: pointer; }
-        .scale-value { font-size: 12px; color: #1677ff; font-weight: 600; min-width: 36px; text-align: right; }
 
         .hint-text { font-size: 10px; color: #999; line-height: 1.5; }
         .status-bar { padding: 8px 14px; background: #f7f8fa; border-radius: 8px; font-size: 12px; color: #777; text-align: center; border: 1px solid #f0f0f0; flex-shrink: 0; }
@@ -136,9 +129,9 @@
             .group-section { margin-bottom: 0; flex-shrink: 0; }
             .material-grid { grid-template-columns: repeat(6, 72px); gap: 6px; }
             .material-item img { height: 30px; max-width: 44px; }
-            .right-panel { width: 100%; min-width: unset; flex-direction: row; flex-wrap: wrap; padding: 10px; gap: 10px; }
-            .reference-section { flex: 1; min-width: 200px; min-height: 140px; }
-            .reference-img-wrapper { min-height: 140px; }
+            .right-panel { width: 100%; min-width: unset; flex-direction: row; flex-wrap: wrap; padding: 10px; gap: 10px; overflow-y: visible; }
+            .reference-section { flex: 1; min-width: 200px; min-height: 200px; }
+            .reference-img-wrapper { min-height: 200px; }
             .canvas-panel { min-width: unset; flex: 1; }
             .action-buttons { flex: 1; }
             .custom-section { min-width: 260px; }
@@ -154,7 +147,7 @@
 <div class="toast" id="toast"></div>
 
 <div class="header">
-    <h1>🏃 运动截图拼图 <span class="version-tag">v1.5</span></h1>
+    <h1>🏃 运动截图拼图 <span class="version-tag">v1.6</span></h1>
     <div class="project-selector">
         <label for="projectSelect">项目：</label>
         <select id="projectSelect"></select>
@@ -194,11 +187,11 @@
             <button class="btn btn-success" id="downloadBtn" disabled>⬇ 导出 JPG</button>
         </div>
 
-        <!-- 自定义信息面板 -->
+        <!-- 自定义信息面板 - 精简版 -->
         <div class="custom-section">
             <div class="custom-section-title">
                 <span class="dot"></span>
-                ✏️ 自定义信息（三个独立元素，各自可拖拽）
+                ✏️ 自定义信息（独立拖拽）
             </div>
 
             <!-- 头像 -->
@@ -219,14 +212,7 @@
             <!-- 用户名 -->
             <div class="custom-row">
                 <label>用户名</label>
-                <input type="text" id="usernameInput" placeholder="默认：未命名" maxlength="20">
-            </div>
-
-            <!-- 用户名缩放 -->
-            <div class="custom-row scale-row">
-                <label>用户名大小</label>
-                <input type="range" class="scale-slider" id="usernameScaleSlider" min="10" max="60" step="1" value="16">
-                <span class="scale-value" id="usernameScaleText">16px</span>
+                <input type="text" id="usernameInput" placeholder="用户名61515321" value="用户名61515321" maxlength="20">
             </div>
 
             <!-- 日期 -->
@@ -241,16 +227,6 @@
                 </div>
             </div>
 
-            <!-- 日期格式 -->
-            <div class="custom-row">
-                <label>格式</label>
-                <select id="dateFormatSelect">
-                    <option value="YYYY/MM/DD">YYYY/MM/DD</option>
-                    <option value="YYYY-MM-DD">YYYY-MM-DD</option>
-                    <option value="MM月DD日">MM月DD日</option>
-                </select>
-            </div>
-
             <!-- 时间 -->
             <div class="custom-row">
                 <label>时间</label>
@@ -261,28 +237,14 @@
                 </div>
             </div>
 
-            <!-- 日期缩放 -->
-            <div class="custom-row scale-row">
-                <label>日期大小</label>
-                <input type="range" class="scale-slider" id="dateScaleSlider" min="8" max="48" step="1" value="13">
-                <span class="scale-value" id="dateScaleText">13px</span>
-            </div>
-
-            <!-- 头像缩放 -->
-            <div class="custom-row scale-row">
-                <label>头像大小</label>
-                <input type="range" class="scale-slider" id="avatarScaleSlider" min="20" max="120" step="2" value="40">
-                <span class="scale-value" id="avatarScaleText">40px</span>
-            </div>
-
             <div class="hint-text">
                 💡 头像/用户名/日期三个元素各自独立，可在画布上分别拖拽移动<br>
                 💡 点击选中后方向键微调，Delete 删除选中元素，Esc 取消选中<br>
-                💡 右侧滑块分别控制各自大小
+                💡 大小已固定：头像96px / 用户名43px / 日期39px
             </div>
         </div>
 
-        <!-- 样图参考 -->
+        <!-- 样图参考 - 重点放大 -->
         <div class="reference-section">
             <div class="reference-title">
                 📷 样图参考
@@ -306,6 +268,13 @@
     const MATERIALS_PATH = './materials/';
     const JPG_QUALITY = 0.92;
     const SNAP_THRESHOLD = 10;
+
+    // ---- 固定默认值（v1.6 硬编码） ----
+    const DEFAULT_AVATAR_SIZE = 96;
+    const DEFAULT_USERNAME_SIZE = 43;
+    const DEFAULT_DATE_SIZE = 39;
+    const DEFAULT_USERNAME_TEXT = '用户名61515321';
+    const DEFAULT_DATE_FORMAT = 'YYYY/MM/DD';
 
     const PROJECTS = [
         { id: 'huabing', name: '滑冰' }, { id: 'mingxiang', name: '冥想' },
@@ -337,8 +306,8 @@
     let sampleImage = null;
     let canvasWidth = 0;
     let canvasHeight = 0;
-    let placedItems = [];       // 普通素材
-    let selectedIndex = -1;     // 选中素材索引（-1=没选中）
+    let placedItems = [];
+    let selectedIndex = -1;
     let isDragging = false;
     let dragIndex = -1;
     let dragOffsetX = 0, dragOffsetY = 0;
@@ -346,38 +315,35 @@
     let guideVAligned = false, guideHAligned = false;
     let zoom = 1;
 
-    // ---- 三个独立的自定义元素 ----
-    // 每个元素有自己独立的 pos / scale / 选中状态
+    // ---- 三个独立的自定义元素（硬编码默认值） ----
     let customElements = {
         avatar: {
             type: 'avatar',
-            img: null,           // HTMLImageElement
-            x: 30, y: 30,       // 画布坐标
-            size: 40,           // 直径（像素）
+            img: null,
+            x: 30, y: 30,
+            size: DEFAULT_AVATAR_SIZE,  // 固定 96px
             selected: false,
         },
         username: {
             type: 'username',
-            text: '未命名',
-            x: 30, y: 80,
-            fontSize: 16,       // px
-            fontWeight: 500,    // 500 中等粗细
+            text: DEFAULT_USERNAME_TEXT,  // 固定默认值
+            x: 140, y: 35,
+            fontSize: DEFAULT_USERNAME_SIZE,  // 固定 43px
+            fontWeight: 500,
             color: '#000000',
             selected: false,
         },
         date: {
             type: 'date',
-            x: 30, y: 110,
-            fontSize: 13,
+            x: 30, y: 140,
+            fontSize: DEFAULT_DATE_SIZE,  // 固定 39px
             color: '#888888',
             selected: false,
         }
     };
 
-    // 当前选中的自定义元素类型（'avatar' | 'username' | 'date' | null）
     let selectedCustom = null;
-    // 拖拽状态
-    let customDragInfo = null;  // { type, offsetX, offsetY }
+    let customDragInfo = null;
 
     // DOM
     const canvas = document.getElementById('baseCanvas');
@@ -402,21 +368,14 @@
         setTimeout(() => t.classList.remove('show'), duration);
     }
 
-    // ==================== 日期格式化 ====================
+    // ==================== 日期格式化（固定 YYYY/MM/DD） ====================
     function getDateStr() {
-        const Y = customElements.avatar.img; // placeholder
         const year = parseInt(document.getElementById('dateYearInput').value) || 2025;
         const month = parseInt(document.getElementById('dateMonthInput').value) || 6;
         const day = parseInt(document.getElementById('dateDayInput').value) || 4;
-        const fmt = document.getElementById('dateFormatSelect').value;
         const M = String(month).padStart(2, '0');
         const D = String(day).padStart(2, '0');
-        let datePart;
-        switch (fmt) {
-            case 'YYYY-MM-DD': datePart = `${year}-${M}-${D}`; break;
-            case 'MM月DD日': datePart = `${M}月${D}日`; break;
-            default: datePart = `${year}/${M}/${D}`;
-        }
+        const datePart = `${year}/${M}/${D}`;
         const startT = document.getElementById('startTimeInput').value || '16:08';
         const endT = document.getElementById('endTimeInput').value || '16:43';
         return `${datePart} ${startT} - ${endT}`;
@@ -490,11 +449,22 @@
         currentProject = projectId;
         placedItems = []; selectedIndex = -1; selectedCustom = null;
         isDragging = false; dragIndex = -1; guideV = null; guideH = null;
-        // 重置三个元素位置
+
+        // 重置三个元素到默认位置（保留用户上传的头像）
+        const savedAvatarImg = customElements.avatar.img;
         customElements.avatar.x = 30; customElements.avatar.y = 30;
-        customElements.username.x = 30; customElements.username.y = 80;
-        customElements.date.x = 30; customElements.date.y = 110;
-        customElements.avatar.selected = customElements.username.selected = customElements.date.selected = false;
+        customElements.avatar.size = DEFAULT_AVATAR_SIZE;
+        customElements.avatar.selected = false;
+        if (savedAvatarImg) customElements.avatar.img = savedAvatarImg;
+
+        customElements.username.x = 140; customElements.username.y = 35;
+        customElements.username.fontSize = DEFAULT_USERNAME_SIZE;
+        customElements.username.selected = false;
+
+        customElements.date.x = 30; customElements.date.y = 140;
+        customElements.date.fontSize = DEFAULT_DATE_SIZE;
+        customElements.date.selected = false;
+
         statusBar.textContent = `⏳ 加载 ${projectId} ...`;
 
         try {
@@ -624,14 +594,13 @@
     // ---- 绘制用户名 ----
     function drawUsername() {
         const u = customElements.username;
-        const text = u.text || '未命名';
+        const text = u.text || DEFAULT_USERNAME_TEXT;
         ctx.save();
         ctx.font = `${u.fontWeight} ${u.fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
         ctx.fillStyle = u.color;
         ctx.textBaseline = 'top';
         ctx.fillText(text, u.x, u.y);
 
-        // 选中框
         if (u.selected) {
             const w = ctx.measureText(text).width;
             drawSelectionRect(u.x, u.y, w, u.fontSize);
@@ -685,19 +654,9 @@
 
         // 用户名
         document.getElementById('usernameInput').addEventListener('input', e => {
-            customElements.username.text = e.target.value.trim() || '未命名';
+            customElements.username.text = e.target.value.trim() || DEFAULT_USERNAME_TEXT;
             renderCanvas();
         });
-
-        // 用户名大小
-        document.getElementById('usernameScaleSlider').addEventListener('input', e => {
-            customElements.username.fontSize = parseInt(e.target.value);
-            document.getElementById('usernameScaleText').textContent = e.target.value + 'px';
-            renderCanvas();
-        });
-
-        // 日期格式
-        document.getElementById('dateFormatSelect').addEventListener('change', () => renderCanvas());
 
         // 年月日
         ['dateYearInput','dateMonthInput','dateDayInput'].forEach(id => {
@@ -707,20 +666,6 @@
         // 时间
         document.getElementById('startTimeInput').addEventListener('change', () => renderCanvas());
         document.getElementById('endTimeInput').addEventListener('change', () => renderCanvas());
-
-        // 日期大小
-        document.getElementById('dateScaleSlider').addEventListener('input', e => {
-            customElements.date.fontSize = parseInt(e.target.value);
-            document.getElementById('dateScaleText').textContent = e.target.value + 'px';
-            renderCanvas();
-        });
-
-        // 头像大小
-        document.getElementById('avatarScaleSlider').addEventListener('input', e => {
-            customElements.avatar.size = parseInt(e.target.value);
-            document.getElementById('avatarScaleText').textContent = e.target.value + 'px';
-            renderCanvas();
-        });
     }
 
     // ==================== 撤销/重置 ====================
@@ -752,7 +697,6 @@
         ecCtx.drawImage(baseImage, 0, 0, canvasWidth, canvasHeight);
         for (const item of placedItems) ecCtx.drawImage(item.img, item.x, item.y, item.w, item.h);
 
-        // 导出三个自定义元素
         exportAvatar(ecCtx);
         exportUsername(ecCtx);
         exportDate(ecCtx);
@@ -791,7 +735,7 @@
         targetCtx.save();
         targetCtx.font = `${u.fontWeight} ${u.fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
         targetCtx.fillStyle = u.color; targetCtx.textBaseline = 'top';
-        targetCtx.fillText(u.text || '未命名', u.x, u.y);
+        targetCtx.fillText(u.text || DEFAULT_USERNAME_TEXT, u.x, u.y);
         targetCtx.restore();
     }
 
@@ -819,7 +763,6 @@
         return -1;
     }
 
-    // 检测点击了哪个自定义元素，返回 'avatar' | 'username' | 'date' | null
     function hitCustomElement(cx, cy) {
         const a = customElements.avatar;
         if (cx >= a.x && cx <= a.x + a.size && cy >= a.y && cy <= a.y + a.size) return 'avatar';
@@ -827,7 +770,7 @@
         const u = customElements.username;
         ctx.save();
         ctx.font = `${u.fontWeight} ${u.fontSize}px sans-serif`;
-        const uw = ctx.measureText(u.text || '未命名').width;
+        const uw = ctx.measureText(u.text || DEFAULT_USERNAME_TEXT).width;
         ctx.restore();
         if (cx >= u.x && cx <= u.x + uw && cy >= u.y && cy <= u.y + u.fontSize) return 'username';
 
@@ -844,11 +787,10 @@
     // ==================== 拖拽 ====================
     function startCustomDrag(type, cx, cy) {
         customDragInfo = { type, offsetX: cx - customElements[type].x, offsetY: cy - customElements[type].y };
-        // 取消其他选中
         Object.keys(customElements).forEach(k => customElements[k].selected = false);
         customElements[type].selected = true;
         selectedCustom = type;
-        selectedIndex = -1; // 取消普通素材选中
+        selectedIndex = -1;
         renderCanvas();
     }
 
@@ -867,7 +809,6 @@
         customDragInfo = null;
     }
 
-    // 普通素材拖拽
     function startDrag(index, cx, cy) {
         isDragging = true; dragIndex = index; selectedIndex = index;
         const item = placedItems[index];
@@ -875,7 +816,6 @@
         const [dragged] = placedItems.splice(index, 1);
         placedItems.push(dragged);
         dragIndex = placedItems.length - 1; selectedIndex = dragIndex;
-        // 取消自定义元素选中
         Object.keys(customElements).forEach(k => customElements[k].selected = false);
         selectedCustom = null;
         renderCanvas();
@@ -915,7 +855,6 @@
         if (!baseImage) return;
         const c = getCanvasCoords(e.clientX, e.clientY);
 
-        // 先检查自定义元素
         const hit = hitCustomElement(c.x, c.y);
         if (hit) {
             startCustomDrag(hit, c.x, c.y);
@@ -981,7 +920,7 @@
                 case 'Delete':
                 case 'Backspace':
                     if (selectedCustom === 'avatar') { el.img = null; document.getElementById('avatarPreviewCircle').innerHTML = '<span class="default-icon">👤</span>'; showToast('头像已删除'); }
-                    else if (selectedCustom === 'username') { el.text = '未命名'; document.getElementById('usernameInput').value = ''; showToast('用户名已清空'); }
+                    else if (selectedCustom === 'username') { el.text = DEFAULT_USERNAME_TEXT; document.getElementById('usernameInput').value = DEFAULT_USERNAME_TEXT; showToast('用户名已恢复默认'); }
                     else if (selectedCustom === 'date') { showToast('日期不可删除，请修改年月日'); handled = false; }
                     selectedCustom = null; el.selected = false;
                     break;
