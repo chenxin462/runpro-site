@@ -222,8 +222,6 @@
 
         #baseCanvas {
             display: block;
-            max-width: 90vw;
-            max-height: 80vh;
             box-shadow: 0 2px 14px rgba(0,0,0,0.09);
             border-radius: 6px;
             background: #fff;
@@ -274,8 +272,8 @@
 
         /* ========== 右侧：操作+样图 ========== */
         .right-panel {
-            width: 340px;
-            min-width: 280px;
+            width: 280px;
+            min-width: 240px;
             background: #fff;
             border-radius: 12px;
             box-shadow: 0 1px 4px rgba(0,0,0,0.06);
@@ -547,7 +545,6 @@
             }
             .reference-img-wrapper { min-height: 160px; }
             .canvas-panel { min-width: unset; flex: 1; }
-            #baseCanvas { max-width: 94vw; max-height: 42vh; }
             .action-buttons { flex: 1; }
         }
     </style>
@@ -898,7 +895,10 @@
                 refzoomOverlay.classList.add('active');
             };
 
-            fitCanvasToViewport();
+            // 等待下一帧确保布局完成，拿到正确的 panel 尺寸
+            requestAnimationFrame(() => {
+                fitCanvasToViewport();
+            });
             renderCanvas();
             updateButtonState();
             statusBar.textContent = `✅ 已加载 ${projectId}  |  ${canvasWidth}×${canvasHeight}`;
@@ -1252,12 +1252,16 @@
     // ==================== 缩放 ====================
     function fitCanvasToViewport() {
         const panel = document.getElementById('canvasPanel');
-        const padding = 40;
+        const padding = 20;
         const availW = panel.clientWidth - padding * 2;
         const availH = panel.clientHeight - padding * 2 - 50;
         const scaleX = availW / canvasWidth;
         const scaleY = availH / canvasHeight;
-        zoom = Math.min(scaleX, scaleY, 1);
+        zoom = Math.min(scaleX, scaleY);
+        // 允许放大到 3 倍，不再限制为 1
+        zoom = Math.min(zoom, 3);
+        // 保证最小可见比例
+        zoom = Math.max(zoom, 0.15);
         applyZoom();
     }
 
