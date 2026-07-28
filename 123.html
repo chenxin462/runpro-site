@@ -3,701 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>运动截图拼图工具 v1.4</title>
+    <title>运动截图拼图工具 v1.5</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background: #f0f2f5;
-            height: 100vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
+            background: #f0f2f5; height: 100vh; overflow: hidden;
+            display: flex; flex-direction: column;
         }
 
-        /* ========== 顶部栏 ========== */
-        .header {
-            background: #fff;
-            padding: 10px 24px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            z-index: 10;
-            flex-shrink: 0;
-        }
+        /* 顶部栏 */
+        .header { background: #fff; padding: 10px 24px; box-shadow: 0 1px 4px rgba(0,0,0,.08); display: flex; align-items: center; justify-content: space-between; z-index: 10; flex-shrink: 0; }
+        .header h1 { font-size: 18px; color: #1a1a1a; font-weight: 700; }
+        .header .version-tag { font-size: 11px; background: #f0f5ff; color: #1677ff; padding: 2px 10px; border-radius: 10px; margin-left: 8px; font-weight: 400; }
+        .project-selector { display: flex; align-items: center; gap: 10px; }
+        .project-selector label { font-size: 14px; color: #555; font-weight: 500; }
+        .project-selector select { padding: 7px 32px 7px 14px; border: 1px solid #d9d9d9; border-radius: 8px; font-size: 14px; background: #fff; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23555' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; outline: none; }
+        .project-selector select:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,.12); }
 
-        .header h1 {
-            font-size: 18px;
-            color: #1a1a1a;
-            font-weight: 700;
-        }
+        /* 主体三栏 */
+        .main-container { display: flex; flex: 1; min-height: 0; gap: 14px; padding: 14px; }
 
-        .header .version-tag {
-            font-size: 11px;
-            background: #f0f5ff;
-            color: #1677ff;
-            padding: 2px 10px;
-            border-radius: 10px;
-            margin-left: 8px;
-            font-weight: 400;
-        }
-
-        .project-selector {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .project-selector label {
-            font-size: 14px;
-            color: #555;
-            font-weight: 500;
-        }
-
-        .project-selector select {
-            padding: 7px 32px 7px 14px;
-            border: 1px solid #d9d9d9;
-            border-radius: 8px;
-            font-size: 14px;
-            background: #fff;
-            cursor: pointer;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23555' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 10px center;
-            outline: none;
-        }
-
-        .project-selector select:focus {
-            border-color: #1677ff;
-            box-shadow: 0 0 0 2px rgba(22,119,255,0.12);
-        }
-
-        /* ========== 主体三栏布局 ========== */
-        .main-container {
-            display: flex;
-            flex: 1;
-            min-height: 0;
-            gap: 14px;
-            padding: 14px;
-        }
-
-        /* ========== 左侧：素材库 ========== */
-        .material-panel {
-            width: 260px;
-            min-width: 200px;
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            flex-shrink: 0;
-        }
-
-        .material-panel-title {
-            padding: 12px 14px 8px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #333;
-            border-bottom: 1px solid #f0f0f0;
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .material-panel-title .badge {
-            background: #f0f5ff;
-            color: #1677ff;
-            font-size: 11px;
-            padding: 1px 8px;
-            border-radius: 10px;
-            font-weight: 400;
-        }
-
-        .material-panel-title .badge-key {
-            background: #f6ffed;
-            color: #52c41a;
-            font-size: 11px;
-            padding: 1px 8px;
-            borderRadius: 10px;
-            font-weight: 400;
-        }
-
-        .material-scroll {
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px 12px;
-        }
-
+        /* 左侧素材库 */
+        .material-panel { width: 260px; min-width: 200px; background: #fff; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.06); display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; }
+        .material-panel-title { padding: 12px 14px 8px; font-size: 14px; font-weight: 600; color: #333; border-bottom: 1px solid #f0f0f0; flex-shrink: 0; display: flex; align-items: center; gap: 6px; }
+        .material-panel-title .badge { background: #f0f5ff; color: #1677ff; font-size: 11px; padding: 1px 8px; border-radius: 10px; font-weight: 400; }
+        .material-panel-title .badge-key { background: #f6ffed; color: #52c41a; font-size: 11px; padding: 1px 8px; border-radius: 10px; font-weight: 400; }
+        .material-scroll { flex: 1; overflow-y: auto; padding: 10px 12px; }
         .material-scroll::-webkit-scrollbar { width: 4px; }
         .material-scroll::-webkit-scrollbar-thumb { background: #d0d0d0; border-radius: 4px; }
-
         .group-section { margin-bottom: 16px; }
         .group-section:last-child { margin-bottom: 0; }
+        .group-title { font-size: 12px; color: #999; margin-bottom: 8px; padding-left: 2px; font-weight: 500; }
+        .material-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .material-item { display: flex; flex-direction: column; align-items: center; background: #f8f9fa; border-radius: 8px; padding: 6px 3px 4px; cursor: pointer; transition: all .15s ease; border: 1px solid #eee; user-select: none; -webkit-user-select: none; }
+        .material-item:hover { background: #e6f4ff; border-color: #91caff; transform: translateY(-2px); box-shadow: 0 3px 8px rgba(22,119,255,.1); }
+        .material-item:active { background: #bae0ff; transform: scale(.95); }
+        .material-item img { height: 36px; width: auto; max-width: 50px; object-fit: contain; pointer-events: none; display: block; margin-bottom: 3px; }
+        .material-label { font-size: 10px; color: #666; line-height: 1.2; text-align: center; font-weight: 500; }
 
-        .group-title {
-            font-size: 12px;
-            color: #999;
-            margin-bottom: 8px;
-            padding-left: 2px;
-            font-weight: 500;
-        }
+        /* 中间画布 */
+        .canvas-panel { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.06); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; min-width: 300px; }
+        .canvas-wrapper { position: relative; display: inline-block; touch-action: none; }
+        #baseCanvas { display: block; box-shadow: 0 2px 14px rgba(0,0,0,.09); border-radius: 6px; background: #fff; }
+        .zoom-controls { position: absolute; bottom: 14px; right: 14px; display: flex; gap: 4px; z-index: 20; background: rgba(255,255,255,.9); border-radius: 8px; padding: 4px; box-shadow: 0 1px 6px rgba(0,0,0,.1); }
+        .zoom-btn { width: 34px; height: 34px; border: 1px solid #d9d9d9; border-radius: 6px; background: #fff; color: #555; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; }
+        .zoom-btn:hover { border-color: #1677ff; color: #1677ff; }
+        .zoom-label { display: flex; align-items: center; padding: 0 8px; font-size: 12px; color: #888; min-width: 48px; justify-content: center; }
 
-        .material-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-        }
-
-        .material-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 6px 3px 4px;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            border: 1px solid #eee;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-
-        .material-item:hover {
-            background: #e6f4ff;
-            border-color: #91caff;
-            transform: translateY(-2px);
-            box-shadow: 0 3px 8px rgba(22,119,255,0.1);
-        }
-
-        .material-item:active {
-            background: #bae0ff;
-            transform: scale(0.95);
-        }
-
-        .material-item img {
-            height: 36px;
-            width: auto;
-            max-width: 50px;
-            object-fit: contain;
-            pointer-events: none;
-            display: block;
-            margin-bottom: 3px;
-        }
-
-        .material-label {
-            font-size: 10px;
-            color: #666;
-            line-height: 1.2;
-            text-align: center;
-            font-weight: 500;
-        }
-
-        /* ========== 中间：画布区 ========== */
-        .canvas-panel {
-            flex: 1;
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-            min-width: 300px;
-        }
-
-        .canvas-wrapper {
-            position: relative;
-            display: inline-block;
-            touch-action: none;
-        }
-
-        #baseCanvas {
-            display: block;
-            box-shadow: 0 2px 14px rgba(0,0,0,0.09);
-            border-radius: 6px;
-            background: #fff;
-        }
-
-        /* 缩放控件 */
-        .zoom-controls {
-            position: absolute;
-            bottom: 14px;
-            right: 14px;
-            display: flex;
-            gap: 4px;
-            z-index: 20;
-            background: rgba(255,255,255,0.9);
-            border-radius: 8px;
-            padding: 4px;
-            box-shadow: 0 1px 6px rgba(0,0,0,0.1);
-        }
-
-        .zoom-btn {
-            width: 34px; height: 34px;
-            border: 1px solid #d9d9d9;
-            border-radius: 6px;
-            background: #fff;
-            color: #555;
-            font-size: 16px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.15s;
-        }
-
-        .zoom-btn:hover {
-            border-color: #1677ff;
-            color: #1677ff;
-        }
-
-        .zoom-label {
-            display: flex;
-            align-items: center;
-            padding: 0 8px;
-            font-size: 12px;
-            color: #888;
-            min-width: 48px;
-            justify-content: center;
-        }
-
-        /* ========== 右侧：操作+样图 ========== */
-        .right-panel {
-            width: 300px;
-            min-width: 260px;
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-            display: flex;
-            flex-direction: column;
-            padding: 14px;
-            gap: 12px;
-            flex-shrink: 0;
-        }
-
+        /* 右侧面板 */
+        .right-panel { width: 300px; min-width: 260px; background: #fff; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.06); display: flex; flex-direction: column; padding: 14px; gap: 12px; flex-shrink: 0; }
         .right-panel::-webkit-scrollbar { width: 4px; }
         .right-panel::-webkit-scrollbar-thumb { background: #d0d0d0; border-radius: 4px; }
-
-        .action-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .btn {
-            padding: 8px 18px;
-            border: none;
-            border-radius: 8px;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.15s;
-            font-weight: 550;
-        }
-
+        .action-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+        .btn { padding: 8px 18px; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all .15s; font-weight: 550; }
         .btn-default { background: #f5f5f5; color: #333; border: 1px solid #d9d9d9; }
         .btn-default:hover { background: #e8e8e8; }
-        .btn-default:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-default:disabled { opacity: .4; cursor: not-allowed; }
         .btn-danger { background: #ff4d4f; color: #fff; }
         .btn-danger:hover { background: #ff7875; }
-        .btn-danger:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-danger:disabled { opacity: .4; cursor: not-allowed; }
         .btn-success { background: #52c41a; color: #fff; }
         .btn-success:hover { background: #73d13d; }
-        .btn-success:disabled { opacity: 0.4; cursor: not-allowed; }
+        .btn-success:disabled { opacity: .4; cursor: not-allowed; }
         .btn-primary { background: #1677ff; color: #fff; }
         .btn-primary:hover { background: #4096ff; }
-        .btn-outline {
-            background: transparent;
-            border: 1px solid #d9d9d9;
-            color: #555;
-        }
+        .btn-outline { background: transparent; border: 1px solid #d9d9d9; color: #555; }
         .btn-outline:hover { border-color: #1677ff; color: #1677ff; }
 
-        /* 样图区域 */
-        .reference-section {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            min-height: 180px;
-        }
+        /* 样图 */
+        .reference-section { flex: 1; display: flex; flex-direction: column; min-height: 180px; }
+        .reference-title { font-size: 13px; color: #555; margin-bottom: 8px; font-weight: 600; display: flex; align-items: center; gap: 6px; justify-content: space-between; }
+        .reference-title .zoom-hint { font-size: 11px; color: #999; font-weight: 400; }
+        .reference-img-wrapper { flex: 1; overflow: hidden; border-radius: 10px; background: #fafafa; display: flex; align-items: center; justify-content: center; min-height: 240px; border: 1px solid #e8e8e8; padding: 6px; cursor: zoom-in; position: relative; }
+        .reference-img-wrapper:hover { border-color: #91caff; background: #f0f7ff; }
+        .reference-img-wrapper img { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; display: block; border-radius: 4px; box-shadow: 0 1px 6px rgba(0,0,0,.06); }
+        .placeholder-text { color: #bbb; font-size: 14px; }
 
-        .reference-title {
-            font-size: 13px;
-            color: #555;
-            margin-bottom: 8px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            justify-content: space-between;
-        }
+        /* 自定义信息面板 */
+        .custom-section { border: 1px solid #e8e8e8; border-radius: 10px; padding: 12px; background: #fafcff; display: flex; flex-direction: column; gap: 10px; }
+        .custom-section-title { font-size: 13px; color: #333; font-weight: 600; display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
+        .custom-section-title .dot { width: 6px; height: 6px; border-radius: 50%; background: #1677ff; display: inline-block; }
+        .custom-row { display: flex; align-items: center; gap: 8px; }
+        .custom-row label { font-size: 12px; color: #666; min-width: 56px; flex-shrink: 0; }
+        .custom-row input[type="text"], .custom-row select, .custom-row input[type="time"], .custom-row input[type="number"] { flex: 1; padding: 6px 10px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 12px; outline: none; background: #fff; color: #333; }
+        .custom-row input:focus, .custom-row select:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,.1); }
+        .custom-row input[type="time"] { flex: 0.6; }
+        .time-group { display: flex; gap: 6px; flex: 1; }
+        .time-group input { flex: 1; }
 
-        .reference-title .zoom-hint {
-            font-size: 11px;
-            color: #999;
-            font-weight: 400;
-        }
-
-        .reference-img-wrapper {
-            flex: 1;
-            overflow: hidden;
-            border-radius: 10px;
-            background: #fafafa;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 240px;
-            border: 1px solid #e8e8e8;
-            padding: 6px;
-            cursor: zoom-in;
-            position: relative;
-        }
-
-        .reference-img-wrapper:hover {
-            border-color: #91caff;
-            background: #f0f7ff;
-        }
-
-        .reference-img-wrapper img {
-            max-width: 100%;
-            max-height: 100%;
-            width: auto;
-            height: auto;
-            object-fit: contain;
-            display: block;
-            border-radius: 4px;
-            box-shadow: 0 1px 6px rgba(0,0,0,0.06);
-        }
-
-        .placeholder-text {
-            color: #bbb;
-            font-size: 14px;
-        }
-
-        /* ========== 自定义信息模块面板 ========== */
-        .custom-section {
-            border: 1px solid #e8e8e8;
-            border-radius: 10px;
-            padding: 12px;
-            background: #fafcff;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .custom-section-title {
-            font-size: 13px;
-            color: #333;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-bottom: 2px;
-        }
-
-        .custom-section-title .dot {
-            width: 6px; height: 6px;
-            border-radius: 50%;
-            background: #1677ff;
-            display: inline-block;
-        }
-
-        .custom-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .custom-row label {
-            font-size: 12px;
-            color: #666;
-            min-width: 56px;
-            flex-shrink: 0;
-        }
-
-        .custom-row input[type="text"],
-        .custom-row select,
-        .custom-row input[type="time"] {
-            flex: 1;
-            padding: 6px 10px;
-            border: 1px solid #d9d9d9;
-            border-radius: 6px;
-            font-size: 12px;
-            outline: none;
-            background: #fff;
-            color: #333;
-        }
-
-        .custom-row input:focus,
-        .custom-row select:focus {
-            border-color: #1677ff;
-            box-shadow: 0 0 0 2px rgba(22,119,255,0.1);
-        }
-
-        .custom-row input[type="time"] {
-            flex: 0.6;
-        }
-
-        .time-group {
-            display: flex;
-            gap: 6px;
-            flex: 1;
-        }
-
-        .time-group input {
-            flex: 1;
-        }
-
-        /* 头像上传 */
-        .avatar-upload-area {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .avatar-preview-circle {
-            width: 42px;
-            height: 42px;
-            border-radius: 50%;
-            border: 2px solid #00C853;
-            background: #CCCCCC;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .avatar-preview-circle img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .avatar-preview-circle .default-icon {
-            font-size: 18px;
-            color: #999;
-        }
-
-        .avatar-btns {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-
-        .avatar-btns .btn {
-            padding: 5px 12px;
-            font-size: 12px;
-        }
+        /* 头像 */
+        .avatar-upload-area { display: flex; align-items: center; gap: 10px; }
+        .avatar-preview-circle { width: 42px; height: 42px; border-radius: 50%; border: 2px solid #00C853; background: #CCCCCC; overflow: hidden; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .avatar-preview-circle img { width: 100%; height: 100%; object-fit: cover; }
+        .avatar-preview-circle .default-icon { font-size: 18px; color: #999; }
+        .avatar-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+        .avatar-btns .btn { padding: 5px 12px; font-size: 12px; }
 
         /* 缩放滑块 */
-        .scale-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .scale-row { display: flex; align-items: center; gap: 8px; }
+        .scale-row label { font-size: 12px; color: #666; min-width: 56px; }
+        .scale-slider { flex: 1; -webkit-appearance: none; height: 4px; border-radius: 2px; background: #d9d9d9; outline: none; }
+        .scale-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #1677ff; cursor: pointer; }
+        .scale-value { font-size: 12px; color: #1677ff; font-weight: 600; min-width: 36px; text-align: right; }
 
-        .scale-row label {
-            font-size: 12px;
-            color: #666;
-            min-width: 56px;
-        }
+        .hint-text { font-size: 10px; color: #999; line-height: 1.5; }
+        .status-bar { padding: 8px 14px; background: #f7f8fa; border-radius: 8px; font-size: 12px; color: #777; text-align: center; border: 1px solid #f0f0f0; flex-shrink: 0; }
 
-        .scale-slider {
-            flex: 1;
-            -webkit-appearance: none;
-            height: 4px;
-            border-radius: 2px;
-            background: #d9d9d9;
-            outline: none;
-        }
+        /* 浮层 */
+        .refzoom-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.6); z-index: 1000; align-items: center; justify-content: center; flex-direction: column; gap: 12px; cursor: zoom-out; }
+        .refzoom-overlay.active { display: flex; }
+        .refzoom-overlay img { max-width: 90vw; max-height: 82vh; object-fit: contain; border-radius: 8px; box-shadow: 0 4px 30px rgba(0,0,0,.35); background: #fff; padding: 6px; }
+        .refzoom-overlay .refzoom-hint { color: rgba(255,255,255,.7); font-size: 12px; }
 
-        .scale-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 16px; height: 16px;
-            border-radius: 50%;
-            background: #1677ff;
-            cursor: pointer;
-        }
+        /* 快捷键 */
+        .shortcut-hint { font-size: 11px; color: #aaa; line-height: 1.8; padding: 6px 10px; background: #fafafa; border-radius: 6px; border: 1px solid #f0f0f0; }
+        .shortcut-hint kbd { display: inline-block; padding: 0 5px; background: #fff; border: 1px solid #ddd; border-radius: 3px; font-size: 10px; font-family: monospace; color: #555; margin: 0 1px; }
 
-        .scale-value {
-            font-size: 12px;
-            color: #1677ff;
-            font-weight: 600;
-            min-width: 36px;
-            text-align: right;
-        }
-
-        /* 提示文字 */
-        .hint-text {
-            font-size: 10px;
-            color: #999;
-            line-height: 1.5;
-        }
-
-        /* 状态条 */
-        .status-bar {
-            padding: 8px 14px;
-            background: #f7f8fa;
-            border-radius: 8px;
-            font-size: 12px;
-            color: #777;
-            text-align: center;
-            border: 1px solid #f0f0f0;
-            flex-shrink: 0;
-        }
-
-        /* ========== 样图放大浮层 ========== */
-        .refzoom-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0,0,0,0.6);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            gap: 12px;
-            cursor: zoom-out;
-        }
-
-        .refzoom-overlay.active {
-            display: flex;
-        }
-
-        .refzoom-overlay img {
-            max-width: 90vw;
-            max-height: 82vh;
-            object-fit: contain;
-            border-radius: 8px;
-            box-shadow: 0 4px 30px rgba(0,0,0,0.35);
-            background: #fff;
-            padding: 6px;
-        }
-
-        .refzoom-overlay .refzoom-hint {
-            color: rgba(255,255,255,0.7);
-            font-size: 12px;
-        }
-
-        /* ========== 快捷键提示 ========== */
-        .shortcut-hint {
-            font-size: 11px;
-            color: #aaa;
-            line-height: 1.8;
-            padding: 6px 10px;
-            background: #fafafa;
-            border-radius: 6px;
-            border: 1px solid #f0f0f0;
-        }
-
-        .shortcut-hint kbd {
-            display: inline-block;
-            padding: 0 5px;
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 3px;
-            font-size: 10px;
-            font-family: monospace;
-            color: #555;
-            margin: 0 1px;
-        }
-
-        /* ========== 吸附提示标记 ========== */
-        .snap-indicator {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #ff4d4f;
-            color: #fff;
-            font-size: 11px;
-            padding: 2px 12px;
-            border-radius: 10px;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.2s;
-            z-index: 30;
-        }
-
-        .snap-indicator.active {
-            opacity: 1;
-        }
+        /* 吸附 */
+        .snap-indicator { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: #ff4d4f; color: #fff; font-size: 11px; padding: 2px 12px; border-radius: 10px; pointer-events: none; opacity: 0; transition: opacity .2s; z-index: 30; }
+        .snap-indicator.active { opacity: 1; }
 
         /* Toast */
-        .toast {
-            position: fixed;
-            top: 60px;
-            left: 50%;
-            transform: translateX(-50%) translateY(-20px);
-            background: #333;
-            color: #fff;
-            padding: 8px 20px;
-            border-radius: 8px;
-            font-size: 13px;
-            opacity: 0;
-            transition: all 0.3s;
-            z-index: 2000;
-            pointer-events: none;
-        }
+        .toast { position: fixed; top: 60px; left: 50%; transform: translateX(-50%) translateY(-20px); background: #333; color: #fff; padding: 8px 20px; border-radius: 8px; font-size: 13px; opacity: 0; transition: all .3s; z-index: 2000; pointer-events: none; }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-        .toast.show {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-        }
-
-        /* ========== 响应式 ========== */
+        /* 响应式 */
         @media (max-width: 1200px) {
-            .main-container {
-                flex-direction: column;
-                padding: 10px;
-                gap: 10px;
-            }
-            .material-panel {
-                width: 100%;
-                min-width: unset;
-                max-height: 140px;
-                flex-shrink: 0;
-            }
-            .material-scroll {
-                display: flex;
-                flex-wrap: nowrap;
-                overflow-x: auto;
-                overflow-y: hidden;
-                padding: 8px 12px;
-                gap: 10px;
-            }
-            .group-section {
-                margin-bottom: 0;
-                flex-shrink: 0;
-            }
-            .material-grid {
-                grid-template-columns: repeat(6, 72px);
-                gap: 6px;
-            }
+            .main-container { flex-direction: column; padding: 10px; gap: 10px; }
+            .material-panel { width: 100%; min-width: unset; max-height: 140px; flex-shrink: 0; }
+            .material-scroll { display: flex; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; padding: 8px 12px; gap: 10px; }
+            .group-section { margin-bottom: 0; flex-shrink: 0; }
+            .material-grid { grid-template-columns: repeat(6, 72px); gap: 6px; }
             .material-item img { height: 30px; max-width: 44px; }
-            .right-panel {
-                width: 100%;
-                min-width: unset;
-                flex-direction: row;
-                flex-wrap: wrap;
-                padding: 10px;
-                gap: 10px;
-            }
-            .reference-section {
-                flex: 1;
-                min-width: 200px;
-                min-height: 140px;
-            }
+            .right-panel { width: 100%; min-width: unset; flex-direction: row; flex-wrap: wrap; padding: 10px; gap: 10px; }
+            .reference-section { flex: 1; min-width: 200px; min-height: 140px; }
             .reference-img-wrapper { min-height: 140px; }
             .canvas-panel { min-width: unset; flex: 1; }
             .action-buttons { flex: 1; }
@@ -707,17 +147,14 @@
 </head>
 <body>
 
-<!-- 样图放大浮层 -->
 <div class="refzoom-overlay" id="refzoomOverlay">
     <img id="refzoomImg" src="" alt="样图放大">
     <div class="refzoom-hint">点击任意位置关闭</div>
 </div>
-
-<!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <div class="header">
-    <h1>🏃 运动截图拼图 <span class="version-tag">v1.4</span></h1>
+    <h1>🏃 运动截图拼图 <span class="version-tag">v1.5</span></h1>
     <div class="project-selector">
         <label for="projectSelect">项目：</label>
         <select id="projectSelect"></select>
@@ -751,18 +188,17 @@
 
     <!-- 右侧操作区 -->
     <div class="right-panel">
-        <!-- 操作按钮 -->
         <div class="action-buttons">
             <button class="btn btn-default" id="undoBtn" title="撤销上一个素材" disabled>↩ 撤销</button>
             <button class="btn btn-danger" id="resetBtn" disabled>🗑 重置</button>
             <button class="btn btn-success" id="downloadBtn" disabled>⬇ 导出 JPG</button>
         </div>
 
-        <!-- 自定义信息模块 -->
+        <!-- 自定义信息面板 -->
         <div class="custom-section">
             <div class="custom-section-title">
                 <span class="dot"></span>
-                ✏️ 自定义信息
+                ✏️ 自定义信息（三个独立元素，各自可拖拽）
             </div>
 
             <!-- 头像 -->
@@ -786,15 +222,22 @@
                 <input type="text" id="usernameInput" placeholder="默认：未命名" maxlength="20">
             </div>
 
+            <!-- 用户名缩放 -->
+            <div class="custom-row scale-row">
+                <label>用户名大小</label>
+                <input type="range" class="scale-slider" id="usernameScaleSlider" min="10" max="60" step="1" value="16">
+                <span class="scale-value" id="usernameScaleText">16px</span>
+            </div>
+
             <!-- 日期 -->
             <div class="custom-row">
                 <label>日期</label>
                 <div class="time-group">
-                    <input type="number" id="dateYearInput" min="2000" max="2100" value="2025" title="年" style="flex:0.8;min-width:0;">
+                    <input type="number" id="dateYearInput" min="2000" max="2100" value="2025" title="年" style="flex:.8;min-width:0;">
                     <span style="line-height:28px;color:#999;font-size:12px;">/</span>
-                    <input type="number" id="dateMonthInput" min="1" max="12" value="6" title="月" style="flex:0.6;min-width:0;">
+                    <input type="number" id="dateMonthInput" min="1" max="12" value="6" title="月" style="flex:.6;min-width:0;">
                     <span style="line-height:28px;color:#999;font-size:12px;">/</span>
-                    <input type="number" id="dateDayInput" min="1" max="31" value="4" title="日" style="flex:0.6;min-width:0;">
+                    <input type="number" id="dateDayInput" min="1" max="31" value="4" title="日" style="flex:.6;min-width:0;">
                 </div>
             </div>
 
@@ -818,15 +261,24 @@
                 </div>
             </div>
 
-            <!-- 缩放滑块 -->
+            <!-- 日期缩放 -->
             <div class="custom-row scale-row">
-                <label>缩放</label>
-                <input type="range" class="scale-slider" id="scaleSlider" min="1.0" max="8.0" step="0.5" value="4.0">
-                <span class="scale-value" id="scaleValueText">4.0x</span>
+                <label>日期大小</label>
+                <input type="range" class="scale-slider" id="dateScaleSlider" min="8" max="48" step="1" value="13">
+                <span class="scale-value" id="dateScaleText">13px</span>
+            </div>
+
+            <!-- 头像缩放 -->
+            <div class="custom-row scale-row">
+                <label>头像大小</label>
+                <input type="range" class="scale-slider" id="avatarScaleSlider" min="20" max="120" step="2" value="40">
+                <span class="scale-value" id="avatarScaleText">40px</span>
             </div>
 
             <div class="hint-text">
-                💡 头像/用户名/日期可在画布上拖拽移动，右下角手柄可整体缩放（1.0x~8.0x）
+                💡 头像/用户名/日期三个元素各自独立，可在画布上分别拖拽移动<br>
+                💡 点击选中后方向键微调，Delete 删除选中元素，Esc 取消选中<br>
+                💡 右侧滑块分别控制各自大小
             </div>
         </div>
 
@@ -856,62 +308,27 @@
     const SNAP_THRESHOLD = 10;
 
     const PROJECTS = [
-        { id: 'huabing', name: '滑冰' },
-        { id: 'mingxiang', name: '冥想' },
-        { id: 'palouti', name: '爬楼梯' },
-        { id: 'panyan', name: '攀岩' },
-        { id: 'paobu', name: '跑步' },
-        { id: 'pingpangqiu', name: '乒乓球' },
-        { id: 'pulati', name: '普拉提' },
-        { id: 'shineipaobu', name: '室内跑步' },
-        { id: 'wudao', name: '舞蹈' },
-        { id: 'xingzou', name: '行走' },
-        { id: 'youyong', name: '游泳' },
-        { id: 'yujia', name: '瑜伽' },
+        { id: 'huabing', name: '滑冰' }, { id: 'mingxiang', name: '冥想' },
+        { id: 'palouti', name: '爬楼梯' }, { id: 'panyan', name: '攀岩' },
+        { id: 'paobu', name: '跑步' }, { id: 'pingpangqiu', name: '乒乓球' },
+        { id: 'pulati', name: '普拉提' }, { id: 'shineipaobu', name: '室内跑步' },
+        { id: 'wudao', name: '舞蹈' }, { id: 'xingzou', name: '行走' },
+        { id: 'youyong', name: '游泳' }, { id: 'yujia', name: '瑜伽' },
         { id: 'yumaoqiu', name: '羽毛球' },
     ];
 
     const GROUP_B = [
-        { file: 'b0.jpg', label: 'b0' },
-        { file: 'b1.jpg', label: 'b1' },
-        { file: 'b2.jpg', label: 'b2' },
-        { file: 'b3.jpg', label: 'b3' },
-        { file: 'b4.jpg', label: 'b4' },
-        { file: 'b5.jpg', label: 'b5' },
-        { file: 'b6.jpg', label: 'b6' },
-        { file: 'b7.jpg', label: 'b7' },
-        { file: 'b8.jpg', label: 'b8' },
-        { file: 'b9.jpg', label: 'b9' },
-        { file: 'bgl.jpg', label: '公里' },
-        { file: 'bm.jpg', label: '一点' },
-        { file: 'b2m.jpg', label: '冒号' },
-        { file: 'bqk.jpg', label: '千卡' },
-        { file: 'bmi.jpg', label: '米' },
+        { file: 'b0.jpg', label: 'b0' },{ file: 'b1.jpg', label: 'b1' },{ file: 'b2.jpg', label: 'b2' },{ file: 'b3.jpg', label: 'b3' },{ file: 'b4.jpg', label: 'b4' },
+        { file: 'b5.jpg', label: 'b5' },{ file: 'b6.jpg', label: 'b6' },{ file: 'b7.jpg', label: 'b7' },{ file: 'b8.jpg', label: 'b8' },{ file: 'b9.jpg', label: 'b9' },
+        { file: 'bgl.jpg', label: '公里' },{ file: 'bm.jpg', label: '一点' },{ file: 'b2m.jpg', label: '冒号' },{ file: 'bqk.jpg', label: '千卡' },{ file: 'bmi.jpg', label: '米' },
     ];
 
     const GROUP_NUM = [
-        { file: '0.jpg', label: '0' },
-        { file: '1.jpg', label: '1' },
-        { file: '2.jpg', label: '2' },
-        { file: '3.jpg', label: '3' },
-        { file: '4.jpg', label: '4' },
-        { file: '5.jpg', label: '5' },
-        { file: '6.jpg', label: '6' },
-        { file: '7.jpg', label: '7' },
-        { file: '8.jpg', label: '8' },
-        { file: '9.jpg', label: '9' },
-        { file: 'ceng.jpg', label: '层' },
-        { file: 'ge.jpg', label: '个' },
-        { file: 'hm.jpg', label: '毫秒' },
-        { file: 'mi.jpg', label: '米' },
-        { file: 'ps1.jpg', label: '配速1' },
-        { file: 'ps2.jpg', label: '配速2' },
-        { file: 'qk.jpg', label: '千卡' },
-        { file: 'qks.jpg', label: '千米/时' },
-        { file: 'tang.jpg', label: '趟' },
-        { file: 'wa.jpg', label: '瓦' },
-        { file: 'm.jpg', label: '点' },
-        { file: '2m.jpg', label: '冒号' },
+        { file: '0.jpg', label: '0' },{ file: '1.jpg', label: '1' },{ file: '2.jpg', label: '2' },{ file: '3.jpg', label: '3' },{ file: '4.jpg', label: '4' },
+        { file: '5.jpg', label: '5' },{ file: '6.jpg', label: '6' },{ file: '7.jpg', label: '7' },{ file: '8.jpg', label: '8' },{ file: '9.jpg', label: '9' },
+        { file: 'ceng.jpg', label: '层' },{ file: 'ge.jpg', label: '个' },{ file: 'hm.jpg', label: '毫秒' },{ file: 'mi.jpg', label: '米' },{ file: 'ps1.jpg', label: '配速1' },
+        { file: 'ps2.jpg', label: '配速2' },{ file: 'qk.jpg', label: '千卡' },{ file: 'qks.jpg', label: '千米/时' },{ file: 'tang.jpg', label: '趟' },{ file: 'wa.jpg', label: '瓦' },
+        { file: 'm.jpg', label: '点' },{ file: '2m.jpg', label: '冒号' },
     ];
 
     // ==================== 状态 ====================
@@ -920,38 +337,47 @@
     let sampleImage = null;
     let canvasWidth = 0;
     let canvasHeight = 0;
-    let placedItems = [];
-    let selectedIndex = -1;
+    let placedItems = [];       // 普通素材
+    let selectedIndex = -1;     // 选中素材索引（-1=没选中）
     let isDragging = false;
     let dragIndex = -1;
-    let dragOffsetX = 0;
-    let dragOffsetY = 0;
-
-    // 辅助线
-    let guideV = null;
-    let guideH = null;
-    let guideVAligned = false;
-    let guideHAligned = false;
-
-    // 画布缩放
+    let dragOffsetX = 0, dragOffsetY = 0;
+    let guideV = null, guideH = null;
+    let guideVAligned = false, guideHAligned = false;
     let zoom = 1;
 
-    // ---- 自定义信息模块状态 ----
-    let customInfo = {
-        avatarImg: null,
-        username: '未命名',
-        dateFormat: 'YYYY/MM/DD',
-        dateYear: 2025,
-        dateMonth: 6,
-        dateDay: 4,
-        startTime: '16:08',
-        endTime: '16:43',
-        scale: 4.0,
-        pos: { x: 20, y: 20 },
+    // ---- 三个独立的自定义元素 ----
+    // 每个元素有自己独立的 pos / scale / 选中状态
+    let customElements = {
+        avatar: {
+            type: 'avatar',
+            img: null,           // HTMLImageElement
+            x: 30, y: 30,       // 画布坐标
+            size: 40,           // 直径（像素）
+            selected: false,
+        },
+        username: {
+            type: 'username',
+            text: '未命名',
+            x: 30, y: 80,
+            fontSize: 16,       // px
+            fontWeight: 500,    // 500 中等粗细
+            color: '#000000',
+            selected: false,
+        },
+        date: {
+            type: 'date',
+            x: 30, y: 110,
+            fontSize: 13,
+            color: '#888888',
+            selected: false,
+        }
     };
-    let customDragMode = false;    // 'move' | 'scale' | false
-    let customDragOffset = { x: 0, y: 0 };
-    let customHandlePos = { x: 0, y: 0, size: 8 }; // 手柄位置（用于点击检测）
+
+    // 当前选中的自定义元素类型（'avatar' | 'username' | 'date' | null）
+    let selectedCustom = null;
+    // 拖拽状态
+    let customDragInfo = null;  // { type, offsetX, offsetY }
 
     // DOM
     const canvas = document.getElementById('baseCanvas');
@@ -968,7 +394,7 @@
     const snapIndicator = document.getElementById('snapIndicator');
     const canvasWrapper = document.getElementById('canvasWrapper');
 
-    // Toast
+    // ==================== Toast ====================
     function showToast(msg, duration = 1800) {
         const t = document.getElementById('toast');
         t.textContent = msg;
@@ -976,27 +402,33 @@
         setTimeout(() => t.classList.remove('show'), duration);
     }
 
-    // 日期格式化
-    function formatDateStr(fmt) {
-        const Y = customInfo.dateYear;
-        const M = String(customInfo.dateMonth).padStart(2, '0');
-        const D = String(customInfo.dateDay).padStart(2, '0');
+    // ==================== 日期格式化 ====================
+    function getDateStr() {
+        const Y = customElements.avatar.img; // placeholder
+        const year = parseInt(document.getElementById('dateYearInput').value) || 2025;
+        const month = parseInt(document.getElementById('dateMonthInput').value) || 6;
+        const day = parseInt(document.getElementById('dateDayInput').value) || 4;
+        const fmt = document.getElementById('dateFormatSelect').value;
+        const M = String(month).padStart(2, '0');
+        const D = String(day).padStart(2, '0');
+        let datePart;
         switch (fmt) {
-            case 'YYYY-MM-DD': return `${Y}-${M}-${D}`;
-            case 'MM月DD日': return `${M}月${D}日`;
-            default: return `${Y}/${M}/${D}`;
+            case 'YYYY-MM-DD': datePart = `${year}-${M}-${D}`; break;
+            case 'MM月DD日': datePart = `${M}月${D}日`; break;
+            default: datePart = `${year}/${M}/${D}`;
         }
+        const startT = document.getElementById('startTimeInput').value || '16:08';
+        const endT = document.getElementById('endTimeInput').value || '16:43';
+        return `${datePart} ${startT} - ${endT}`;
     }
 
     // ==================== 初始化 ====================
     function init() {
         PROJECTS.forEach(p => {
             const opt = document.createElement('option');
-            opt.value = p.id;
-            opt.textContent = p.name;
+            opt.value = p.id; opt.textContent = p.name;
             projectSelect.appendChild(opt);
         });
-
         buildMaterialPanel();
 
         projectSelect.addEventListener('change', e => { if (e.target.value) loadProject(e.target.value); });
@@ -1004,7 +436,7 @@
         resetBtn.addEventListener('click', resetAll);
         downloadBtn.addEventListener('click', downloadJpg);
 
-        // 画布交互
+        // 画布事件
         canvas.addEventListener('mousedown', onPointerDown);
         window.addEventListener('mousemove', onPointerMove);
         window.addEventListener('mouseup', onPointerUp);
@@ -1022,10 +454,8 @@
         document.getElementById('zoomFit').addEventListener('click', fitCanvasToViewport);
         window.addEventListener('resize', () => { if (baseImage) fitCanvasToViewport(); });
 
-        // ---- 自定义信息控件绑定 ----
-        initCustomInfoControls();
+        initCustomControls();
 
-        // 默认加载第一个
         if (PROJECTS.length > 0) {
             projectSelect.value = PROJECTS[0].id;
             loadProject(PROJECTS[0].id);
@@ -1035,49 +465,22 @@
     // ==================== 素材面板 ====================
     function buildMaterialPanel() {
         materialScroll.innerHTML = '';
+        const g1 = document.createElement('div'); g1.className = 'group-section';
+        const t1 = document.createElement('div'); t1.className = 'group-title'; t1.textContent = 'b 系列（15个）'; g1.appendChild(t1);
+        const grid1 = document.createElement('div'); grid1.className = 'material-grid';
+        GROUP_B.forEach(i => grid1.appendChild(createMaterialItem(i.file, i.label))); g1.appendChild(grid1); materialScroll.appendChild(g1);
 
-        const groupBDiv = document.createElement('div');
-        groupBDiv.className = 'group-section';
-        const titleB = document.createElement('div');
-        titleB.className = 'group-title';
-        titleB.textContent = 'b 系列（15个）';
-        groupBDiv.appendChild(titleB);
-        const gridB = document.createElement('div');
-        gridB.className = 'material-grid';
-        GROUP_B.forEach(item => gridB.appendChild(createMaterialItem(item.file, item.label)));
-        groupBDiv.appendChild(gridB);
-        materialScroll.appendChild(groupBDiv);
-
-        const groupNDiv = document.createElement('div');
-        groupNDiv.className = 'group-section';
-        const titleN = document.createElement('div');
-        titleN.className = 'group-title';
-        titleN.textContent = '数字 / 汉字（22个）';
-        groupNDiv.appendChild(titleN);
-        const gridN = document.createElement('div');
-        gridN.className = 'material-grid';
-        GROUP_NUM.forEach(item => gridN.appendChild(createMaterialItem(item.file, item.label)));
-        groupNDiv.appendChild(gridN);
-        materialScroll.appendChild(groupNDiv);
+        const g2 = document.createElement('div'); g2.className = 'group-section';
+        const t2 = document.createElement('div'); t2.className = 'group-title'; t2.textContent = '数字 / 汉字（22个）'; g2.appendChild(t2);
+        const grid2 = document.createElement('div'); grid2.className = 'material-grid';
+        GROUP_NUM.forEach(i => grid2.appendChild(createMaterialItem(i.file, i.label))); g2.appendChild(grid2); materialScroll.appendChild(g2);
     }
 
     function createMaterialItem(file, label) {
-        const div = document.createElement('div');
-        div.className = 'material-item';
-
-        const img = document.createElement('img');
-        img.src = MATERIALS_PATH + file;
-        img.alt = label;
-        img.loading = 'lazy';
-        img.onerror = () => { img.style.display = 'none'; };
-
-        const span = document.createElement('span');
-        span.className = 'material-label';
-        span.textContent = label;
-
-        div.appendChild(img);
-        div.appendChild(span);
-
+        const div = document.createElement('div'); div.className = 'material-item';
+        const img = document.createElement('img'); img.src = MATERIALS_PATH + file; img.alt = label; img.loading = 'lazy'; img.onerror = () => { img.style.display = 'none'; };
+        const span = document.createElement('span'); span.className = 'material-label'; span.textContent = label;
+        div.appendChild(img); div.appendChild(span);
         div.addEventListener('click', () => addMaterialToCanvas(file));
         return div;
     }
@@ -1085,13 +488,13 @@
     // ==================== 项目加载 ====================
     async function loadProject(projectId) {
         currentProject = projectId;
-        placedItems = [];
-        selectedIndex = -1;
-        isDragging = false;
-        dragIndex = -1;
-        guideV = null; guideH = null;
-        // 重置自定义信息位置
-        customInfo.pos = { x: 20, y: 20 };
+        placedItems = []; selectedIndex = -1; selectedCustom = null;
+        isDragging = false; dragIndex = -1; guideV = null; guideH = null;
+        // 重置三个元素位置
+        customElements.avatar.x = 30; customElements.avatar.y = 30;
+        customElements.username.x = 30; customElements.username.y = 80;
+        customElements.date.x = 30; customElements.date.y = 110;
+        customElements.avatar.selected = customElements.username.selected = customElements.date.selected = false;
         statusBar.textContent = `⏳ 加载 ${projectId} ...`;
 
         try {
@@ -1099,35 +502,24 @@
                 loadImage(MATERIALS_PATH + projectId + '.jpg'),
                 loadImage(MATERIALS_PATH + projectId + '1.jpg')
             ]);
-
-            baseImage = baseImg;
-            sampleImage = sampImg;
+            baseImage = baseImg; sampleImage = sampImg;
             canvasWidth = baseImg.naturalWidth || baseImg.width;
             canvasHeight = baseImg.naturalHeight || baseImg.height;
-            canvas.width = canvasWidth;
-            canvas.height = canvasHeight;
+            canvas.width = canvasWidth; canvas.height = canvasHeight;
 
-            // 样图
             referenceWrapper.innerHTML = '';
             const refImg = document.createElement('img');
-            refImg.src = sampImg.src;
-            refImg.alt = projectId + ' 样图';
-            refImg.id = 'refImg';
+            refImg.src = sampImg.src; refImg.alt = projectId + ' 样图'; refImg.id = 'refImg';
             referenceWrapper.appendChild(refImg);
-            referenceWrapper.onclick = () => {
-                refzoomImg.src = sampImg.src;
-                refzoomOverlay.classList.add('active');
-            };
+            referenceWrapper.onclick = () => { refzoomImg.src = sampImg.src; refzoomOverlay.classList.add('active'); };
 
             requestAnimationFrame(() => { fitCanvasToViewport(); });
-            renderCanvas();
-            updateButtonState();
+            renderCanvas(); updateButtonState();
             statusBar.textContent = `✅ 已加载 ${projectId}  |  ${canvasWidth}×${canvasHeight}`;
         } catch (err) {
             console.error('加载失败:', err);
             statusBar.textContent = `❌ 加载 ${projectId} 失败`;
-            baseImage = null;
-            sampleImage = null;
+            baseImage = null; sampleImage = null;
             canvas.width = 800; canvas.height = 600;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             referenceWrapper.innerHTML = '<span class="placeholder-text">加载失败</span>';
@@ -1137,33 +529,20 @@
 
     function loadImage(src) {
         return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.crossOrigin = 'anonymous';
-            img.onload = () => resolve(img);
-            img.onerror = () => reject(new Error(`无法加载: ${src}`));
-            img.src = src;
+            const img = new Image(); img.crossOrigin = 'anonymous';
+            img.onload = () => resolve(img); img.onerror = () => reject(new Error(`无法加载: ${src}`)); img.src = src;
         });
     }
 
     // ==================== 添加素材 ====================
     function addMaterialToCanvas(file) {
         if (!baseImage) { statusBar.textContent = '⚠️ 请先选择运动项目'; return; }
-
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
+        const img = new Image(); img.crossOrigin = 'anonymous';
         img.onload = () => {
-            const w = img.naturalWidth || img.width;
-            const h = img.naturalHeight || img.height;
-            const item = {
-                img,
-                x: Math.round((canvasWidth - w) / 2),
-                y: Math.round((canvasHeight - h) / 2),
-                w, h, file
-            };
-            placedItems.push(item);
-            selectedIndex = placedItems.length - 1;
-            renderCanvas();
-            updateButtonState();
+            const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+            const item = { img, x: Math.round((canvasWidth - w) / 2), y: Math.round((canvasHeight - h) / 2), w, h, file };
+            placedItems.push(item); selectedIndex = placedItems.length - 1; selectedCustom = null;
+            renderCanvas(); updateButtonState();
             statusBar.textContent = `➕ 添加: ${file}  (共${placedItems.length}个)`;
         };
         img.onerror = () => { statusBar.textContent = `❌ 素材加载失败: ${file}`; };
@@ -1173,205 +552,123 @@
     // ==================== 渲染 ====================
     function renderCanvas() {
         if (!baseImage) { ctx.clearRect(0, 0, canvas.width, canvas.height); return; }
-
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+
         // 1. 底图
         ctx.drawImage(baseImage, 0, 0, canvasWidth, canvasHeight);
 
-        // 2. 已放置素材
+        // 2. 普通素材
         for (let i = 0; i < placedItems.length; i++) {
             const item = placedItems[i];
             ctx.drawImage(item.img, item.x, item.y, item.w, item.h);
-
-            if (i === selectedIndex) {
-                ctx.save();
-                ctx.strokeStyle = '#1677ff';
-                ctx.lineWidth = 2;
-                ctx.setLineDash([6, 3]);
-                const pad = 2;
-                ctx.strokeRect(item.x - pad, item.y - pad, item.w + pad * 2, item.h + pad * 2);
-                ctx.setLineDash([]);
-                ctx.fillStyle = '#1677ff';
-                const s = 6;
-                const corners = [
-                    [item.x - pad, item.y - pad],
-                    [item.x + item.w + pad, item.y - pad],
-                    [item.x - pad, item.y + item.h + pad],
-                    [item.x + item.w + pad, item.y + item.h + pad],
-                ];
-                corners.forEach(([cx, cy]) => { ctx.fillRect(cx - s/2, cy - s/2, s, s); });
-                ctx.restore();
-            }
+            if (i === selectedIndex) drawSelectionRect(item.x, item.y, item.w, item.h);
         }
 
-        // 3. 自定义信息模块
-        drawCustomInfo();
+        // 3. 三个自定义元素
+        drawAvatar();
+        drawUsername();
+        drawDate();
 
         // 4. 对齐辅助线
         if (guideV !== null || guideH !== null) {
-            ctx.save();
-            ctx.setLineDash([8, 6]);
-            ctx.lineWidth = 1;
-            if (guideV !== null) {
-                ctx.strokeStyle = guideVAligned ? '#ff4d4f' : '#91caff';
-                ctx.beginPath(); ctx.moveTo(guideV + 0.5, 0); ctx.lineTo(guideV + 0.5, canvasHeight); ctx.stroke();
-            }
-            if (guideH !== null) {
-                ctx.strokeStyle = guideHAligned ? '#ff4d4f' : '#91caff';
-                ctx.beginPath(); ctx.moveTo(0, guideH + 0.5); ctx.lineTo(canvasWidth, guideH + 0.5); ctx.stroke();
-            }
+            ctx.save(); ctx.setLineDash([8, 6]); ctx.lineWidth = 1;
+            if (guideV !== null) { ctx.strokeStyle = guideVAligned ? '#ff4d4f' : '#91caff'; ctx.beginPath(); ctx.moveTo(guideV + .5, 0); ctx.lineTo(guideV + .5, canvasHeight); ctx.stroke(); }
+            if (guideH !== null) { ctx.strokeStyle = guideHAligned ? '#ff4d4f' : '#91caff'; ctx.beginPath(); ctx.moveTo(0, guideH + .5); ctx.lineTo(canvasWidth, guideH + .5); ctx.stroke(); }
             ctx.restore();
         }
     }
 
-    // ==================== 自定义信息绘制 ====================
-    function drawCustomInfo() {
-        const s = customInfo.scale;
-        const px = customInfo.pos.x;
-        const py = customInfo.pos.y;
-        const avatarD = 40 * s;
-        const nameFontSize = 16 * s;
-        const dateFontSize = 13 * s;
-        const gapX = 8 * s;       // 头像与用户名的水平间距
-        const gapY = 4 * s;       // 用户名与日期的垂直间距
+    function drawSelectionRect(x, y, w, h) {
+        ctx.save(); ctx.strokeStyle = '#1677ff'; ctx.lineWidth = 2; ctx.setLineDash([6, 3]);
+        const pad = 2; ctx.strokeRect(x - pad, y - pad, w + pad * 2, h + pad * 2); ctx.setLineDash([]);
+        ctx.fillStyle = '#1677ff'; const s = 6;
+        [[x-pad,y-pad],[x+w+pad,y-pad],[x-pad,y+h+pad],[x+w+pad,y+h+pad]].forEach(([cx,cy]) => ctx.fillRect(cx-s/2, cy-s/2, s, s));
+        ctx.restore();
+    }
+
+    // ---- 绘制头像 ----
+    function drawAvatar() {
+        const a = customElements.avatar;
+        const d = a.size;
+        const cx = a.x + d / 2, cy = a.y + d / 2;
 
         ctx.save();
+        ctx.beginPath(); ctx.arc(cx, cy, d / 2, 0, Math.PI * 2); ctx.closePath();
+        ctx.save(); ctx.clip();
 
-        // ---- 第一行：头像 + 用户名 ----
-        // 头像（圆形裁剪）
-        const cx = px + avatarD / 2;
-        const cy = py + avatarD / 2;
-
-        ctx.beginPath();
-        ctx.arc(cx, cy, avatarD / 2, 0, Math.PI * 2);
-        ctx.closePath();
-        ctx.save();
-        ctx.clip();
-
-        if (customInfo.avatarImg) {
-            const img = customInfo.avatarImg;
+        if (a.img) {
+            const img = a.img;
             const aspect = img.naturalWidth / img.naturalHeight;
             let sx, sy, sw, sh;
-            if (aspect > 1) {
-                sh = img.naturalHeight; sw = sh;
-                sx = (img.naturalWidth - sw) / 2; sy = 0;
-            } else {
-                sw = img.naturalWidth; sh = sw;
-                sx = 0; sy = (img.naturalHeight - sh) / 2;
-            }
-            ctx.drawImage(img, sx, sy, sw, sh, px, py, avatarD, avatarD);
+            if (aspect > 1) { sh = img.naturalHeight; sw = sh; sx = (img.naturalWidth - sw) / 2; sy = 0; }
+            else { sw = img.naturalWidth; sh = sw; sx = 0; sy = (img.naturalHeight - sh) / 2; }
+            ctx.drawImage(img, sx, sy, sw, sh, a.x, a.y, d, d);
         } else {
-            // 默认灰色圆形
-            ctx.fillStyle = '#CCCCCC';
-            ctx.fillRect(px, py, avatarD, avatarD);
-            // 默认人像图标
+            ctx.fillStyle = '#CCCCCC'; ctx.fillRect(a.x, a.y, d, d);
             ctx.fillStyle = '#999999';
-            ctx.beginPath();
-            ctx.arc(cx, cy - avatarD*0.1, avatarD*0.2, 0, Math.PI*2);
-            ctx.fill();
-            ctx.beginPath();
-            ctx.arc(cx, cy + avatarD*0.3, avatarD*0.3, Math.PI, 0, false);
-            ctx.fill();
+            ctx.beginPath(); ctx.arc(cx, cy - d * 0.1, d * 0.2, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(cx, cy + d * 0.3, d * 0.3, Math.PI, 0, false); ctx.fill();
         }
         ctx.restore();
 
         // 绿色边框
-        ctx.beginPath();
-        ctx.arc(cx, cy, avatarD / 2, 0, Math.PI * 2);
-        ctx.strokeStyle = '#00C853';
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        ctx.beginPath(); ctx.arc(cx, cy, d / 2, 0, Math.PI * 2);
+        ctx.strokeStyle = '#00C853'; ctx.lineWidth = 2; ctx.stroke();
 
-        // 用户名（头像右侧，垂直居中）
-        const username = customInfo.username || '未命名';
-        ctx.font = `bold ${nameFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-        ctx.fillStyle = '#000000';
-        ctx.textBaseline = 'middle';
-        const nameX = px + avatarD + gapX;
-        const nameY = py + avatarD / 2;  // 头像垂直中心
-        ctx.fillText(username, nameX, nameY);
-
-        // ---- 第二行：日期时间（在用户名正下方，左对齐头像左边缘） ----
-        const dateStr = `${formatDateStr(customInfo.dateFormat)} ${customInfo.startTime} - ${customInfo.endTime}`;
-        ctx.font = `${dateFontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-        ctx.fillStyle = '#888888';
-        ctx.textBaseline = 'top';
-        const dateX = px;  // 左对齐头像左边缘（即整体 pos.x）
-        const dateY = py + avatarD + gapY;  // 头像底部 + 间距
-        ctx.fillText(dateStr, dateX, dateY);
-
-        // ---- 缩放手柄（右下角） ----
-        const nameW = ctx.measureText(username).width;
-        const dateW = ctx.measureText(dateStr).width;
-        const contentW = Math.max(nameW, dateW);
-        const totalW = avatarD + gapX + contentW;
-        const totalH = avatarD + gapY + dateFontSize + 4;
-        const handleSize = 8;
-        const hx = px + totalW - handleSize / 2;
-        const hy = py + totalH - handleSize / 2;
-        customHandlePos = { x: hx, y: hy, size: handleSize };
-        ctx.fillStyle = 'rgba(0,0,0,0.45)';
-        ctx.fillRect(hx, hy, handleSize, handleSize);
-
-        // 选中时画外框
-        if (selectedIndex === -2) {
-            ctx.strokeStyle = '#1677ff';
-            ctx.lineWidth = 2;
-            ctx.setLineDash([6, 3]);
-            ctx.strokeRect(px - 3, py - 3, totalW + 6, totalH + 6);
-            ctx.setLineDash([]);
-        }
+        // 选中框
+        if (a.selected) drawSelectionRect(a.x, a.y, d, d);
 
         ctx.restore();
     }
 
-    // 获取自定义信息模块包围盒（画布坐标）
-    function getCustomInfoBounds() {
-        const s = customInfo.scale;
-        const px = customInfo.pos.x;
-        const py = customInfo.pos.y;
-        const avatarD = 40 * s;
-        const nameFontSize = 16 * s;
-        const dateFontSize = 13 * s;
-        const gapX = 8 * s;
-        const gapY = 4 * s;
-
+    // ---- 绘制用户名 ----
+    function drawUsername() {
+        const u = customElements.username;
+        const text = u.text || '未命名';
         ctx.save();
-        ctx.font = `bold ${nameFontSize}px sans-serif`;
-        const nameW = ctx.measureText(customInfo.username || '未命名').width;
-        ctx.font = `${dateFontSize}px sans-serif`;
-        const dateStr = `${formatDateStr(customInfo.dateFormat)} ${customInfo.startTime} - ${customInfo.endTime}`;
-        const dateW = ctx.measureText(dateStr).width;
+        ctx.font = `${u.fontWeight} ${u.fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+        ctx.fillStyle = u.color;
+        ctx.textBaseline = 'top';
+        ctx.fillText(text, u.x, u.y);
+
+        // 选中框
+        if (u.selected) {
+            const w = ctx.measureText(text).width;
+            drawSelectionRect(u.x, u.y, w, u.fontSize);
+        }
         ctx.restore();
-
-        // 总宽度 = 头像 + gapX + max(用户名宽, 日期宽)
-        const contentW = Math.max(nameW, dateW);
-        const totalW = avatarD + gapX + contentW;
-        // 总高度 = 头像直径 + gapY + 日期字号
-        const totalH = avatarD + gapY + dateFontSize + 4;
-
-        return { x: px, y: py, w: totalW, h: totalH };
     }
 
-    // ==================== 自定义信息控件 ====================
-    function initCustomInfoControls() {
+    // ---- 绘制日期 ----
+    function drawDate() {
+        const d = customElements.date;
+        const text = getDateStr();
+        ctx.save();
+        ctx.font = `${d.fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+        ctx.fillStyle = d.color;
+        ctx.textBaseline = 'top';
+        ctx.fillText(text, d.x, d.y);
+
+        if (d.selected) {
+            const w = ctx.measureText(text).width;
+            drawSelectionRect(d.x, d.y, w, d.fontSize);
+        }
+        ctx.restore();
+    }
+
+    // ==================== 自定义控件绑定 ====================
+    function initCustomControls() {
         // 头像上传
-        document.getElementById('uploadAvatarBtn').addEventListener('click', () => {
-            document.getElementById('avatarInput').click();
-        });
-        document.getElementById('avatarInput').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
+        document.getElementById('uploadAvatarBtn').addEventListener('click', () => document.getElementById('avatarInput').click());
+        document.getElementById('avatarInput').addEventListener('change', e => {
+            const file = e.target.files[0]; if (!file) return;
             const reader = new FileReader();
-            reader.onload = (ev) => {
+            reader.onload = ev => {
                 const img = new Image();
                 img.onload = () => {
-                    customInfo.avatarImg = img;
-                    // 更新预览
-                    const preview = document.getElementById('avatarPreviewCircle');
-                    preview.innerHTML = `<img src="${ev.target.result}" alt="头像">`;
-                    renderCanvas();
-                    showToast('头像已上传');
+                    customElements.avatar.img = img;
+                    document.getElementById('avatarPreviewCircle').innerHTML = `<img src="${ev.target.result}" alt="头像">`;
+                    renderCanvas(); showToast('头像已上传');
                 };
                 img.src = ev.target.result;
             };
@@ -1380,53 +677,48 @@
 
         // 删除头像
         document.getElementById('removeAvatarBtn').addEventListener('click', () => {
-            customInfo.avatarImg = null;
+            customElements.avatar.img = null;
             document.getElementById('avatarPreviewCircle').innerHTML = '<span class="default-icon">👤</span>';
             document.getElementById('avatarInput').value = '';
-            renderCanvas();
-            showToast('头像已删除');
+            renderCanvas(); showToast('头像已删除');
         });
 
         // 用户名
-        document.getElementById('usernameInput').addEventListener('input', (e) => {
-            customInfo.username = e.target.value.trim() || '未命名';
+        document.getElementById('usernameInput').addEventListener('input', e => {
+            customElements.username.text = e.target.value.trim() || '未命名';
+            renderCanvas();
+        });
+
+        // 用户名大小
+        document.getElementById('usernameScaleSlider').addEventListener('input', e => {
+            customElements.username.fontSize = parseInt(e.target.value);
+            document.getElementById('usernameScaleText').textContent = e.target.value + 'px';
             renderCanvas();
         });
 
         // 日期格式
-        document.getElementById('dateFormatSelect').addEventListener('change', (e) => {
-            customInfo.dateFormat = e.target.value;
-            renderCanvas();
-        });
+        document.getElementById('dateFormatSelect').addEventListener('change', () => renderCanvas());
 
         // 年月日
-        document.getElementById('dateYearInput').addEventListener('input', (e) => {
-            const v = parseInt(e.target.value);
-            if (!isNaN(v)) { customInfo.dateYear = v; renderCanvas(); }
-        });
-        document.getElementById('dateMonthInput').addEventListener('input', (e) => {
-            const v = parseInt(e.target.value);
-            if (!isNaN(v)) { customInfo.dateMonth = Math.min(12, Math.max(1, v)); renderCanvas(); }
-        });
-        document.getElementById('dateDayInput').addEventListener('input', (e) => {
-            const v = parseInt(e.target.value);
-            if (!isNaN(v)) { customInfo.dateDay = Math.min(31, Math.max(1, v)); renderCanvas(); }
+        ['dateYearInput','dateMonthInput','dateDayInput'].forEach(id => {
+            document.getElementById(id).addEventListener('input', () => renderCanvas());
         });
 
         // 时间
-        document.getElementById('startTimeInput').addEventListener('change', (e) => {
-            customInfo.startTime = e.target.value;
-            renderCanvas();
-        });
-        document.getElementById('endTimeInput').addEventListener('change', (e) => {
-            customInfo.endTime = e.target.value;
+        document.getElementById('startTimeInput').addEventListener('change', () => renderCanvas());
+        document.getElementById('endTimeInput').addEventListener('change', () => renderCanvas());
+
+        // 日期大小
+        document.getElementById('dateScaleSlider').addEventListener('input', e => {
+            customElements.date.fontSize = parseInt(e.target.value);
+            document.getElementById('dateScaleText').textContent = e.target.value + 'px';
             renderCanvas();
         });
 
-        // 缩放滑块
-        document.getElementById('scaleSlider').addEventListener('input', (e) => {
-            customInfo.scale = parseFloat(e.target.value);
-            document.getElementById('scaleValueText').textContent = customInfo.scale.toFixed(1) + 'x';
+        // 头像大小
+        document.getElementById('avatarScaleSlider').addEventListener('input', e => {
+            customElements.avatar.size = parseInt(e.target.value);
+            document.getElementById('avatarScaleText').textContent = e.target.value + 'px';
             renderCanvas();
         });
     }
@@ -1436,123 +728,87 @@
         if (placedItems.length === 0) return;
         const removed = placedItems.pop();
         if (selectedIndex >= placedItems.length) selectedIndex = placedItems.length - 1;
-        renderCanvas();
-        updateButtonState();
+        renderCanvas(); updateButtonState();
         statusBar.textContent = `↩️ 撤销: ${removed.file}  (剩余${placedItems.length}个)`;
     }
 
     function resetAll() {
         if (placedItems.length === 0) return;
         if (!confirm('确定要清空画布上所有素材吗？')) return;
-        placedItems = [];
-        selectedIndex = -1;
+        placedItems = []; selectedIndex = -1; selectedCustom = null;
         guideV = null; guideH = null;
-        renderCanvas();
-        updateButtonState();
+        renderCanvas(); updateButtonState();
         statusBar.textContent = '🗑️ 已重置';
     }
 
     // ==================== 导出 JPG ====================
     function downloadJpg() {
         if (!baseImage || !currentProject) { statusBar.textContent = '⚠️ 请先选择项目'; return; }
-
         const ec = document.createElement('canvas');
         ec.width = canvasWidth; ec.height = canvasHeight;
         const ecCtx = ec.getContext('2d');
 
-        // 白底
-        ecCtx.fillStyle = '#fff';
-        ecCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-        // 底图
+        ecCtx.fillStyle = '#fff'; ecCtx.fillRect(0, 0, canvasWidth, canvasHeight);
         ecCtx.drawImage(baseImage, 0, 0, canvasWidth, canvasHeight);
-        // 素材
         for (const item of placedItems) ecCtx.drawImage(item.img, item.x, item.y, item.w, item.h);
-        // 自定义信息
-        drawCustomInfoOnContext(ecCtx);
+
+        // 导出三个自定义元素
+        exportAvatar(ecCtx);
+        exportUsername(ecCtx);
+        exportDate(ecCtx);
 
         const link = document.createElement('a');
         link.download = `${currentProject}_完成.jpg`;
         link.href = ec.toDataURL('image/jpeg', JPG_QUALITY);
         link.click();
-        statusBar.textContent = `⬇️ 已导出: ${currentProject}_完成.jpg (质量 ${(JPG_QUALITY*100).toFixed(0)}%)`;
+        statusBar.textContent = `⬇️ 已导出: ${currentProject}_完成.jpg`;
         showToast(`已导出 ${currentProject}_完成.jpg`);
     }
 
-    function drawCustomInfoOnContext(targetCtx) {
-        const s = customInfo.scale;
-        const px = customInfo.pos.x;
-        const py = customInfo.pos.y;
-        const avatarD = 40 * s;
-        const nameFontSize = 16 * s;
-        const dateFontSize = 13 * s;
-        const gapX = 8 * s;
-        const gapY = 4 * s;
-
+    function exportAvatar(targetCtx) {
+        const a = customElements.avatar;
+        const d = a.size; const cx = a.x + d/2, cy = a.y + d/2;
         targetCtx.save();
-
-        const cx = px + avatarD / 2;
-        const cy = py + avatarD / 2;
-
-        // 头像裁剪
-        targetCtx.beginPath();
-        targetCtx.arc(cx, cy, avatarD / 2, 0, Math.PI * 2);
-        targetCtx.closePath();
-        targetCtx.save();
-        targetCtx.clip();
-
-        if (customInfo.avatarImg) {
-            const img = customInfo.avatarImg;
-            const aspect = img.naturalWidth / img.naturalHeight;
+        targetCtx.beginPath(); targetCtx.arc(cx, cy, d/2, 0, Math.PI*2); targetCtx.closePath();
+        targetCtx.save(); targetCtx.clip();
+        if (a.img) {
+            const img = a.img; const aspect = img.naturalWidth / img.naturalHeight;
             let sx, sy, sw, sh;
-            if (aspect > 1) {
-                sh = img.naturalHeight; sw = sh;
-                sx = (img.naturalWidth - sw) / 2; sy = 0;
-            } else {
-                sw = img.naturalWidth; sh = sw;
-                sx = 0; sy = (img.naturalHeight - sh) / 2;
-            }
-            targetCtx.drawImage(img, sx, sy, sw, sh, px, py, avatarD, avatarD);
+            if (aspect > 1) { sh = img.naturalHeight; sw = sh; sx = (img.naturalWidth - sw)/2; sy = 0; }
+            else { sw = img.naturalWidth; sh = sw; sx = 0; sy = (img.naturalHeight - sh)/2; }
+            targetCtx.drawImage(img, sx, sy, sw, sh, a.x, a.y, d, d);
         } else {
-            targetCtx.fillStyle = '#CCCCCC';
-            targetCtx.fillRect(px, py, avatarD, avatarD);
+            targetCtx.fillStyle = '#CCCCCC'; targetCtx.fillRect(a.x, a.y, d, d);
         }
         targetCtx.restore();
-
-        // 绿色边框
-        targetCtx.beginPath();
-        targetCtx.arc(cx, cy, avatarD / 2, 0, Math.PI * 2);
-        targetCtx.strokeStyle = '#00C853';
-        targetCtx.lineWidth = 2;
-        targetCtx.stroke();
-
-        // 用户名（头像右侧，垂直居中）
-        const username = customInfo.username || '未命名';
-        targetCtx.font = `bold ${nameFontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
-        targetCtx.fillStyle = '#000000';
-        targetCtx.textBaseline = 'middle';
-        const nameDrawX = px + avatarD + gapX;
-        const nameDrawY = py + avatarD / 2;
-        targetCtx.fillText(username, nameDrawX, nameDrawY);
-
-        // 日期时间（第二行，左对齐头像左边缘 = px）
-        const dateStr = `${formatDateStr(customInfo.dateFormat)} ${customInfo.startTime} - ${customInfo.endTime}`;
-        targetCtx.font = `${dateFontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
-        targetCtx.fillStyle = '#888888';
-        targetCtx.textBaseline = 'top';
-        const dateDrawX = px;  // 左对齐头像左边缘
-        const dateDrawY = py + avatarD + gapY;  // 头像底部 + 间距
-        targetCtx.fillText(dateStr, dateDrawX, dateDrawY);
-
+        targetCtx.beginPath(); targetCtx.arc(cx, cy, d/2, 0, Math.PI*2);
+        targetCtx.strokeStyle = '#00C853'; targetCtx.lineWidth = 2; targetCtx.stroke();
         targetCtx.restore();
     }
 
-    // ==================== 拖拽交互 ====================
+    function exportUsername(targetCtx) {
+        const u = customElements.username;
+        targetCtx.save();
+        targetCtx.font = `${u.fontWeight} ${u.fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
+        targetCtx.fillStyle = u.color; targetCtx.textBaseline = 'top';
+        targetCtx.fillText(u.text || '未命名', u.x, u.y);
+        targetCtx.restore();
+    }
+
+    function exportDate(targetCtx) {
+        const d = customElements.date;
+        const text = getDateStr();
+        targetCtx.save();
+        targetCtx.font = `${d.fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
+        targetCtx.fillStyle = d.color; targetCtx.textBaseline = 'top';
+        targetCtx.fillText(text, d.x, d.y);
+        targetCtx.restore();
+    }
+
+    // ==================== 命中检测 ====================
     function getCanvasCoords(clientX, clientY) {
         const rect = canvas.getBoundingClientRect();
-        return {
-            x: (clientX - rect.left) * (canvas.width / rect.width),
-            y: (clientY - rect.top) * (canvas.height / rect.height)
-        };
+        return { x: (clientX - rect.left) * (canvas.width / rect.width), y: (clientY - rect.top) * (canvas.height / rect.height) };
     }
 
     function findHitItem(cx, cy) {
@@ -1563,118 +819,93 @@
         return -1;
     }
 
-    // 检查是否点击自定义信息区域
-    function hitCustomInfo(cx, cy) {
-        const bounds = getCustomInfoBounds();
-        // 检查手柄
-        const hp = customHandlePos;
-        if (cx >= hp.x && cx <= hp.x + hp.size && cy >= hp.y && cy <= hp.y + hp.size) {
-            return 'scale';
-        }
-        // 检查整体区域
-        if (cx >= bounds.x && cx <= bounds.x + bounds.w && cy >= bounds.y && cy <= bounds.y + bounds.h) {
-            return 'move';
-        }
+    // 检测点击了哪个自定义元素，返回 'avatar' | 'username' | 'date' | null
+    function hitCustomElement(cx, cy) {
+        const a = customElements.avatar;
+        if (cx >= a.x && cx <= a.x + a.size && cy >= a.y && cy <= a.y + a.size) return 'avatar';
+
+        const u = customElements.username;
+        ctx.save();
+        ctx.font = `${u.fontWeight} ${u.fontSize}px sans-serif`;
+        const uw = ctx.measureText(u.text || '未命名').width;
+        ctx.restore();
+        if (cx >= u.x && cx <= u.x + uw && cy >= u.y && cy <= u.y + u.fontSize) return 'username';
+
+        const d = customElements.date;
+        ctx.save();
+        ctx.font = `${d.fontSize}px sans-serif`;
+        const dw = ctx.measureText(getDateStr()).width;
+        ctx.restore();
+        if (cx >= d.x && cx <= d.x + dw && cy >= d.y && cy <= d.y + d.fontSize) return 'date';
+
         return null;
     }
 
-    function startDrag(index, cx, cy) {
-        if (index < 0) return;
-        isDragging = true;
-        dragIndex = index;
-        selectedIndex = index;
-        const item = placedItems[index];
-        dragOffsetX = cx - item.x;
-        dragOffsetY = cy - item.y;
+    // ==================== 拖拽 ====================
+    function startCustomDrag(type, cx, cy) {
+        customDragInfo = { type, offsetX: cx - customElements[type].x, offsetY: cy - customElements[type].y };
+        // 取消其他选中
+        Object.keys(customElements).forEach(k => customElements[k].selected = false);
+        customElements[type].selected = true;
+        selectedCustom = type;
+        selectedIndex = -1; // 取消普通素材选中
+        renderCanvas();
+    }
 
+    function moveCustomDrag(cx, cy) {
+        if (!customDragInfo) return;
+        const el = customElements[customDragInfo.type];
+        let nx = cx - customDragInfo.offsetX;
+        let ny = cy - customDragInfo.offsetY;
+        nx = Math.max(0, Math.min(nx, canvasWidth - 10));
+        ny = Math.max(0, Math.min(ny, canvasHeight - 10));
+        el.x = Math.round(nx); el.y = Math.round(ny);
+        renderCanvas();
+    }
+
+    function endCustomDrag() {
+        customDragInfo = null;
+    }
+
+    // 普通素材拖拽
+    function startDrag(index, cx, cy) {
+        isDragging = true; dragIndex = index; selectedIndex = index;
+        const item = placedItems[index];
+        dragOffsetX = cx - item.x; dragOffsetY = cy - item.y;
         const [dragged] = placedItems.splice(index, 1);
         placedItems.push(dragged);
-        dragIndex = placedItems.length - 1;
-        selectedIndex = dragIndex;
-
+        dragIndex = placedItems.length - 1; selectedIndex = dragIndex;
+        // 取消自定义元素选中
+        Object.keys(customElements).forEach(k => customElements[k].selected = false);
+        selectedCustom = null;
         renderCanvas();
     }
 
     function moveDrag(cx, cy) {
         if (!isDragging || dragIndex < 0) return;
         const item = placedItems[dragIndex];
-
-        let rawX = cx - dragOffsetX;
-        let rawY = cy - dragOffsetY;
-
-        let snappedX = rawX;
-        let snappedY = rawY;
-        let vGuide = null, hGuide = null;
-        let vAligned = false, hAligned = false;
-
+        let rx = cx - dragOffsetX, ry = cy - dragOffsetY;
+        let sx = rx, sy = ry, gv = null, gh = null, va = false, ha = false;
         for (let i = 0; i < placedItems.length; i++) {
             if (i === dragIndex) continue;
-            const other = placedItems[i];
-
-            if (Math.abs(rawX - other.x) <= SNAP_THRESHOLD) {
-                snappedX = other.x; vGuide = snappedX; vAligned = true;
-            }
-            if (Math.abs((rawX + item.w) - (other.x + other.w)) <= SNAP_THRESHOLD) {
-                snappedX = other.x + other.w - item.w; vGuide = snappedX; vAligned = true;
-            }
-            if (Math.abs(rawX - (other.x + other.w)) <= SNAP_THRESHOLD) {
-                snappedX = other.x + other.w; vGuide = snappedX; vAligned = true;
-            }
-            if (Math.abs(rawY - other.y) <= SNAP_THRESHOLD) {
-                snappedY = other.y; hGuide = snappedY + item.h; hAligned = true;
-            }
-            if (Math.abs((rawY + item.h) - (other.y + other.h)) <= SNAP_THRESHOLD) {
-                snappedY = other.y + other.h - item.h; hGuide = snappedY + item.h; hAligned = true;
-            }
+            const o = placedItems[i];
+            if (Math.abs(rx - o.x) <= SNAP_THRESHOLD) { sx = o.x; gv = sx; va = true; }
+            if (Math.abs(rx + item.w - (o.x + o.w)) <= SNAP_THRESHOLD) { sx = o.x + o.w - item.w; gv = sx; va = true; }
+            if (Math.abs(rx - (o.x + o.w)) <= SNAP_THRESHOLD) { sx = o.x + o.w; gv = sx; va = true; }
+            if (Math.abs(ry - o.y) <= SNAP_THRESHOLD) { sy = o.y; gh = sy + item.h; ha = true; }
+            if (Math.abs(ry + item.h - (o.y + o.h)) <= SNAP_THRESHOLD) { sy = o.y + o.h - item.h; gh = sy + item.h; ha = true; }
         }
-
-        item.x = Math.round(snappedX);
-        item.y = Math.round(snappedY);
-        guideV = vGuide; guideH = hGuide;
-        guideVAligned = vAligned; guideHAligned = hAligned;
-
-        if (vAligned || hAligned) snapIndicator.classList.add('active');
-        else snapIndicator.classList.remove('active');
-
+        item.x = Math.round(sx); item.y = Math.round(sy);
+        guideV = gv; guideH = gh; guideVAligned = va; guideHAligned = ha;
+        snapIndicator.classList.toggle('active', va || ha);
         renderCanvas();
     }
 
     function endDrag() {
         if (isDragging) {
-            isDragging = false;
-            dragIndex = -1;
-            guideV = null; guideH = null;
-            guideVAligned = false; guideHAligned = false;
+            isDragging = false; dragIndex = -1;
+            guideV = null; guideH = null; guideVAligned = false; guideHAligned = false;
             snapIndicator.classList.remove('active');
-            renderCanvas();
-        }
-    }
-
-    // ---- 自定义信息拖拽 ----
-    function moveCustomDrag(cx, cy) {
-        if (customDragMode === 'move') {
-            let nx = cx - customDragOffset.x;
-            let ny = cy - customDragOffset.y;
-            nx = Math.max(0, Math.min(nx, canvasWidth - 40));
-            ny = Math.max(0, Math.min(ny, canvasHeight - 30));
-            customInfo.pos = { x: nx, y: ny };
-            renderCanvas();
-        } else if (customDragMode === 'scale') {
-            // 以左上角为锚点缩放
-            const startW = 40; // 基准宽度
-            const dx = cx - customInfo.pos.x;
-            let ratio = dx / startW;
-            ratio = Math.max(0.5, Math.min(2.0, ratio));
-            customInfo.scale = ratio;
-            document.getElementById('scaleSlider').value = ratio.toFixed(1);
-            document.getElementById('scaleValueText').textContent = ratio.toFixed(1) + 'x';
-            renderCanvas();
-        }
-    }
-
-    function endCustomDrag() {
-        if (customDragMode) {
-            customDragMode = false;
             renderCanvas();
         }
     }
@@ -1684,158 +915,111 @@
         if (!baseImage) return;
         const c = getCanvasCoords(e.clientX, e.clientY);
 
-        // 先检查自定义信息
-        const customHit = hitCustomInfo(c.x, c.y);
-        if (customHit) {
-            if (customHit === 'scale') {
-                customDragMode = 'scale';
-            } else {
-                customDragMode = 'move';
-                customDragOffset = { x: c.x - customInfo.pos.x, y: c.y - customInfo.pos.y };
-            }
-            selectedIndex = -2; // 选中自定义信息
+        // 先检查自定义元素
+        const hit = hitCustomElement(c.x, c.y);
+        if (hit) {
+            startCustomDrag(hit, c.x, c.y);
             e.preventDefault();
-            renderCanvas();
+            statusBar.textContent = `✏️ 选中: ${hit === 'avatar' ? '头像' : hit === 'username' ? '用户名' : '日期'}（独立拖拽中）`;
             return;
         }
 
-        const hit = findHitItem(c.x, c.y);
-        if (hit >= 0) {
-            startDrag(hit, c.x, c.y);
-            e.preventDefault();
-        } else {
-            selectedIndex = -1;
-            renderCanvas();
-        }
+        const itemHit = findHitItem(c.x, c.y);
+        if (itemHit >= 0) { startDrag(itemHit, c.x, c.y); e.preventDefault(); }
+        else { selectedIndex = -1; selectedCustom = null; Object.keys(customElements).forEach(k => customElements[k].selected = false); renderCanvas(); }
     }
 
     function onPointerMove(e) {
-        if (customDragMode) {
-            const c = getCanvasCoords(e.clientX, e.clientY);
-            moveCustomDrag(c.x, c.y);
-            e.preventDefault();
-            return;
-        }
+        if (customDragInfo) { const c = getCanvasCoords(e.clientX, e.clientY); moveCustomDrag(c.x, c.y); e.preventDefault(); return; }
         if (!isDragging) return;
-        const c = getCanvasCoords(e.clientX, e.clientY);
-        moveDrag(c.x, c.y);
-        e.preventDefault();
+        const c = getCanvasCoords(e.clientX, e.clientY); moveDrag(c.x, c.y); e.preventDefault();
     }
 
-    function onPointerUp() {
-        endCustomDrag();
-        endDrag();
-    }
+    function onPointerUp() { endCustomDrag(); endDrag(); }
 
     function onTouchStart(e) {
         if (!baseImage) return;
         const t = e.touches[0]; if (!t) return;
         const c = getCanvasCoords(t.clientX, t.clientY);
+        const hit = hitCustomElement(c.x, c.y);
+        if (hit) { startCustomDrag(hit, c.x, c.y); e.preventDefault(); return; }
+        const itemHit = findHitItem(c.x, c.y);
+        if (itemHit >= 0) { startDrag(itemHit, c.x, c.y); e.preventDefault(); }
+    }
 
-        const customHit = hitCustomInfo(c.x, c.y);
-        if (customHit) {
-            if (customHit === 'scale') customDragMode = 'scale';
-            else {
-                customDragMode = 'move';
-                customDragOffset = { x: c.x - customInfo.pos.x, y: c.y - customInfo.pos.y };
-            }
-            selectedIndex = -2;
-            e.preventDefault();
+    function onTouchMove(e) {
+        if (customDragInfo) { const t = e.touches[0]; if (!t) return; const c = getCanvasCoords(t.clientX, t.clientY); moveCustomDrag(c.x, c.y); e.preventDefault(); return; }
+        if (!isDragging) return;
+        const t = e.touches[0]; if (!t) return; const c = getCanvasCoords(t.clientX, t.clientY); moveDrag(c.x, c.y); e.preventDefault();
+    }
+
+    function onTouchEnd() { endCustomDrag(); endDrag(); }
+
+    // ==================== 键盘 ====================
+    function onKeyDown(e) {
+        if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
+
+        if (e.key === 'Escape') {
+            refzoomOverlay.classList.remove('active');
+            selectedIndex = -1; selectedCustom = null;
+            Object.keys(customElements).forEach(k => customElements[k].selected = false);
             renderCanvas();
             return;
         }
 
-        const hit = findHitItem(c.x, c.y);
-        if (hit >= 0) {
-            startDrag(hit, c.x, c.y);
-            e.preventDefault();
-        }
-    }
+        const step = e.shiftKey ? 10 : 1;
 
-    function onTouchMove(e) {
-        if (customDragMode) {
-            const t = e.touches[0]; if (!t) return;
-            const c = getCanvasCoords(t.clientX, t.clientY);
-            moveCustomDrag(c.x, c.y);
-            e.preventDefault();
-            return;
-        }
-        if (!isDragging) return;
-        const t = e.touches[0]; if (!t) return;
-        const c = getCanvasCoords(t.clientX, t.clientY);
-        moveDrag(c.x, c.y);
-        e.preventDefault();
-    }
-
-    function onTouchEnd() {
-        endCustomDrag();
-        endDrag();
-    }
-
-    // ==================== 键盘微调 ====================
-    function onKeyDown(e) {
-        if (e.target.tagName === 'SELECT') return;
-        if (e.target.tagName === 'INPUT') return; // 输入框聚焦时不拦截
-
-        if (e.key === 'Escape') {
-            refzoomOverlay.classList.remove('active');
-            if (selectedIndex !== -1) {
-                selectedIndex = -1;
-                renderCanvas();
-            }
-            return;
-        }
-
-        // 自定义信息微调
-        if (selectedIndex === -2) {
-            const step = e.shiftKey ? 10 : 1;
+        // 自定义元素微调
+        if (selectedCustom) {
+            const el = customElements[selectedCustom];
             let handled = true;
             switch (e.key) {
-                case 'ArrowLeft':  customInfo.pos.x -= step; break;
-                case 'ArrowRight': customInfo.pos.x += step; break;
-                case 'ArrowUp':    customInfo.pos.y -= step; break;
-                case 'ArrowDown':  customInfo.pos.y += step; break;
+                case 'ArrowLeft': el.x -= step; break;
+                case 'ArrowRight': el.x += step; break;
+                case 'ArrowUp': el.y -= step; break;
+                case 'ArrowDown': el.y += step; break;
+                case 'Delete':
+                case 'Backspace':
+                    if (selectedCustom === 'avatar') { el.img = null; document.getElementById('avatarPreviewCircle').innerHTML = '<span class="default-icon">👤</span>'; showToast('头像已删除'); }
+                    else if (selectedCustom === 'username') { el.text = '未命名'; document.getElementById('usernameInput').value = ''; showToast('用户名已清空'); }
+                    else if (selectedCustom === 'date') { showToast('日期不可删除，请修改年月日'); handled = false; }
+                    selectedCustom = null; el.selected = false;
+                    break;
                 default: handled = false;
             }
             if (handled) {
                 e.preventDefault();
-                customInfo.pos.x = Math.max(0, Math.min(customInfo.pos.x, canvasWidth - 40));
-                customInfo.pos.y = Math.max(0, Math.min(customInfo.pos.y, canvasHeight - 30));
+                el.x = Math.max(0, Math.min(el.x, canvasWidth - 5));
+                el.y = Math.max(0, Math.min(el.y, canvasHeight - 5));
                 renderCanvas();
-                statusBar.textContent = `✏️ 自定义信息微调: (${Math.round(customInfo.pos.x)}, ${Math.round(customInfo.pos.y)})`;
+                statusBar.textContent = `✏️ ${selectedCustom}: (${el.x}, ${el.y}) 步长${step}px`;
             }
             return;
         }
 
+        // 普通素材微调
         if (selectedIndex < 0 || selectedIndex >= placedItems.length) return;
-
         const item = placedItems[selectedIndex];
-        const step = e.shiftKey ? 10 : 1;
         let handled = true;
-
         switch (e.key) {
-            case 'ArrowLeft':  item.x -= step; break;
+            case 'ArrowLeft': item.x -= step; break;
             case 'ArrowRight': item.x += step; break;
-            case 'ArrowUp':    item.y -= step; break;
-            case 'ArrowDown':  item.y += step; break;
-            case 'Delete':
-            case 'Backspace':
+            case 'ArrowUp': item.y -= step; break;
+            case 'ArrowDown': item.y += step; break;
+            case 'Delete': case 'Backspace':
                 placedItems.splice(selectedIndex, 1);
                 selectedIndex = placedItems.length > 0 ? placedItems.length - 1 : -1;
                 updateButtonState();
-                statusBar.textContent = `🗑️ 删除选中素材  (剩余${placedItems.length}个)`;
+                statusBar.textContent = `🗑️ 删除选中素材 (剩余${placedItems.length}个)`;
                 break;
             default: handled = false;
         }
-
         if (handled) {
             e.preventDefault();
             item.x = Math.max(0, Math.min(item.x, canvasWidth - item.w));
             item.y = Math.max(0, Math.min(item.y, canvasHeight - item.h));
             renderCanvas();
-            if (e.key.startsWith('Arrow')) {
-                statusBar.textContent = `✏️ 微调: (${item.x}, ${item.y})  步长${step}px`;
-            }
+            if (e.key.startsWith('Arrow')) statusBar.textContent = `✏️ 微调: (${item.x}, ${item.y}) 步长${step}px`;
         }
     }
 
@@ -1845,11 +1029,8 @@
         const padding = 20;
         const availW = panel.clientWidth - padding * 2;
         const availH = panel.clientHeight - padding * 2 - 50;
-        const scaleX = availW / canvasWidth;
-        const scaleY = availH / canvasHeight;
-        zoom = Math.min(scaleX, scaleY);
-        zoom = Math.min(zoom, 3);
-        zoom = Math.max(zoom, 0.15);
+        zoom = Math.min(availW / canvasWidth, availH / canvasHeight);
+        zoom = Math.min(zoom, 8); zoom = Math.max(zoom, 0.15);
         applyZoom();
     }
 
@@ -1861,9 +1042,8 @@
 
     // ==================== 按钮状态 ====================
     function updateButtonState() {
-        const hasItems = placedItems.length > 0;
-        undoBtn.disabled = !hasItems;
-        resetBtn.disabled = !hasItems;
+        undoBtn.disabled = placedItems.length === 0;
+        resetBtn.disabled = placedItems.length === 0;
         downloadBtn.disabled = !baseImage;
     }
 
