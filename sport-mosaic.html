@@ -24,23 +24,89 @@
         /* 主体三栏 */
         .main-container { display: flex; flex: 1; min-height: 0; gap: 14px; padding: 14px; }
 
-        /* 左侧素材库 */
-        .material-panel { width: 260px; min-width: 200px; background: #fff; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.06); display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; }
-        .material-panel-title { padding: 12px 14px 8px; font-size: 14px; font-weight: 600; color: #333; border-bottom: 1px solid #f0f0f0; flex-shrink: 0; display: flex; align-items: center; gap: 6px; }
+        /* 左侧素材库 — 无滚动，完整展示 */
+        .material-panel { 
+            width: 260px; 
+            min-width: 200px; 
+            background: #fff; 
+            border-radius: 12px; 
+            box-shadow: 0 1px 4px rgba(0,0,0,.06); 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+            flex-shrink: 0; 
+            height: 100%; /* 撑满父容器 */
+        }
+        .material-panel-title { 
+            padding: 12px 14px 8px; 
+            font-size: 14px; 
+            font-weight: 600; 
+            color: #333; 
+            border-bottom: 1px solid #f0f0f0; 
+            flex-shrink: 0; 
+            display: flex; 
+            align-items: center; 
+            gap: 6px; 
+        }
         .material-panel-title .badge { background: #f0f5ff; color: #1677ff; font-size: 11px; padding: 1px 8px; border-radius: 10px; font-weight: 400; }
         .material-panel-title .badge-key { background: #f6ffed; color: #52c41a; font-size: 11px; padding: 1px 8px; border-radius: 10px; font-weight: 400; }
-        .material-scroll { flex: 1; overflow-y: auto; padding: 10px 12px; }
-        .material-scroll::-webkit-scrollbar { width: 4px; }
-        .material-scroll::-webkit-scrollbar-thumb { background: #d0d0d0; border-radius: 4px; }
-        .group-section { margin-bottom: 16px; }
+        
+        /* 素材内容区域 — 无滚动，flex布局自动压缩 */
+        .material-scroll { 
+            flex: 1; 
+            overflow: hidden; /* 关键：禁用滚动 */
+            padding: 8px 10px; 
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            gap: 4px;
+        }
+        /* 移除滚动条 */
+        .material-scroll::-webkit-scrollbar { display: none; }
+        
+        .group-section { 
+            margin-bottom: 4px; 
+            flex-shrink: 1; /* 允许压缩 */
+        }
         .group-section:last-child { margin-bottom: 0; }
-        .group-title { font-size: 12px; color: #999; margin-bottom: 8px; padding-left: 2px; font-weight: 500; }
-        .material-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .material-item { display: flex; flex-direction: column; align-items: center; background: #f8f9fa; border-radius: 8px; padding: 6px 3px 4px; cursor: pointer; transition: all .15s ease; border: 1px solid #eee; user-select: none; -webkit-user-select: none; }
-        .material-item:hover { background: #e6f4ff; border-color: #91caff; transform: translateY(-2px); box-shadow: 0 3px 8px rgba(22,119,255,.1); }
+        .group-title { 
+            font-size: 11px; 
+            color: #999; 
+            margin-bottom: 4px; 
+            padding-left: 2px; 
+            font-weight: 500; 
+        }
+        /* 使用更紧凑的网格，每行4个以适应高度 */
+        .material-grid { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 4px; 
+        }
+        .material-item { 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            background: #f8f9fa; 
+            border-radius: 6px; 
+            padding: 4px 2px 3px; 
+            cursor: pointer; 
+            transition: all .15s ease; 
+            border: 1px solid #eee; 
+            user-select: none; 
+            -webkit-user-select: none; 
+        }
+        .material-item:hover { background: #e6f4ff; border-color: #91caff; transform: translateY(-1px); box-shadow: 0 2px 6px rgba(22,119,255,.1); }
         .material-item:active { background: #bae0ff; transform: scale(.95); }
-        .material-item img { height: 36px; width: auto; max-width: 50px; object-fit: contain; pointer-events: none; display: block; margin-bottom: 3px; }
-        .material-label { font-size: 10px; color: #666; line-height: 1.2; text-align: center; font-weight: 500; }
+        .material-item img { 
+            height: 28px; 
+            width: auto; 
+            max-width: 40px; 
+            object-fit: contain; 
+            pointer-events: none; 
+            display: block; 
+            margin-bottom: 2px; 
+        }
+        .material-label { font-size: 9px; color: #666; line-height: 1.1; text-align: center; font-weight: 500; }
 
         /* 中间画布 */
         .canvas-panel { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.06); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; min-width: 300px; }
@@ -107,10 +173,43 @@
         .custom-row label { font-size: 12px; color: #666; min-width: 48px; flex-shrink: 0; font-weight: 500; }
         .custom-row input[type="text"], .custom-row select, .custom-row input[type="time"], .custom-row input[type="number"] { flex: 1; padding: 6px 10px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 12px; outline: none; background: #fff; color: #333; }
         .custom-row input:focus, .custom-row select:focus { border-color: #1677ff; box-shadow: 0 0 0 2px rgba(22,119,255,.1); }
-        /* 修复时间选择器溢出：缩小flex比例 + 限制最大宽度 */
         .custom-row input[type="time"] { flex: 0.48; min-width: 0; max-width: 78px; padding: 6px 4px; }
         .time-group { display: flex; gap: 4px; flex: 1; }
         .time-group input { flex: 1; min-width: 0; }
+
+        /* ===== 日期输入框紧凑样式 ===== */
+        .date-group {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            flex: 1;
+        }
+        .date-group input[type="number"] {
+            width: auto;
+            max-width: 3.6em;
+            min-width: 2.2em;
+            padding: 4px 3px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 12px;
+            text-align: center;
+            outline: none;
+            background: #fff;
+            color: #333;
+            font-variant-numeric: tabular-nums;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .date-group input[type="number"]:focus {
+            border-color: #1677ff;
+            box-shadow: 0 0 0 2px rgba(22,119,255,.1);
+        }
+        .date-group .sep {
+            color: #999;
+            font-size: 13px;
+            font-weight: 300;
+            padding: 0 1px;
+            user-select: none;
+        }
 
         /* 头像 */
         .avatar-upload-area { display: flex; align-items: center; gap: 10px; }
@@ -150,8 +249,18 @@
         /* 响应式 */
         @media (max-width: 1200px) {
             .main-container { flex-direction: column; padding: 10px; gap: 10px; }
-            .material-panel { width: 100%; min-width: unset; max-height: 140px; flex-shrink: 0; }
-            .material-scroll { display: flex; flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; padding: 8px 12px; gap: 10px; }
+            .material-panel { width: 100%; min-width: unset; max-height: 140px; flex-shrink: 0; height: auto; }
+            .material-scroll { 
+                display: flex; 
+                flex-wrap: nowrap; 
+                overflow-x: auto; 
+                overflow-y: hidden; 
+                padding: 8px 12px; 
+                gap: 10px;
+                flex-direction: row;
+            }
+            .material-scroll::-webkit-scrollbar { display: block; height: 4px; }
+            .material-scroll::-webkit-scrollbar-thumb { background: #d0d0d0; border-radius: 4px; }
             .group-section { margin-bottom: 0; flex-shrink: 0; }
             .material-grid { grid-template-columns: repeat(6, 72px); gap: 6px; }
             .material-item img { height: 30px; max-width: 44px; }
@@ -179,7 +288,6 @@
         <label for="projectSelect">项目：</label>
         <select id="projectSelect"></select>
     </div>
-    <!-- 使用说明按钮 -->
     <button id="helpBtn" style="background:#f0f5ff;border:1px solid #91caff;border-radius:8px;padding:6px 14px;font-size:13px;color:#1677ff;cursor:pointer;font-weight:500;margin-left:12px;">❓ 使用说明</button>
 </div>
 
@@ -187,11 +295,8 @@
 <div id="helpOverlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.45);z-index:9999;align-items:center;justify-content:center;">
     <div style="background:#fff;border-radius:20px;max-width:720px;width:90%;max-height:85vh;overflow-y:auto;padding:30px 32px;box-shadow:0 20px 60px rgba(0,0,0,0.2);position:relative;">
         <button id="closeHelpBtn" style="position:absolute;top:12px;right:16px;background:none;border:none;font-size:24px;cursor:pointer;color:#999;">✕</button>
-        
         <h2 style="font-size:22px;margin-bottom:6px;">🏋️ Keep运动截图拼图 · 使用说明</h2>
         <p style="color:#888;font-size:14px;margin-bottom:20px;">像拼乐高一样，把数字和单位拖到底图上，轻松做出专业运动打卡截图</p>
-
-        <!-- 三步流程 -->
         <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:24px;">
             <div style="flex:1;min-width:150px;background:#f8f9fc;border-radius:14px;padding:16px;">
                 <div style="width:30px;height:30px;background:#1677ff;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;margin-bottom:10px;">1</div>
@@ -221,12 +326,10 @@
                 </ul>
             </div>
         </div>
-
-        <!-- 快捷键 -->
         <div style="background:#fafafa;border-radius:12px;padding:14px 16px;margin-bottom:16px;">
             <h4 style="font-size:14px;margin-bottom:8px;">⌨️ 快捷键</h4>
             <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px;font-size:13px;color:#555;">
-                <span><kbd style="background:#eee;padding:1px 8px;border-radius:4px;font-size:12px;">←↑→↓</kbd> 移动1px</span>
+                <span><kbd style="background:#eee;padding:1px 8px;border-radius:4px;font-size:12px;">←↑↓→</kbd> 移动1px</span>
                 <span><kbd style="background:#eee;padding:1px 8px;border-radius:4px;font-size:12px;">Shift</kbd>+方向键 移动10px</span>
                 <span><kbd style="background:#eee;padding:1px 8px;border-radius:4px;font-size:12px;">Delete</kbd> 删除选中</span>
                 <span><kbd style="background:#eee;padding:1px 8px;border-radius:4px;font-size:12px;">Esc</kbd> 取消选中</span>
@@ -234,13 +337,11 @@
                 <span><kbd style="background:#eee;padding:1px 8px;border-radius:4px;font-size:12px;">[ ]</kbd> 精细缩放</span>
             </div>
         </div>
-
         <p style="font-size:13px;color:#888;line-height:1.6;">💡 头像/用户名/日期可独立拖拽 · 跑步项目可上传轨迹图 · 同一个素材可多次点击使用</p>
     </div>
 </div>
 
 <script>
-// 使用说明弹窗控制
 document.getElementById('helpBtn').addEventListener('click', function(){
     document.getElementById('helpOverlay').style.display = 'flex';
 });
@@ -265,7 +366,6 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
 
     <!-- 画布区 -->
     <div class="canvas-panel" id="canvasPanel">
-        <!-- 跑步轨迹上传按钮（画布右上角浮动） -->
         <div class="track-upload-float" id="trackUploadFloat">
             <div class="track-upload-btn" id="trackUploadBtn">
                 <span class="track-icon">🗺️</span>
@@ -298,14 +398,12 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
             <button class="btn btn-success" id="downloadBtn" disabled>⬇ 导出 JPG</button>
         </div>
 
-        <!-- 自定义信息面板 - 精简版 -->
         <div class="custom-section">
             <div class="custom-section-title">
                 <span class="dot"></span>
                 ✏️ 自定义信息（独立拖拽）
             </div>
 
-            <!-- 头像 -->
             <div class="custom-row">
                 <label>头像</label>
                 <div class="avatar-upload-area">
@@ -320,25 +418,23 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
                 </div>
             </div>
 
-            <!-- 用户名 -->
             <div class="custom-row">
                 <label>用户名</label>
                 <input type="text" id="usernameInput" placeholder="用户名61515321" value="用户名61515321" maxlength="20">
             </div>
 
-            <!-- 日期 -->
+            <!-- 日期区域：紧凑布局，自适应宽度 -->
             <div class="custom-row">
                 <label>日期</label>
-                <div class="time-group">
-                    <input type="number" id="dateYearInput" min="2000" max="2100" value="2025" title="年" style="flex:.8;min-width:0;">
-                    <span style="line-height:28px;color:#999;font-size:12px;">/</span>
-                    <input type="number" id="dateMonthInput" min="1" max="12" value="6" title="月" style="flex:.6;min-width:0;">
-                    <span style="line-height:28px;color:#999;font-size:12px;">/</span>
-                    <input type="number" id="dateDayInput" min="1" max="31" value="4" title="日" style="flex:.6;min-width:0;">
+                <div class="date-group">
+                    <input type="number" id="dateYearInput" min="2000" max="2100" value="2025" title="年">
+                    <span class="sep">/</span>
+                    <input type="number" id="dateMonthInput" min="1" max="12" value="6" title="月">
+                    <span class="sep">/</span>
+                    <input type="number" id="dateDayInput" min="1" max="31" value="4" title="日">
                 </div>
             </div>
 
-            <!-- 时间 -->
             <div class="custom-row">
                 <label>时间</label>
                 <div class="time-group">
@@ -354,7 +450,6 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
             </div>
         </div>
 
-        <!-- 样图参考 - 重点放大 -->
         <div class="reference-section">
             <div class="reference-title">
                 📷 样图参考
@@ -375,7 +470,6 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
     </div>
 </div>
 
-<!-- 隐藏的文件输入 -->
 <input type="file" id="trackImageInput" accept="image/*" style="display:none;">
 
 <script>
@@ -383,14 +477,10 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
     const MATERIALS_PATH = './materials/';
     const JPG_QUALITY = 0.92;
     const SNAP_THRESHOLD = 10;
-
-    // 轨迹图缩放手柄尺寸
     const TRACK_RESIZE_HANDLE_SIZE = 14;
-    // 轨迹图缩放限制
     const TRACK_MIN_SCALE = 0.02;
     const TRACK_MAX_SCALE = 15;
 
-    // ---- 固定默认值（v1.6 硬编码） ----
     const DEFAULT_AVATAR_SIZE = 96;
     const DEFAULT_USERNAME_SIZE = 43;
     const DEFAULT_DATE_SIZE = 39;
@@ -436,7 +526,6 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
     let guideVAligned = false, guideHAligned = false;
     let zoom = 1;
 
-    // ---- 跑步轨迹图状态 ----
     let trackImage = null;
     let trackX = 0;
     let trackY = 0;
@@ -448,18 +537,14 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
     let trackDragOffsetX = 0;
     let trackDragOffsetY = 0;
 
-    // 轨迹图缩放手柄拖拽状态
     let isTrackResizing = false;
     let trackResizeStartX = 0;
     let trackResizeStartY = 0;
     let trackResizeStartScale = 1;
     let trackResizeStartW = 0;
     let trackResizeStartH = 0;
-
-    // 存储当前帧的手柄位置（供命中检测）
     let trackResizeHandlePos = null;
 
-    // ---- 三个独立的自定义元素（硬编码默认值） ----
     let customElements = {
         avatar: {
             type: 'avatar',
@@ -489,7 +574,6 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
     let selectedCustom = null;
     let customDragInfo = null;
 
-    // DOM
     const canvas = document.getElementById('baseCanvas');
     const ctx = canvas.getContext('2d');
     const projectSelect = document.getElementById('projectSelect');
@@ -504,7 +588,6 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
     const snapIndicator = document.getElementById('snapIndicator');
     const canvasWrapper = document.getElementById('canvasWrapper');
 
-    // 轨迹图相关 DOM
     const trackUploadFloat = document.getElementById('trackUploadFloat');
     const trackUploadBtn = document.getElementById('trackUploadBtn');
     const trackBtnMain = document.getElementById('trackBtnMain');
@@ -521,7 +604,7 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         setTimeout(() => t.classList.remove('show'), duration);
     }
 
-    // ==================== 日期格式化（固定 YYYY/MM/DD） ====================
+    // ==================== 日期格式化 ====================
     function getDateStr() {
         const year = parseInt(document.getElementById('dateYearInput').value) || 2025;
         const month = parseInt(document.getElementById('dateMonthInput').value) || 6;
@@ -548,7 +631,6 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         resetBtn.addEventListener('click', resetAll);
         downloadBtn.addEventListener('click', downloadJpg);
 
-        // 画布事件
         canvas.addEventListener('mousedown', onPointerDown);
         window.addEventListener('mousemove', onPointerMove);
         window.addEventListener('mouseup', onPointerUp);
@@ -557,10 +639,7 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         window.addEventListener('touchend', onTouchEnd, { passive: false });
         window.addEventListener('touchcancel', onTouchEnd, { passive: false });
 
-        // 滚轮缩放轨迹图
         canvas.addEventListener('wheel', onWheel, { passive: false });
-
-        // 鼠标在画布上移动时检测缩放手柄悬停
         canvas.addEventListener('mousemove', onCanvasMouseMove);
         canvas.addEventListener('mouseleave', () => {
             if (!isTrackResizing) canvasWrapper.classList.remove('resizing');
@@ -569,7 +648,6 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         refzoomOverlay.addEventListener('click', () => refzoomOverlay.classList.remove('active'));
         document.addEventListener('keydown', onKeyDown);
 
-        // 画布缩放
         document.getElementById('zoomIn').addEventListener('click', () => { zoom = Math.min(zoom * 1.2, 8); applyZoom(); });
         document.getElementById('zoomOut').addEventListener('click', () => { zoom = Math.max(zoom / 1.2, 0.15); applyZoom(); });
         document.getElementById('zoomFit').addEventListener('click', fitCanvasToViewport);
@@ -584,7 +662,7 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         }
     }
 
-    // ==================== 素材面板 ====================
+    // ==================== 素材面板（无滚动，完整展示） ====================
     function buildMaterialPanel() {
         materialScroll.innerHTML = '';
         const g1 = document.createElement('div'); g1.className = 'group-section';
@@ -612,18 +690,14 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         currentProject = projectId;
         placedItems = []; selectedIndex = -1; selectedCustom = null;
         isDragging = false; dragIndex = -1; guideV = null; guideH = null;
-
-        // 重置轨迹图
         resetTrackImage();
 
-        // 控制轨迹上传按钮显示
         if (projectId === 'paobu') {
             trackUploadFloat.classList.add('active');
         } else {
             trackUploadFloat.classList.remove('active');
         }
 
-        // 重置三个元素到默认位置（保留用户上传的头像）
         const savedAvatarImg = customElements.avatar.img;
         customElements.avatar.x = 30; customElements.avatar.y = 30;
         customElements.avatar.size = DEFAULT_AVATAR_SIZE;
@@ -698,25 +772,19 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         if (!baseImage) { ctx.clearRect(0, 0, canvas.width, canvas.height); return; }
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 1. 底图
         ctx.drawImage(baseImage, 0, 0, canvasWidth, canvasHeight);
-
-        // 2. 跑步轨迹图（在底图之上，普通素材之下）
         drawTrackImage();
 
-        // 3. 普通素材
         for (let i = 0; i < placedItems.length; i++) {
             const item = placedItems[i];
             ctx.drawImage(item.img, item.x, item.y, item.w, item.h);
             if (i === selectedIndex) drawSelectionRect(item.x, item.y, item.w, item.h);
         }
 
-        // 4. 三个自定义元素
         drawAvatar();
         drawUsername();
         drawDate();
 
-        // 5. 对齐辅助线
         if (guideV !== null || guideH !== null) {
             ctx.save(); ctx.setLineDash([8, 6]); ctx.lineWidth = 1;
             if (guideV !== null) { ctx.strokeStyle = guideVAligned ? '#ff4d4f' : '#91caff'; ctx.beginPath(); ctx.moveTo(guideV + .5, 0); ctx.lineTo(guideV + .5, canvasHeight); ctx.stroke(); }
@@ -733,43 +801,27 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         ctx.restore();
     }
 
-    // ---- 绘制跑步轨迹图 ----
     function drawTrackImage() {
         if (!trackImage) return;
-
         const drawW = trackOrigW * trackScale;
         const drawH = trackOrigH * trackScale;
-
         ctx.save();
         ctx.drawImage(trackImage, trackX, trackY, drawW, drawH);
-
-        // 选中框 + 缩放手柄
         if (trackSelected) {
             const pad = 3;
-            // 虚线框
             ctx.strokeStyle = '#1677ff'; ctx.lineWidth = 2; ctx.setLineDash([6, 3]);
             ctx.strokeRect(trackX - pad, trackY - pad, drawW + pad * 2, drawH + pad * 2);
             ctx.setLineDash([]);
-
-            // 四角方块（蓝色）
             ctx.fillStyle = '#1677ff'; const s = 6;
             [[trackX-pad,trackY-pad],[trackX+drawW+pad,trackY-pad],[trackX-pad,trackY+drawH+pad],[trackX+drawW+pad,trackY+drawH+pad]].forEach(([cx,cy]) => ctx.fillRect(cx-s/2, cy-s/2, s, s));
-
-            // 右下角缩放手柄（绿色实心圆 + 白色箭头图标）
             const handleX = trackX + drawW + pad;
             const handleY = trackY + drawH + pad;
             const hs = TRACK_RESIZE_HANDLE_SIZE;
-
-            // 阴影
             ctx.beginPath(); ctx.arc(handleX, handleY, hs/2 + 1, 0, Math.PI * 2);
             ctx.fillStyle = 'rgba(0,0,0,0.15)'; ctx.fill();
-
-            // 绿色圆底
             ctx.beginPath(); ctx.arc(handleX, handleY, hs/2, 0, Math.PI * 2);
             ctx.fillStyle = '#52c41a'; ctx.fill();
             ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
-
-            // 缩放箭头图标 ↘
             ctx.fillStyle = '#fff'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5;
             const ax = handleX - 2, ay = handleY - 2;
             ctx.beginPath();
@@ -778,26 +830,20 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
             ctx.beginPath();
             ctx.moveTo(ax + 1, ay - 3); ctx.lineTo(ax + 4, ay - 3); ctx.lineTo(ax + 1, ay + 1);
             ctx.closePath(); ctx.fill();
-
-            // 存储手柄位置供命中检测使用
             trackResizeHandlePos = { x: handleX, y: handleY, size: hs };
         } else {
             trackResizeHandlePos = null;
         }
-
         ctx.restore();
     }
 
-    // ---- 绘制头像 ----
     function drawAvatar() {
         const a = customElements.avatar;
         const d = a.size;
         const cx = a.x + d / 2, cy = a.y + d / 2;
-
         ctx.save();
         ctx.beginPath(); ctx.arc(cx, cy, d / 2, 0, Math.PI * 2); ctx.closePath();
         ctx.save(); ctx.clip();
-
         if (a.img) {
             const img = a.img;
             const aspect = img.naturalWidth / img.naturalHeight;
@@ -812,18 +858,12 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
             ctx.beginPath(); ctx.arc(cx, cy + d * 0.3, d * 0.3, Math.PI, 0, false); ctx.fill();
         }
         ctx.restore();
-
-        // 绿色边框
         ctx.beginPath(); ctx.arc(cx, cy, d / 2, 0, Math.PI * 2);
         ctx.strokeStyle = '#00C853'; ctx.lineWidth = 2; ctx.stroke();
-
-        // 选中框
         if (a.selected) drawSelectionRect(a.x, a.y, d, d);
-
         ctx.restore();
     }
 
-    // ---- 绘制用户名 ----
     function drawUsername() {
         const u = customElements.username;
         const text = u.text || DEFAULT_USERNAME_TEXT;
@@ -832,7 +872,6 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         ctx.fillStyle = u.color;
         ctx.textBaseline = 'top';
         ctx.fillText(text, u.x, u.y);
-
         if (u.selected) {
             const w = ctx.measureText(text).width;
             drawSelectionRect(u.x, u.y, w, u.fontSize);
@@ -840,7 +879,6 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         ctx.restore();
     }
 
-    // ---- 绘制日期 ----
     function drawDate() {
         const d = customElements.date;
         const text = getDateStr();
@@ -849,7 +887,6 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         ctx.fillStyle = d.color;
         ctx.textBaseline = 'top';
         ctx.fillText(text, d.x, d.y);
-
         if (d.selected) {
             const w = ctx.measureText(text).width;
             drawSelectionRect(d.x, d.y, w, d.fontSize);
@@ -859,7 +896,6 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
 
     // ==================== 自定义控件绑定 ====================
     function initCustomControls() {
-        // 头像上传
         document.getElementById('uploadAvatarBtn').addEventListener('click', () => document.getElementById('avatarInput').click());
         document.getElementById('avatarInput').addEventListener('change', e => {
             const file = e.target.files[0]; if (!file) return;
@@ -876,7 +912,6 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
             reader.readAsDataURL(file);
         });
 
-        // 删除头像
         document.getElementById('removeAvatarBtn').addEventListener('click', () => {
             customElements.avatar.img = null;
             document.getElementById('avatarPreviewCircle').innerHTML = '<span class="default-icon">👤</span>';
@@ -884,34 +919,25 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
             renderCanvas(); showToast('头像已删除');
         });
 
-        // 用户名
         document.getElementById('usernameInput').addEventListener('input', e => {
             customElements.username.text = e.target.value.trim() || DEFAULT_USERNAME_TEXT;
             renderCanvas();
         });
 
-        // 年月日
         ['dateYearInput','dateMonthInput','dateDayInput'].forEach(id => {
             document.getElementById(id).addEventListener('input', () => renderCanvas());
         });
 
-        // 时间
         document.getElementById('startTimeInput').addEventListener('change', () => renderCanvas());
         document.getElementById('endTimeInput').addEventListener('change', () => renderCanvas());
     }
 
     // ==================== 跑步轨迹图上传 ====================
     function initTrackUpload() {
-        // 点击上传按钮
-        trackUploadBtn.addEventListener('click', () => {
-            trackImageInput.click();
-        });
-
-        // 文件选择
+        trackUploadBtn.addEventListener('click', () => { trackImageInput.click(); });
         trackImageInput.addEventListener('change', e => {
             const file = e.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = ev => {
                 const img = new Image();
@@ -919,24 +945,17 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
                     trackImage = img;
                     trackOrigW = img.naturalWidth || img.width;
                     trackOrigH = img.naturalHeight || img.height;
-
-                    // 初始缩放：让图片宽度为画布的 40%
                     const targetW = canvasWidth * 0.4;
                     trackScale = targetW / trackOrigW;
-
-                    // 居中
                     const drawW = trackOrigW * trackScale;
                     const drawH = trackOrigH * trackScale;
                     trackX = Math.round((canvasWidth - drawW) / 2);
                     trackY = Math.round((canvasHeight - drawH) / 2);
-
-                    // 更新按钮状态
                     trackUploadBtn.classList.add('has-image');
                     trackBtnMain.textContent = '✅ 轨迹已上传';
                     trackBtnSub.textContent = '滚轮/手柄缩放 · 拖拽移动 · +/-微调';
                     trackRemoveBtn.classList.add('active');
                     trackHint.classList.add('active');
-
                     renderCanvas();
                     updateButtonState();
                     showToast('轨迹图已上传，居中显示');
@@ -946,11 +965,9 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
                 img.src = ev.target.result;
             };
             reader.readAsDataURL(file);
-            // 重置 input 以便重复选择同一文件
             e.target.value = '';
         });
 
-        // 清除轨迹图
         trackRemoveBtn.addEventListener('click', () => {
             resetTrackImage();
             renderCanvas();
@@ -962,32 +979,22 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
 
     function resetTrackImage() {
         trackImage = null;
-        trackX = 0;
-        trackY = 0;
-        trackScale = 1;
-        trackOrigW = 0;
-        trackOrigH = 0;
+        trackX = 0; trackY = 0; trackScale = 1;
+        trackOrigW = 0; trackOrigH = 0;
         trackSelected = false;
         isTrackDragging = false;
         isTrackResizing = false;
         trackResizeHandlePos = null;
-
-        // 重置按钮状态
         trackUploadBtn.classList.remove('has-image');
         trackBtnMain.textContent = '上传跑步轨迹';
         trackBtnSub.textContent = '仅限跑步 · 支持JPG/PNG';
         trackRemoveBtn.classList.remove('active');
         trackHint.classList.remove('active');
-
-        // 恢复鼠标样式
         canvasWrapper.classList.remove('resizing', 'track-moving');
     }
 
-    function deselectTrack() {
-        trackSelected = false;
-    }
+    function deselectTrack() { trackSelected = false; }
 
-    // ==================== 轨迹图命中检测 ====================
     function hitTrackImage(cx, cy) {
         if (!trackImage) return false;
         const drawW = trackOrigW * trackScale;
@@ -995,18 +1002,11 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         return cx >= trackX && cx <= trackX + drawW && cy >= trackY && cy <= trackY + drawH;
     }
 
-    // 检测是否命中缩放手柄
     function hitTrackResizeHandle(cx, cy) {
         if (!trackImage || !trackSelected || !trackResizeHandlePos) return false;
         const hp = trackResizeHandlePos;
-        const hs = hp.size + 4; // 扩大命中区域，更容易点中
+        const hs = hp.size + 4;
         return cx >= hp.x - hs/2 && cx <= hp.x + hs/2 && cy >= hp.y - hs/2 && cy <= hp.y + hs/2;
-    }
-
-    function getTrackDrawRect() {
-        const drawW = trackOrigW * trackScale;
-        const drawH = trackOrigH * trackScale;
-        return { x: trackX, y: trackY, w: drawW, h: drawH };
     }
 
     // ==================== 撤销/重置 ====================
@@ -1034,24 +1034,17 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         const ec = document.createElement('canvas');
         ec.width = canvasWidth; ec.height = canvasHeight;
         const ecCtx = ec.getContext('2d');
-
         ecCtx.fillStyle = '#fff'; ecCtx.fillRect(0, 0, canvasWidth, canvasHeight);
         ecCtx.drawImage(baseImage, 0, 0, canvasWidth, canvasHeight);
-
-        // 导出轨迹图
         if (trackImage) {
             const drawW = trackOrigW * trackScale;
             const drawH = trackOrigH * trackScale;
             ecCtx.drawImage(trackImage, trackX, trackY, drawW, drawH);
         }
-
-        // 导出普通素材
         for (const item of placedItems) ecCtx.drawImage(item.img, item.x, item.y, item.w, item.h);
-
         exportAvatar(ecCtx);
         exportUsername(ecCtx);
         exportDate(ecCtx);
-
         const link = document.createElement('a');
         link.download = `${currentProject}_完成.jpg`;
         link.href = ec.toDataURL('image/jpeg', JPG_QUALITY);
@@ -1117,25 +1110,22 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
     function hitCustomElement(cx, cy) {
         const a = customElements.avatar;
         if (cx >= a.x && cx <= a.x + a.size && cy >= a.y && cy <= a.y + a.size) return 'avatar';
-
         const u = customElements.username;
         ctx.save();
         ctx.font = `${u.fontWeight} ${u.fontSize}px sans-serif`;
         const uw = ctx.measureText(u.text || DEFAULT_USERNAME_TEXT).width;
         ctx.restore();
         if (cx >= u.x && cx <= u.x + uw && cy >= u.y && cy <= u.y + u.fontSize) return 'username';
-
         const d = customElements.date;
         ctx.save();
         ctx.font = `${d.fontSize}px sans-serif`;
         const dw = ctx.measureText(getDateStr()).width;
         ctx.restore();
         if (cx >= d.x && cx <= d.x + dw && cy >= d.y && cy <= d.y + d.fontSize) return 'date';
-
         return null;
     }
 
-    // ==================== 拖拽（普通素材） ====================
+    // ==================== 拖拽 ====================
     function startCustomDrag(type, cx, cy) {
         customDragInfo = { type, offsetX: cx - customElements[type].x, offsetY: cy - customElements[type].y };
         Object.keys(customElements).forEach(k => customElements[k].selected = false);
@@ -1157,9 +1147,7 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         renderCanvas();
     }
 
-    function endCustomDrag() {
-        customDragInfo = null;
-    }
+    function endCustomDrag() { customDragInfo = null; }
 
     function startDrag(index, cx, cy) {
         isDragging = true; dragIndex = index; selectedIndex = index;
@@ -1203,13 +1191,11 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         }
     }
 
-    // ==================== 轨迹图拖拽 ====================
     function startTrackDrag(cx, cy) {
         isTrackDragging = true;
         trackSelected = true;
         trackDragOffsetX = cx - trackX;
         trackDragOffsetY = cy - trackY;
-        // 取消其他选中
         selectedIndex = -1;
         selectedCustom = null;
         Object.keys(customElements).forEach(k => customElements[k].selected = false);
@@ -1235,7 +1221,6 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         canvasWrapper.classList.remove('track-moving');
     }
 
-    // ==================== 轨迹图缩放手柄拖拽（核心新功能） ====================
     function startTrackResize(cx, cy) {
         isTrackResizing = true;
         trackSelected = true;
@@ -1244,7 +1229,6 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         trackResizeStartScale = trackScale;
         trackResizeStartW = trackOrigW * trackScale;
         trackResizeStartH = trackOrigH * trackScale;
-        // 取消其他选中
         selectedIndex = -1;
         selectedCustom = null;
         Object.keys(customElements).forEach(k => customElements[k].selected = false);
@@ -1254,23 +1238,14 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
 
     function moveTrackResize(cx, cy) {
         if (!isTrackResizing) return;
-
-        // 以轨迹图左上角为锚点，计算鼠标拖拽出的宽高
         const anchorX = trackX;
         const anchorY = trackY;
-
         let newW = cx - anchorX;
         let newH = cy - anchorY;
-
-        // 基于宽高比计算等比缩放（取宽度和高度方向算出的较小缩放比，防止溢出）
         let scaleByW = newW / trackOrigW;
         let scaleByH = newH / trackOrigH;
         let newScale = Math.min(scaleByW, scaleByH);
-
-        // 限制缩放范围
         newScale = Math.max(TRACK_MIN_SCALE, Math.min(newScale, TRACK_MAX_SCALE));
-
-        // 用对角距离做平滑补偿（拖拽体验更自然）
         const dx = cx - trackResizeStartX;
         const dy = cy - trackResizeStartY;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -1280,7 +1255,6 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
             const blended = newScale * 0.7 + distScale * 0.3;
             newScale = Math.max(TRACK_MIN_SCALE, Math.min(blended, TRACK_MAX_SCALE));
         }
-
         trackScale = newScale;
         renderCanvas();
     }
@@ -1295,61 +1269,45 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         }
     }
 
-    // ==================== 滚轮缩放轨迹图 ====================
     function onWheel(e) {
         if (!trackImage) return;
-        // 检查鼠标是否在画布内
         const rect = canvas.getBoundingClientRect();
         if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) return;
-
         e.preventDefault();
         const c = getCanvasCoords(e.clientX, e.clientY);
-
-        // 如果轨迹图未被选中，先选中它
         if (!trackSelected) {
             trackSelected = true;
             selectedIndex = -1;
             selectedCustom = null;
             Object.keys(customElements).forEach(k => customElements[k].selected = false);
         }
-
         const delta = e.deltaY > 0 ? 0.9 : 1.1;
         const oldScale = trackScale;
         let newScale = trackScale * delta;
-
-        // 限制缩放范围
         newScale = Math.max(TRACK_MIN_SCALE, Math.min(newScale, TRACK_MAX_SCALE));
-
-        // 以鼠标位置为缩放中心
         const mouseX = c.x;
         const mouseY = c.y;
         trackX = Math.round(mouseX - (mouseX - trackX) * (newScale / oldScale));
         trackY = Math.round(mouseY - (mouseY - trackY) * (newScale / oldScale));
         trackScale = newScale;
-
         const drawW = Math.round(trackOrigW * trackScale);
         const drawH = Math.round(trackOrigH * trackScale);
         statusBar.textContent = `🗺️ 轨迹图缩放: ${Math.round(trackScale * 100)}%  (${drawW}×${drawH}px)`;
         renderCanvas();
     }
 
-    // ==================== 键盘缩放轨迹图（新功能） ====================
     function scaleTrackByKey(factor) {
         if (!trackImage || !trackSelected) return;
         const oldScale = trackScale;
         let newScale = trackScale * factor;
         newScale = Math.max(TRACK_MIN_SCALE, Math.min(newScale, TRACK_MAX_SCALE));
-
-        // 以轨迹图中心为缩放锚点
         const drawW = trackOrigW * oldScale;
         const drawH = trackOrigH * oldScale;
         const centerX = trackX + drawW / 2;
         const centerY = trackY + drawH / 2;
-
         trackX = Math.round(centerX - (trackOrigW * newScale) / 2);
         trackY = Math.round(centerY - (trackOrigH * newScale) / 2);
         trackScale = newScale;
-
         const newDrawW = Math.round(trackOrigW * trackScale);
         const newDrawH = Math.round(trackOrigH * trackScale);
         statusBar.textContent = `🗺️ 轨迹图缩放: ${Math.round(trackScale * 100)}% (${newDrawW}×${newDrawH}px)`;
@@ -1360,23 +1318,18 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
     function onPointerDown(e) {
         if (!baseImage) return;
         const c = getCanvasCoords(e.clientX, e.clientY);
-
-        // 优先检测缩放手柄（最高优先级）
         if (trackImage && trackSelected && hitTrackResizeHandle(c.x, c.y)) {
             startTrackResize(c.x, c.y);
             e.preventDefault();
             statusBar.textContent = `🗺️ 拖拽右下角手柄等比缩放轨迹图...`;
             return;
         }
-
-        // 检测轨迹图本体
         if (hitTrackImage(c.x, c.y)) {
             startTrackDrag(c.x, c.y);
             e.preventDefault();
             statusBar.textContent = `🗺️ 拖拽轨迹图中... (滚轮/手柄缩放)`;
             return;
         }
-
         const hit = hitCustomElement(c.x, c.y);
         if (hit) {
             startCustomDrag(hit, c.x, c.y);
@@ -1385,14 +1338,12 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
             deselectTrack();
             return;
         }
-
         const itemHit = findHitItem(c.x, c.y);
         if (itemHit >= 0) { startDrag(itemHit, c.x, c.y); e.preventDefault(); deselectTrack(); }
         else { selectedIndex = -1; selectedCustom = null; Object.keys(customElements).forEach(k => customElements[k].selected = false); deselectTrack(); renderCanvas(); }
     }
 
     function onPointerMove(e) {
-        // 优先处理缩放手柄拖拽
         if (isTrackResizing) {
             const c = getCanvasCoords(e.clientX, e.clientY);
             moveTrackResize(c.x, c.y);
@@ -1407,7 +1358,6 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
 
     function onPointerUp() { endTrackResize(); endTrackDrag(); endCustomDrag(); endDrag(); }
 
-    // 鼠标悬停在手柄上时切换光标
     function onCanvasMouseMove(e) {
         if (isTrackResizing || isTrackDragging) return;
         if (!trackImage || !trackSelected) {
@@ -1426,16 +1376,12 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         if (!baseImage) return;
         const t = e.touches[0]; if (!t) return;
         const c = getCanvasCoords(t.clientX, t.clientY);
-
-        // 优先检测缩放手柄
         if (trackImage && trackSelected && hitTrackResizeHandle(c.x, c.y)) {
             startTrackResize(c.x, c.y);
             e.preventDefault();
             return;
         }
-
         if (hitTrackImage(c.x, c.y)) { startTrackDrag(c.x, c.y); e.preventDefault(); return; }
-
         const hit = hitCustomElement(c.x, c.y);
         if (hit) { startCustomDrag(hit, c.x, c.y); e.preventDefault(); deselectTrack(); return; }
         const itemHit = findHitItem(c.x, c.y);
@@ -1452,10 +1398,9 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
 
     function onTouchEnd() { endTrackResize(); endTrackDrag(); endCustomDrag(); endDrag(); }
 
-    // ==================== 键盘（增强版） ====================
+    // ==================== 键盘 ====================
     function onKeyDown(e) {
         if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
-
         if (e.key === 'Escape') {
             refzoomOverlay.classList.remove('active');
             selectedIndex = -1; selectedCustom = null;
@@ -1464,29 +1409,19 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
             renderCanvas();
             return;
         }
-
         const step = e.shiftKey ? 10 : 1;
 
-        // ===== 轨迹图操作（最高优先级） =====
         if (trackSelected && trackImage) {
             let handled = true;
-
             switch (e.key) {
-                // 方向键微移动
                 case 'ArrowLeft': trackX -= step; break;
                 case 'ArrowRight': trackX += step; break;
                 case 'ArrowUp': trackY -= step; break;
                 case 'ArrowDown': trackY += step; break;
-
-                // 键盘缩放（大步）
                 case '+': case '=': scaleTrackByKey(1.1); break;
                 case '-': case '_': scaleTrackByKey(0.9); break;
-
-                // 精细缩放（小步）
                 case ']': scaleTrackByKey(1.02); break;
                 case '[': scaleTrackByKey(0.98); break;
-
-                // 删除
                 case 'Delete':
                 case 'Backspace':
                     resetTrackImage();
@@ -1497,16 +1432,13 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
                     break;
                 default: handled = false;
             }
-
             if (handled) {
                 e.preventDefault();
                 const drawW = trackOrigW * trackScale;
                 const drawH = trackOrigH * trackScale;
-                // 限制位置不超出画布太多
                 trackX = Math.max(-drawW * 0.5, Math.min(trackX, canvasWidth - drawW * 0.5));
                 trackY = Math.max(-drawH * 0.5, Math.min(trackY, canvasHeight - drawH * 0.5));
                 renderCanvas();
-
                 if (e.key.startsWith('Arrow')) {
                     statusBar.textContent = `🗺️ 轨迹图: (${trackX}, ${trackY}) 步长${step}px 缩放${Math.round(trackScale*100)}%`;
                 } else {
@@ -1516,7 +1448,6 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
             return;
         }
 
-        // 自定义元素微调
         if (selectedCustom) {
             const el = customElements[selectedCustom];
             let handled = true;
@@ -1544,7 +1475,6 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
             return;
         }
 
-        // 普通素材微调
         if (selectedIndex < 0 || selectedIndex >= placedItems.length) return;
         const item = placedItems[selectedIndex];
         let handled = true;
@@ -1587,14 +1517,12 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         document.getElementById('zoomLabel').textContent = Math.round(zoom * 100) + '%';
     }
 
-    // ==================== 按钮状态 ====================
     function updateButtonState() {
         undoBtn.disabled = placedItems.length === 0;
         resetBtn.disabled = placedItems.length === 0 && !trackImage;
         downloadBtn.disabled = !baseImage;
     }
 
-    // ==================== 启动 ====================
     init();
 </script>
 </body>
