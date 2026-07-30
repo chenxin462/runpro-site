@@ -648,17 +648,19 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         img.onload = () => {
             const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
             
-            // 计算当前视野中心在画布上的坐标
-            const screenCenterX = canvasPanel.clientWidth / 2;
-            const screenCenterY = canvasPanel.clientHeight / 2;
-            const canvasCenterX = (screenCenterX - panX) / zoom;
-            const canvasCenterY = (screenCenterY - panY) / zoom;
+            // 1. 获取画布面板在屏幕上的矩形
+            const panelRect = canvasPanel.getBoundingClientRect();
+            // 2. 计算画布面板的中心点在浏览器视口中的坐标
+            const screenCenterClientX = panelRect.left + panelRect.width / 2;
+            const screenCenterClientY = panelRect.top + panelRect.height / 2;
+            // 3. 将屏幕中心坐标转换为画布内部坐标
+            const centerCoords = getCanvasCoords(screenCenterClientX, screenCenterClientY);
             
             // 让素材中心对齐视野中心
-            let x = Math.round(canvasCenterX - w / 2);
-            let y = Math.round(canvasCenterY - h / 2);
+            let x = Math.round(centerCoords.x - w / 2);
+            let y = Math.round(centerCoords.y - h / 2);
             
-            // 限制在画布范围内
+            // 限制在画布范围内（防止素材加到画布外看不见）
             x = Math.max(0, Math.min(x, canvasWidth - w));
             y = Math.max(0, Math.min(y, canvasHeight - h));
             
@@ -1332,7 +1334,6 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         const availH = canvasPanel.clientHeight - padding * 2 - 50;
         zoom = Math.min(availW / canvasWidth, availH / canvasHeight);
         zoom = Math.min(zoom, 8); zoom = Math.max(zoom, 0.15);
-        // 修复居中计算逻辑
         panX = (canvasPanel.clientWidth - canvasWidth * zoom) / 2;
         panY = (canvasPanel.clientHeight - canvasHeight * zoom) / 2;
         applyTransform();
@@ -1364,7 +1365,6 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
     function onPointerDown(e) {
         if (!baseImage) return;
         
-        // 如果按住空格键，直接进入平移模式
         if (isSpacePressed) {
             isPanning = true;
             panStartClientX = e.clientX;
@@ -1378,7 +1378,6 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
 
         const c = getCanvasCoords(e.clientX, e.clientY);
         
-        // 优先检测是否点击了删除按钮
         const hitDelete = findHitDeleteBtn(c.x, c.y);
         if (hitDelete !== -1) {
             placedItems.splice(hitDelete, 1);
@@ -1419,7 +1418,6 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
             return;
         }
         
-        // 如果点击在空白处，准备平移画布
         maybePanning = true;
         panStartClientX = e.clientX;
         panStartClientY = e.clientY;
@@ -1484,7 +1482,6 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         }
         if (maybePanning) {
             maybePanning = false;
-            // 点击空白处未拖拽，触发取消选中
             selectedIndex = -1; 
             selectedCustom = null; 
             Object.keys(customElements).forEach(k => customElements[k].selected = false); 
@@ -1512,7 +1509,6 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         if (isSpacePressed) {
             canvasWrapper.style.cursor = 'grab';
         } else {
-            // 轨迹图手柄cursor检测
             if (trackImage && trackSelected) {
                 if (hitTrackResizeHandle(c.x, c.y)) {
                     canvasWrapper.style.cursor = 'nwse-resize';
@@ -1524,7 +1520,6 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
             }
         }
 
-        // 素材hover检测
         const hit = findHitItem(c.x, c.y);
         if (hit !== hoveredItemIndex) {
             hoveredItemIndex = hit;
@@ -1574,7 +1569,6 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
             return;
         }
 
-        // 点击空白处
         maybePanning = true;
         panStartClientX = t.clientX;
         panStartClientY = t.clientY;
