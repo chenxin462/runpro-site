@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>52Run.cn —— 跑步数据可视化与科学复盘工具</title>
+<meta name="description" content="52Run.cn 专注跑步运动数据深度分析，提供 GPS 轨迹解析、配速曲线、心率区间、跑量趋势等多维可视化与复盘服务。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --primary-green: #00e676;
+  --deep-green: #0a2e1a;
+  --darker-green: #062113;
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --text-main: #ffffff;
+  --text-dim: rgba(255, 255, 255, 0.75);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI','Microsoft YaHei',sans-serif;}
+body{
+  background: var(--deep-green);
+  color: var(--text-main);
+  line-height:1.6;
+  overflow-x:hidden;
+  position:relative;
+}
+
+/* ===== 跑步背景图与全局光晕 ===== */
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(0,230,118,0.1), transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(0,230,118,0.08), transparent 40%),
+    linear-gradient(135deg, rgba(10,46,26,0.55), rgba(6,33,19,0.75)),
+    url('https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=1920&q=80') center/cover no-repeat fixed;
+  z-index:-1;
+  background-color: var(--deep-green);
+}
+
+/* ===== 动态效果 CSS 开始 ===== */
+#bg-scene {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  will-change: transform;
+  transition: transform 0.6s cubic-bezier(.2,.7,.2,1);
+}
+
+.bg-node {
+  position: absolute;
+  background: rgba(0, 230, 118, 0.6);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(0, 230, 118, 0.4);
+  animation: nodeTwinkle var(--dur, 4s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+@keyframes nodeTwinkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.8); }
+  50% { opacity: 0.8; transform: scale(1.4); }
+}
+
+.scan-line {
+  position: absolute;
+  width: 300px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(0,230,118,0), #00e676, rgba(0,230,118,0));
+  filter: drop-shadow(0 0 4px #00e676);
+  animation: scanMove var(--dur, 2.5s) linear forwards;
+}
+@keyframes scanMove {
+  0% { transform: translateX(100vw); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateX(-300px); opacity: 0; }
+}
+
+.cursor-particle {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  background: var(--primary-green);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  box-shadow: 0 0 10px var(--primary-green);
+  transition: transform 0.6s ease-out, opacity 0.6s ease-out;
+}
+
+.sun-glow {
+  position: absolute;
+  top: -15%;
+  right: -10%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(255, 165, 0, 0.15) 0%, rgba(255, 200, 0, 0.05) 40%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(40px);
+  animation: sunBreathe 6s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes sunBreathe {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.15); opacity: 0.9; }
+}
+
+#trace-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.run-trace {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 2px currentColor);
+  stroke-width: 0.8;
+  opacity: 0;
+}
+
+.trace-group {
+  display: none;
+  opacity: 0;
+  transition: opacity 1.5s ease;
+}
+.trace-group.active {
+  display: block;
+  opacity: 1;
+}
+
+@keyframes traceDrawCycle {
+  0%   { stroke-dashoffset: var(--len, 200); opacity: 0; }
+  8%   { opacity: 0.7; }
+  55%  { stroke-dashoffset: 0; opacity: 0.7; }
+  75%  { stroke-dashoffset: 0; opacity: 0.7; }
+  90%  { stroke-dashoffset: 0; opacity: 0; }
+  100% { stroke-dashoffset: var(--len, 200); opacity: 0; }
+}
+
+@keyframes dotCycle {
+  0%, 55%   { opacity: 0; transform: scale(0.2); }
+  62%       { opacity: 1; transform: scale(1.3); }
+  70%       { opacity: 1; transform: scale(1); }
+  80%       { opacity: 1; transform: scale(1); }
+  90%       { opacity: 0; transform: scale(0.4); }
+  100%      { opacity: 0; transform: scale(0.2); }
+}
+
+@keyframes glowCycle {
+  0%, 50%   { opacity: 0; }
+  60%       { opacity: 0.22; }
+  78%       { opacity: 0.3; }
+  90%       { opacity: 0; }
+  100%      { opacity: 0; }
+}
+
+@keyframes flowCycle {
+  0%, 58%   { opacity: 0; }
+  62%       { opacity: 0.4; }
+  80%       { opacity: 0.4; }
+  90%       { opacity: 0; }
+  100%      { opacity: 0; }
+}
+
+@keyframes textFadeCycle {
+  0%, 15%   { opacity: 0; }
+  25%       { opacity: 0.85; }
+  70%       { opacity: 0.85; }
+  85%       { opacity: 0; }
+  100%      { opacity: 0; }
+}
+
+@keyframes trackDrawCycle {
+  0%   { stroke-dashoffset: var(--len, 300); opacity: 0; }
+  5%   { opacity: 0.8; }
+  60%  { stroke-dashoffset: 0; opacity: 0.85; }
+  78%  { stroke-dashoffset: 0; opacity: 0.85; }
+  90%  { stroke-dashoffset: 0; opacity: 0; }
+  100% { stroke-dashoffset: var(--len, 300); opacity: 0; }
+}
+
+@keyframes dataPanelFade {
+  0%, 8%    { opacity: 0; transform: translateY(15px); }
+  20%       { opacity: 1; transform: translateY(0); }
+  78%       { opacity: 1; transform: translateY(0); }
+  90%, 100% { opacity: 0; transform: translateY(-8px); }
+}
+
+header, section, footer, .back-top {
+  position: relative;
+  z-index: 2;
+}
+
+header{
+  position:sticky;top:0;z-index:100;
+  background:rgba(6,33,19,0.7); 
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  display:flex;justify-content:space-between;align-items:center;
+  padding:1rem 5%;
+  transition:.3s;
+  border-bottom:1px solid var(--glass-border);
+}
+header.scrolled{padding:.5rem 5%;box-shadow:0 4px 30px rgba(0,0,0,.4); background:rgba(6,33,19,0.85);}
+.logo{font-size:1.8rem;font-weight:bold;color:var(--primary-green);letter-spacing:2px; text-shadow: 0 0 10px rgba(0,230,118,0.5);}
+.logo span{color:#fff;}
+nav a{color:var(--text-dim);text-decoration:none;margin-left:1.8rem;font-size:.95rem;transition:color .3s; position:relative;}
+nav a:hover{color:var(--primary-green);}
+nav a::after {
+  content:''; position:absolute; bottom:-5px; left:0; width:0; height:2px; background:var(--primary-green); transition: width .3s;
+}
+nav a:hover::after { width: 100%; }
+
+section{padding:5rem 5%;position:relative;}
+section h2{
+  text-align:center;font-size:2.2rem;margin-bottom:.5rem;color:var(--text-main);
+  font-family: 'Oswald', sans-serif; font-weight: 700;
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5); 
+}
+section .subtitle{text-align:center;color:var(--text-dim);margin-bottom:3rem;font-size:1rem;}
+
+.glass-card {
+  background: rgba(6, 33, 19, 0.65); 
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  transition: all 0.3s ease;
+}
+.glass-card:hover {
+  background: rgba(0, 230, 118, 0.08);
+  border-color: rgba(0, 230, 118, 0.4);
+  box-shadow: 0 8px 30px rgba(0, 230, 118, 0.1);
+  transform: translateY(-5px);
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 16px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  border: 1px solid rgba(0, 230, 118, 0.1);
+}
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px rgba(0,230,118,0.25);
+  border-color: rgba(0,230,118,0.4);
+}
+.card h3, .card h4 { color: #0a2e1a; margin:.8rem 0 .5rem; font-size:1.2rem; }
+.card p { color: #444; font-size:.9rem; line-height:1.6; }
+.card .step-num {
+  background: linear-gradient(135deg, #00e676, #00a85c);
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 10px rgba(0,230,118,0.3);
+}
+.card .stat-num { color: #00a85c; text-shadow: none; font-variant-numeric: tabular-nums; }
+.card .stat-label { color: #666; }
+.card .tag {
+  background: rgba(0,230,118,0.15);
+  color: #00a85c;
+  border: 1px solid rgba(0,230,118,0.3);
+}
+
+.tag{
+  display:inline-block;
+  background:rgba(0,230,118,.15);
+  color:var(--primary-green);
+  padding:.3rem .8rem;
+  border-radius:20px;
+  font-size:.75rem;
+  font-weight:600;
+  margin-top:.8rem;
+  border: 1px solid rgba(0,230,118,0.3);
+}
+
+.step-num{
+  width:52px;height:52px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(0,230,118,0.2),rgba(0,168,92,0.1));
+  border: 1px solid rgba(0,230,118,0.4);
+  color:var(--primary-green);font-size:1.4rem;font-weight:bold;
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 1rem;
+  box-shadow: 0 0 15px rgba(0,230,118,0.2);
+}
+
+.hero{
+  padding:6rem 5% 5rem;
+  text-align:center;
+  position:relative;
+}
+.hero-badge{
+  display:inline-block;
+  background:rgba(0,230,118,.15);
+  color:var(--primary-green);
+  padding:.5rem 1.2rem;border-radius:30px;
+  font-size:.85rem;font-weight:600;
+  margin-bottom:1.5rem;
+  border:1px solid rgba(0,230,118,.3);
+  backdrop-filter: blur(5px);
+}
+.hero h1{
+  font-size:3.2rem; 
+  margin-bottom:1.5rem;
+  line-height:1.3;
+  min-height: 2em; 
+}
+
+.fusion-text {
+  font-family: 'Oswald', 'Microsoft YaHei', sans-serif;
+  font-size: 3.2rem; 
+  font-weight: 700;  
+  transform: skewX(-6deg); 
+  display: inline-block;
+  letter-spacing: 0.03em; 
+  line-height: 1.3;
+  background: linear-gradient(90deg, #ffffff 0%, #00e676 50%, #ffffff 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: auroraFlow 3s linear infinite;
+  filter: blur(12px);
+  opacity: 0;
+  transition: filter 1.5s ease, opacity 1.5s ease;
+  text-shadow: 0 4px 20px rgba(0,230,118,0.3); 
+}
+.fusion-text.active { filter: blur(0); opacity: 1; }
+@keyframes auroraFlow {
+  0% { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+.hero p{
+  max-width:700px;margin:0 auto 2rem; 
+  color:var(--text-dim);font-size:1.1rem;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.4); 
+}
+.btn{
+  display:inline-block;padding:.9rem 2.5rem;border-radius:50px;
+  font-weight:bold;text-decoration:none;font-size:1rem;cursor:pointer;
+  transition:all .3s;
+}
+.btn-primary{
+  background:linear-gradient(135deg,#00e676,#00a85c);
+  color:#0a2e1a;box-shadow:0 4px 20px rgba(0,230,118,.4);
+}
+.btn-primary:hover{
+  transform:translateY(-3px);box-shadow:0 6px 30px rgba(0,230,118,.6);
+}
+
+.stats-grid{ display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem; }
+.stat-item{ padding:2rem 1rem;text-align:center; }
+.stat-num{
+  font-size:3rem;font-weight:bold;color:var(--primary-green); 
+  font-family: 'Oswald', sans-serif;
+  text-shadow: 0 0 15px rgba(0,230,118,0.4);
+  font-variant-numeric: tabular-nums;
+}
+.stat-label{color:var(--text-dim);margin-top:.3rem;font-size:.9rem; letter-spacing: 0.05em;}
+
+.grid-4{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.5rem;}
+
+.case-card{ overflow:hidden; }
+.case-card:hover{ transform:translateY(-6px); }
+.case-img{
+  height:160px; 
+  background: linear-gradient(135deg, #062113, #0a2e1a);
+  display:flex;align-items:center;justify-content:center;
+  color:rgba(0,230,118,0.4);font-size:3rem;
+  border-bottom: 1px solid var(--glass-border);
+}
+.case-body{padding:1.5rem;}
+.case-body h4{color:var(--text-main);margin-bottom:.5rem; font-size:1.1rem;}
+.case-body p{color:var(--text-dim);font-size:.85rem;}
+.case-tag{ margin-top:.8rem; }
+
+.flow-grid{ display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;position:relative; }
+.flow-item{ text-align:center;position:relative; padding: 2rem 1rem; }
+.flow-item::after{
+  content:'';position:absolute;top:48px;right:-50%;width:100%;height:1px;
+  background:linear-gradient(90deg,var(--primary-green),transparent);z-index:0; opacity: 0.5;
+}
+.flow-item:last-child::after{display:none;}
+.flow-item h4 { color: var(--text-main); margin-bottom: 0.5rem; }
+.flow-item p { color: var(--text-dim); font-size:.9rem; }
+
+.scene-card{ padding:2rem 1.5rem;text-align:center; }
+.scene-card:hover{transform:translateY(-6px);}
+.scene-icon{
+  width:64px;height:64px;border-radius:50%;margin:0 auto 1rem;
+  background:linear-gradient(135deg,rgba(0,230,118,.2),rgba(0,168,92,.1));
+  border: 1px solid rgba(0,230,118,0.3);
+  display:flex;align-items:center;justify-content:center;font-size:1.8rem;
+}
+.scene-card h4{color:var(--text-main);margin-bottom:.4rem;}
+.scene-card p{color:var(--text-dim);font-size:.85rem;}
+
+.notice-grid{ display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem; }
+.notice-card{ padding:1.8rem; position:relative; overflow:hidden; }
+.notice-card::before{
+  content:'';position:absolute;top:0;left:0;width:3px;height:100%;
+  background:var(--primary-green); box-shadow: 0 0 10px var(--primary-green);
+}
+.notice-card h4{color:var(--text-main);margin-bottom:.6rem;padding-left:.8rem; font-size:1.1rem;}
+.notice-card p{color:var(--text-dim);font-size:.9rem;padding-left:.8rem;}
+
+.guarantee-bar{ display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.5rem; }
+.guarantee-item{ padding:2rem 1rem;text-align:center; }
+.guarantee-item:hover{transform:translateY(-5px);}
+.guarantee-icon{
+  width:60px;height:60px;border-radius:50%;margin:0 auto 1rem;
+  background:linear-gradient(135deg,rgba(0,230,118,.15),rgba(0,168,92,.05));
+  border: 1px solid rgba(0,230,118,0.2);
+  display:flex;align-items:center;justify-content:center;font-size:1.5rem;
+}
+.guarantee-item h4{color:var(--text-main);margin-bottom:.3rem;}
+.guarantee-item p{color:var(--text-dim);font-size:.85rem;}
+
+.contact{
+  text-align:center;
+  background:linear-gradient(180deg,transparent,rgba(6,33,19,0.6)); 
+  padding:5rem 5%;
+}
+.contact h2{color:var(--text-main);margin-bottom:1rem;}
+.contact p{color:var(--text-dim);margin-bottom:2rem;}
+.wechat-box{
+  display:inline-block;
+  background:rgba(6, 33, 19, 0.8); 
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius:16px;padding:2.5rem 3.5rem;
+  box-shadow:0 8px 30px rgba(0,0,0,.3);
+}
+.wechat-label{color:var(--text-dim);font-size:.9rem;margin-bottom:.5rem;}
+.wechat-number{
+  font-size:2.5rem;font-weight:bold;color:var(--primary-green);
+  letter-spacing:2px; font-family: 'Oswald', sans-serif;
+  text-shadow: 0 0 15px rgba(0,230,118,0.4);
+}
+.wechat-btn{
+  display:inline-block;margin-top:1.5rem;
+  background:linear-gradient(135deg,#00e676,#00a85c);
+  color:#0a2e1a;padding:.8rem 2.5rem;border-radius:50px;font-weight:bold;
+  text-decoration:none;transition:all .3s;
+}
+.wechat-btn:hover{transform:translateY(-3px);box-shadow:0 8px 25px rgba(0,230,118,.5);}
+
+.faq-list{max-width:800px;margin:0 auto;}
+.faq-item{ margin-bottom:1rem; overflow:hidden; }
+.faq-q{
+  padding:1.5rem 1.5rem;cursor:pointer;display:flex;justify-content:space-between;
+  align-items:center;font-weight:bold;color:var(--text-main);font-size:1rem;
+}
+.faq-q .arrow{transition:transform .3s;color:var(--primary-green);font-size:.9rem;}
+.faq-item.open .faq-q .arrow{transform:rotate(180deg);}
+.faq-item.open { background: rgba(6, 33, 19, 0.8); border-color: rgba(0, 230, 118, 0.3); }
+.faq-a{
+  max-height:0;overflow:hidden;padding:0 1.5rem;color:var(--text-dim);font-size:.9rem;transition:.35s;
+}
+.faq-item.open .faq-a{padding:0 1.5rem 1.5rem;max-height:200px;}
+
+footer{
+  background:rgba(5,20,12,.9);padding:2.5rem 5%;text-align:center;color:var(--text-dim);font-size:.82rem;
+  border-top: 1px solid var(--glass-border);
+}
+.footer-links{display:flex;flex-wrap:wrap;justify-content:center;gap:1.5rem;margin-bottom:1rem;}
+.footer-links a{color:var(--text-dim);text-decoration:none;font-size:.85rem;transition:color .3s;}
+.footer-links a:hover{color:var(--primary-green);}
+
+.back-top{
+  position:fixed;right:20px;bottom:20px;
+  width:48px;height:48px;border-radius:50%;
+  background:linear-gradient(135deg,#00e676,#00a85c);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;opacity:0;visibility:hidden;transition:.3s;z-index:1000;
+  font-size:1.3rem;color:#0a2e1a;box-shadow:0 4px 15px rgba(0,230,118,.4);
+}
+.back-top.show{opacity:1;visibility:visible;}
+.back-top:hover{transform:translateY(-4px);}
+
+@media(max-width:768px){
+  .hero h1{font-size:2rem; min-height: 2.5em;}
+  .fusion-text { font-size: 2rem; } 
+  .hero p{font-size:1rem;}
+  nav a{margin-left:1rem;font-size:.85rem;}
+  .wechat-number{font-size:1.8rem;}
+  .flow-item::after{display:none;}
+}
+
+/* ===== 操场轨迹数据面板样式（优化版：大字号+背景卡片+高对比度） ===== */
+.track-data-panel {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  animation: dataPanelFade 13s ease-in-out forwards;
+  z-index: 1;
+}
+/* 面板背景卡片 */
+.track-data-panel .data-bg {
+  fill: rgba(6, 33, 19, 0.88);
+  stroke: rgba(0, 230, 118, 0.45);
+  stroke-width: 0.3;
+  filter: drop-shadow(0 0 4px rgba(0,0,0,0.6));
+  rx: 1.5;
+}
+.track-data-panel .data-title {
+  font-size: 6px; fill: #00e676; font-weight: bold; letter-spacing: 0.5px;
+  filter: drop-shadow(0 0 3px #00e676); font-family: 'Oswald', sans-serif;
+}
+.track-data-panel .data-label {
+  font-size: 4px; fill: rgba(255,255,255,0.85); font-weight: 500;
+  font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+}
+.track-data-panel .data-value {
+  font-size: 5px; fill: #ffffff; font-weight: bold; font-family: 'Oswald', sans-serif;
+  filter: drop-shadow(0 0 2px rgba(255,255,255,0.4));
+}
+.track-data-panel .data-unit {
+  font-size: 3.2px; fill: rgba(255,255,255,0.7); font-weight: 500;
+  font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+}
+.track-data-panel .data-divider { stroke: rgba(0,230,118,0.5); stroke-width: 0.3; }
+</style>
+</head>
+<body>
+
+<div id="bg-scene">
+  <div class="sun-glow"></div>
+
+  <svg id="trace-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
+
+    <!-- ===== 轨迹1：400米标准操场跑道 (等比例缩小) ===== -->
+    <g class="trace-group" id="trace1" style="--len:240;">
+      <defs>
+        <linearGradient id="trackGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#00e676" stop-opacity="0.95"/>
+          <stop offset="35%" stop-color="#00bcd4" stop-opacity="0.85"/>
+          <stop offset="70%" stop-color="#26c6da" stop-opacity="0.8"/>
+          <stop offset="100%" stop-color="#009688" stop-opacity="0.9"/>
+        </linearGradient>
+        <linearGradient id="trackWarm1" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#ff8a65" stop-opacity="0"/>
+          <stop offset="60%" stop-color="#ff8a65" stop-opacity="0.15"/>
+          <stop offset="100%" stop-color="#ff5722" stop-opacity="0.35"/>
+        </linearGradient>
+      </defs>
+
+      <!-- 跑道外圈光晕 -->
+      <path d="M 40,32 L 60,32 A 14,14 0 1,1 60,68 L 40,68 A 14,14 0 1,1 40,32 Z"
+            fill="none" stroke="rgba(0,230,118,0.06)" stroke-width="3.2"
+            style="animation: glowCycle 13s ease-in-out forwards;"/>
+      <path d="M 40,33 L 60,33 A 13,13 0 1,1 60,67 L 40,67 A 13,13 0 1,1 40,33 Z"
+            fill="none" stroke="rgba(0,188,212,0.05)" stroke-width="2"
+            style="animation: glowCycle 13s ease-in-out forwards;"/>
+
+      <!-- 主跑道轨迹线 -->
+      <path d="M 41,37 L 59,37 A 12,12 0 0,1 59,63 L 41,63 A 12,12 0 0,1 41,37 Z"
+            fill="none" stroke="url(#trackGrad1)" stroke-width="1.2"
+            stroke-dasharray="240" stroke-dashoffset="240"
+            stroke-linecap="round" stroke-linejoin="round"
+            style="animation: trackDrawCycle 13s ease-in-out forwards;"/>
+
+      <!-- 跑道内沿细线 -->
+      <path d="M 42,40 L 58,40 A 9.5,9.5 0 0,1 58,60 L 42,60 A 9.5,9.5 0 0,1 42,40 Z"
+            fill="none" stroke="rgba(0,230,118,0.2)" stroke-width="0.4"
+            stroke-dasharray="200" stroke-dashoffset="200"
+            style="animation: trackDrawCycle 13s ease-in-out 0.4s forwards;"/>
+
+      <!-- 流动虚线 -->
+      <path d="M 41,37 L 59,37 A 12,12 0 0,1 59,63 L 41,63 A 12,12 0 0,1 41,37 Z"
+            fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.4"
+            stroke-dasharray="2 6"
+            style="animation: flowCycle 13s ease-in-out forwards;"/>
+
+      <!-- 起点 -->
+      <circle cx="59" cy="37" r="1.4" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="0.4"
+              style="animation: dotCycle 13s ease-in-out forwards;"/>
+      <circle cx="59" cy="37" r="0.8" fill="#00e676" filter="drop-shadow(0 0 3px #00e676)"
+              style="animation: dotCycle 13s ease-in-out forwards;"/>
+
+      <!-- 终点 -->
+      <circle cx="59" cy="63" r="1.2" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="0.3"
+              style="animation: dotCycle 13s ease-in-out forwards;"/>
+      <circle cx="59" cy="63" r="0.6" fill="#ff5252" filter="drop-shadow(0 0 2px #ff5252)"
+              style="animation: dotCycle 13s ease-in-out forwards;"/>
+
+      <!-- 底部暖色弧线 -->
+      <path d="M 42,65 Q 50,69 58,65"
+            fill="none" stroke="url(#trackWarm1)" stroke-width="1.6"
+            stroke-linecap="round"
+            style="animation: glowCycle 13s ease-in-out forwards;"/>
+
+      <path d="M 59,41 A 9,9 0 0,1 59,59"
+            fill="none" stroke="rgba(0,230,118,0.12)" stroke-width="0.3"
+            stroke-dasharray="140" stroke-dashoffset="140"
+            style="animation: trackDrawCycle 13s ease-in-out 0.6s forwards;"/>
+      <path d="M 41,41 A 9,9 0 0,0 41,59"
+            fill="none" stroke="rgba(0,230,118,0.12)" stroke-width="0.3"
+            stroke-dasharray="140" stroke-dashoffset="140"
+            style="animation: trackDrawCycle 13s ease-in-out 0.6s forwards;"/>
+
+      <g class="track-data-panel">
+        <!-- 背景卡片 -->
+        <rect x="75" y="17" width="26" height="44" class="data-bg"/>
+        <!-- 标题 -->
+        <text x="88" y="23" class="data-title" text-anchor="middle">🏟️ 操场10KM</text>
+        <line x1="78" y1="26" x2="98" y2="26" class="data-divider"/>
+        <!-- 距离 -->
+        <text x="78" y="32" class="data-label">距离</text>
+        <text x="97" y="32" class="data-value" text-anchor="end">10.0</text>
+        <text x="98" y="32" class="data-unit">km</text>
+        <!-- 配速 -->
+        <text x="78" y="38.5" class="data-label">配速</text>
+        <text x="97" y="38.5" class="data-value" text-anchor="end">5'30"</text>
+        <text x="98" y="38.5" class="data-unit">/km</text>
+        <!-- 用时 -->
+        <text x="78" y="45" class="data-label">用时</text>
+        <text x="97" y="45" class="data-value" text-anchor="end">55:00</text>
+        <text x="98" y="45" class="data-unit">min</text>
+        <!-- 分隔线 -->
+        <line x1="78" y1="47.5" x2="98" y2="47.5" class="data-divider"/>
+        <!-- 心率 -->
+        <text x="78" y="53" class="data-label">心率</text>
+        <text x="97" y="53" class="data-value" text-anchor="end" fill="#ff8a80">158</text>
+        <text x="98" y="53" class="data-unit">bpm</text>
+        <!-- 爬升 -->
+        <text x="78" y="59" class="data-label">爬升</text>
+        <text x="97" y="59" class="data-value" text-anchor="end">10</text>
+        <text x="98" y="59" class="data-unit">m</text>
+        <!-- 步频 -->
+        <text x="78" y="65" class="data-label">步频</text>
+        <text x="97" y="65" class="data-value" text-anchor="end" fill="#80deea">168</text>
+        <text x="98" y="65" class="data-unit">spm</text>
+      </g>
+    </g>
+
+    <!-- ===== 轨迹2：圆形路线 (等比例缩小) ===== -->
+    <g class="trace-group" id="trace2" style="--len:88;">
+      <circle cx="50" cy="50" r="14" fill="none" stroke="rgba(0,230,118,0.18)" stroke-width="2"
+              style="animation: glowCycle 11s ease-in-out forwards;"/>
+      <circle cx="50" cy="50" r="14" fill="none" stroke="rgba(0,230,118,0.7)" stroke-width="1"
+              stroke-dasharray="88" stroke-dashoffset="88"
+              style="animation: traceDrawCycle 11s ease-in-out forwards;"/>
+      <circle cx="50" cy="50" r="14" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="0.4"
+              stroke-dasharray="3 6"
+              style="animation: flowCycle 11s ease-in-out forwards;"/>
+      <circle cx="36" cy="50" r="0.8" fill="#00e676" filter="drop-shadow(0 0 2px #00e676)"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
+      <circle cx="36" cy="50" r="1.2" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="0.3"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
+      <circle cx="38" cy="42" r="0.5" fill="#ff5252" filter="drop-shadow(0 0 2px #ff5252)"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
+    </g>
+
+    <!-- ===== 轨迹3：平滑连续跑步轨迹 (等比例缩小) ===== -->
+    <g class="trace-group" id="trace3" style="--len:260;">
+      <defs>
+        <linearGradient id="smoothGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#00e676" stop-opacity="0.9"/>
+          <stop offset="25%" stop-color="#00bcd4" stop-opacity="0.85"/>
+          <stop offset="50%" stop-color="#26c6da" stop-opacity="0.8"/>
+          <stop offset="75%" stop-color="#00bcd4" stop-opacity="0.85"/>
+          <stop offset="100%" stop-color="#00e676" stop-opacity="0.9"/>
+        </linearGradient>
+      </defs>
+
+      <path d="M 20,58 C 16,46 24,30 38,26 C 52,22 66,28 72,38 C 78,48 70,60 58,66 C 46,72 30,70 24,62 C 20,58 20,58 20,58 Z"
+            fill="none" stroke="rgba(0,230,118,0.08)" stroke-width="3.2"
+            style="animation: glowCycle 11s ease-in-out forwards;"/>
+
+      <path d="M 22,60 C 22,50 28,40 36,34 C 44,28 54,25 62,30 C 70,35 74,44 70,52 C 66,60 56,66 46,64 C 36,62 26,66 20,60 C 18,56 19,54 22,60 Z"
+            fill="none" stroke="url(#smoothGrad)" stroke-width="1"
+            stroke-dasharray="260" stroke-dashoffset="260"
+            stroke-linecap="round" stroke-linejoin="round"
+            style="animation: traceDrawCycle 11s ease-in-out forwards;"/>
+
+      <path d="M 22,60 C 22,50 28,40 36,34 C 44,28 54,25 62,30 C 70,35 74,44 70,52 C 66,60 56,66 46,64 C 36,62 26,66 20,60 C 18,56 19,54 22,60 Z"
+            fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.4"
+            stroke-dasharray="2 5"
+            style="animation: flowCycle 11s ease-in-out forwards;"/>
+
+      <circle cx="22" cy="60" r="0.8" fill="#00e676" filter="drop-shadow(0 0 2px #00e676)"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
+      <circle cx="22" cy="60" r="1.2" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="0.3"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
+
+      <circle cx="25" cy="63" r="0.5" fill="#ff5252" filter="drop-shadow(0 0 2px #ff5252)"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
+      <circle cx="25" cy="63" r="0.9" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="0.2"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
+
+      <circle cx="50" cy="27" r="0.3" fill="rgba(0,230,118,0.6)" filter="drop-shadow(0 0 1px #00e676)"
+              style="animation: dotCycle 11s ease-in-out 2s forwards;"/>
+      <circle cx="75" cy="46" r="0.3" fill="rgba(38,198,218,0.6)" filter="drop-shadow(0 0 1px #26c6da)"
+              style="animation: dotCycle 11s ease-in-out 3s forwards;"/>
+      <circle cx="40" cy="68" r="0.3" fill="rgba(0,230,118,0.5)" filter="drop-shadow(0 0 1px #00e676)"
+              style="animation: dotCycle 11s ease-in-out 4s forwards;"/>
+    </g>
+
+    <!-- ===== 轨迹4：S形曲线 + 52Run.cn 域名文字 (等比例缩小) ===== -->
+    <g class="trace-group" id="trace4" style="--len:180;">
+      <defs>
+        <path id="textPath4" d="M14,50 Q26,28 38,50 T62,50 Q74,70 78,50" fill="none"/>
+      </defs>
+      <path d="M14,50 Q26,28 38,50 T62,50 Q74,70 78,50"
+            fill="none" stroke="rgba(0,230,118,0.15)" stroke-width="2"
+            style="animation: glowCycle 11s ease-in-out forwards;"/>
+      <path d="M14,50 Q26,28 38,50 T62,50 Q74,70 78,50"
+            fill="none" stroke="rgba(0,230,118,0.65)" stroke-width="1"
+            stroke-dasharray="180" stroke-dashoffset="180"
+            style="animation: traceDrawCycle 11s ease-in-out forwards;"/>
+      <path d="M14,50 Q26,28 38,50 T62,50 Q74,70 78,50"
+            fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.4"
+            stroke-dasharray="2 5"
+            style="animation: flowCycle 11s ease-in-out forwards;"/>
+      <text font-size="2.8" fill="#00e676" font-weight="bold" letter-spacing="0.5"
+            filter="drop-shadow(0 0 2px #00e676)"
+            style="animation: textFadeCycle 11s ease-in-out forwards;">
+        <textPath href="#textPath4" startOffset="0%">
+          52Run.cn
+          <animate attributeName="startOffset" from="-30%" to="100%"
+                   dur="8s" begin="1s" repeatCount="1"/>
+        </textPath>
+      </text>
+      <circle cx="14" cy="50" r="0.6" fill="#00e676" filter="drop-shadow(0 0 2px #00e676)"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
+      <circle cx="14" cy="50" r="1" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="0.3"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
+      <circle cx="78" cy="50" r="0.6" fill="#00e676" filter="drop-shadow(0 0 2px #00e676)"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
+      <circle cx="78" cy="50" r="1" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="0.3"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
+    </g>
+
+  </svg>
+</div>
+
+<header id="header">
+  <div class="logo">52<span>Run.cn</span></div>
+  <nav>
+    <a href="#home">首页</a>
+    <a href="#features">功能优势</a>
+    <a href="#cases">案例展示</a>
+    <a href="#process">使用流程</a>
+    <a href="#faq">常见问题</a>
+    <a href="#contact">联系我们</a>
+  </nav>
+</header>
+
+<section class="hero" id="home">
+  <div class="hero-badge">🏃 52Run.cn · 跑步数据可视化分析平台</div>
+  <h1><span class="fusion-text" id="fusionText"></span></h1>
+  <p>52Run.cn 专注于跑步运动数据的深度解析与可视化呈现。支持 Keep / 咕咚 / 悦跑圈 / 悦动圈 GPX/TCX 数据导入，提供轨迹渲染、配速曲线、心率区间与跑量趋势的多维复盘，让每一次奔跑都沉淀为可信赖的数据资产。</p>
+  <a href="sport-mosaic.html" class="btn btn-primary">Keep运动截图拼图生成器</a>
+</section>
+
+<section id="stats" style="background:linear-gradient(180deg,rgba(6,33,19,0.3),transparent);">
+  <div class="stats-grid">
+    <div class="card stat-item"><div class="stat-num" data-target="3000" data-suffix="+">0</div><div class="stat-label">服务跑友</div></div>
+    <div class="card stat-item"><div class="stat-num" data-target="5000" data-suffix="+">0</div><div class="stat-label">分析记录</div></div>
+    <div class="card stat-item"><div class="stat-num" data-target="99.2" data-suffix="%">0</div><div class="stat-label">数据准确率</div></div>
+    <div class="card stat-item"><div class="stat-num" data-target="24" data-suffix="h">0</div><div class="stat-label">极速响应</div></div>
+  </div>
+</section>
+
+<section id="features">
+  <h2>选择 52Run.cn 的理由</h2>
+  <p class="subtitle">以数据基石为核心理念，让每一次奔跑都有据可依</p>
+  <div class="grid-4">
+    <div class="card">
+      <div class="step-num">🗺️</div>
+      <h3>轨迹解析</h3>
+      <p>基于多源 GPS 数据融合算法，还原真实运动轨迹，支持高程、坡度与转弯半径的可视化呈现，误差 &lt; 0.1%</p>
+      <div class="tag">核心功能</div>
+    </div>
+    <div class="card">
+      <div class="step-num">📊</div>
+      <h3>指标校准</h3>
+      <p>自动识别异常漂移点与静默段，提供配速、步频、心率的平滑校准与区间统计分析</p>
+      <div class="tag">精准分析</div>
+    </div>
+    <div class="card">
+      <div class="step-num">📈</div>
+      <h3>多维复盘</h3>
+      <p>生成配速曲线图、心率热力图与跑量趋势图，支持按日/周/月/年维度的训练负荷复盘</p>
+      <div class="tag">可视化报告</div>
+    </div>
+    <div class="card">
+      <div class="step-num">🔒</div>
+      <h3>数据安全</h3>
+      <p>全流程本地化数据处理，不留存用户账号信息，仅用于本次分析与可视化渲染</p>
+      <div class="tag">隐私保护</div>
+    </div>
+  </div>
+</section>
+
+<section id="selling" style="background:linear-gradient(180deg,transparent,rgba(0,230,118,0.03));">
+  <h2>核心卖点</h2>
+  <p class="subtitle">每一个细节都为你的数据安全和分析体验考虑</p>
+  <div class="grid-4">
+    <div class="card">
+      <div class="step-num">🎯</div>
+      <h4>精准轨迹</h4>
+      <p>支持任意日期、任意地点的 GPX/TCX 数据导入，轨迹平滑流畅，适配多平台导出</p>
+    </div>
+    <div class="card">
+      <div class="step-num">⚡</div>
+      <h4>极速渲染</h4>
+      <p>上传数据后 30 分钟内生成可视化图表，支持 PNG/SVG 高清导出</p>
+    </div>
+    <div class="card">
+      <div class="step-num">🔐</div>
+      <h4>隐私保护</h4>
+      <p>绝不泄露你的账号信息，全程不索要密码，分析完成后可删除源数据</p>
+    </div>
+    <div class="card">
+      <div class="step-num">💡</div>
+      <h4>智能建议</h4>
+      <p>基于历史数据自动生成训练负荷评估与恢复建议，助力科学训练</p>
+    </div>
+  </div>
+</section>
+
+<section id="cases">
+  <h2>数据分析案例</h2>
+  <p class="subtitle">真实跑步数据，专业可视化呈现</p>
+  <div class="grid-4">
+    <div class="glass-card case-card">
+      <div class="case-img">🏃‍♂️</div>
+      <div class="case-body">
+        <h4>复盘案例 · 5.0km 晨跑</h4>
+        <p>某跑者导入 Keep 原始 GPX 数据，经 52Run.cn 解析后生成配速曲线与心率区间图，轨迹平滑自然，数据可用于个人训练复盘。</p>
+        <div class="case-tag">Keep 数据可视化</div>
+      </div>
+    </div>
+    <div class="glass-card case-card">
+      <div class="case-img">🌙</div>
+      <div class="case-body">
+        <h4>复盘案例 · 7.0km 夜跑</h4>
+        <p>某跑者上传咕咚 TCX 文件，52Run.cn 自动校准漂移点，生成完整的夜跑轨迹渲染图与消耗分析报告。</p>
+        <div class="case-tag">咕咚数据复盘</div>
+      </div>
+    </div>
+    <div class="glass-card case-card">
+      <div class="case-img">🏅</div>
+      <div class="case-body">
+        <h4>复盘案例 · 10km 路跑</h4>
+        <p>悦跑圈 GPX 数据导入 52Run.cn，步频稳定在 170，配速区间分布合理，完整呈现城市路跑轨迹。</p>
+        <div class="case-tag">悦跑圈可视化</div>
+      </div>
+    </div>
+    <div class="glass-card case-card">
+      <div class="case-img">🎽</div>
+      <div class="case-body">
+        <h4>复盘案例 · 21km 半马</h4>
+        <p>悦动圈原始数据经 52Run.cn 解析，生成半马全程轨迹渲染与分段配速分析，助力跑者赛后复盘。</p>
+        <div class="case-tag">悦动圈数据解析</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="process" style="background:linear-gradient(180deg,rgba(0,230,118,0.03),transparent);">
+  <h2>四步完成数据分析</h2>
+  <p class="subtitle">简单四步，轻松拿到你的跑步可视化报告</p>
+  <div class="flow-grid">
+    <div class="glass-card flow-item">
+      <div class="step-num">01</div>
+      <h4>上传数据</h4>
+      <p>提供 GPX/TCX 格式跑步文件，支持多平台数据导入</p>
+    </div>
+    <div class="glass-card flow-item">
+      <div class="step-num">02</div>
+      <h4>解析渲染</h4>
+      <p>系统自动解析轨迹点，生成可视化图表与指标报告</p>
+    </div>
+    <div class="glass-card flow-item">
+      <div class="step-num">03</div>
+      <h4>校准优化</h4>
+      <p>人工辅助校准异常数据段，确保图表真实反映运动状态</p>
+    </div>
+    <div class="glass-card flow-item">
+      <div class="step-num">04</div>
+      <h4>导出分享</h4>
+      <p>生成高清复盘报告，支持导出 PNG/SVG 或直接分享至社交平台</p>
+    </div>
+  </div>
+</section>
+
+<section id="scenes">
+  <h2>适用场景</h2>
+  <p class="subtitle">无论什么需求，我们都能帮你搞定</p>
+  <div class="grid-4">
+    <div class="glass-card scene-card">
+      <div class="scene-icon">✅</div>
+      <h4>训练复盘</h4>
+      <p>科学分析每次训练的强度与效果，优化后续训练计划</p>
+    </div>
+    <div class="glass-card scene-card">
+      <div class="scene-icon">🏁</div>
+      <h4>赛事回顾</h4>
+      <p>对已完成赛事进行全维度数据复盘，提炼成功经验</p>
+    </div>
+    <div class="glass-card scene-card">
+      <div class="scene-icon">📱</div>
+      <h4>社交分享</h4>
+      <p>生成高颜值数据图表，用于朋友圈、跑团社群的健康分享</p>
+    </div>
+    <div class="glass-card scene-card">
+      <div class="scene-icon">📂</div>
+      <h4>档案归档</h4>
+      <p>长期归档跑步数据，形成个人运动生涯的数字档案</p>
+    </div>
+  </div>
+</section>
+
+<section id="notices" style="background:linear-gradient(180deg,transparent,rgba(0,230,118,0.03));">
+  <h2>使用须知</h2>
+  <p class="subtitle">使用前请仔细阅读，让你放心使用</p>
+  <div class="notice-grid">
+    <div class="glass-card notice-card">
+      <h4>关于数据导入</h4>
+      <p>支持 Keep、咕咚、悦跑圈、悦动圈全平台的 GPX/TCX 数据导入，日期、地点、距离全覆盖。</p>
+    </div>
+    <div class="glass-card notice-card">
+      <h4>关于处理时间</h4>
+      <p>一般 24 小时内完成数据解析，急单可协商加急处理。图表生成通常 5-30 分钟。</p>
+    </div>
+    <div class="glass-card notice-card">
+      <h4>关于隐私</h4>
+      <p>绝不泄露你的账号信息，仅用于本次数据分析。完成后可删除源数据，不留痕迹。</p>
+    </div>
+    <div class="glass-card notice-card">
+      <h4>关于售后</h4>
+      <p>数据有问题，免费重新生成。微信一对一沟通，不满意可以重做。</p>
+    </div>
+    <div class="glass-card notice-card" style="grid-column:1/-1;max-width:600px;margin:0 auto;">
+      <h4 style="color:#ff9800;">⚠️ 温馨提示</h4>
+      <p>本平台仅提供跑步数据的可视化分析与个人复盘服务，请合理使用，严禁用于任何违规行为。</p>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <h2>你可能关心的问题</h2>
+  <p class="subtitle">新手必看，打消你的所有顾虑</p>
+  <div class="faq-list">
+    <div class="glass-card faq-item">
+      <div class="faq-q">支持哪些平台的数据？<span class="arrow">▼</span></div>
+      <div class="faq-a">支持 Keep、咕咚、悦跑圈、悦动圈等主流平台，可导入 GPX/TCX 格式数据进行可视化分析，包括距离、配速、心率、卡路里等全维度指标。</div>
+    </div>
+    <div class="glass-card faq-item">
+      <div class="faq-q">数据准确吗？<span class="arrow">▼</span></div>
+      <div class="faq-a">采用多源 GPS 数据融合算法，自动识别并校准异常漂移点，配速、心率、步频等核心指标误差率低于 0.1%，至今保持高准确率记录。</div>
+    </div>
+    <div class="glass-card faq-item">
+      <div class="faq-q">多久能完成分析？<span class="arrow">▼</span></div>
+      <div class="faq-a">上传 GPX/TCX 文件后，系统自动解析并生成可视化图表，通常 5-30 分钟内完成。复杂数据或大量文件可协商处理时间。</div>
+    </div>
+    <div class="glass-card faq-item">
+      <div class="faq-q">隐私安全吗？<span class="arrow">▼</span></div>
+      <div class="faq-a">全流程本地化数据处理，绝不留存用户账号信息。分析完成后可主动删除源数据文件，全程不索要任何平台密码。</div>
+    </div>
+  </div>
+</section>
+
+<section id="guarantee" style="background:linear-gradient(180deg,rgba(0,230,118,0.03),transparent);">
+  <h2>服务保障</h2>
+  <p class="subtitle">四大承诺，让你放心使用</p>
+  <div class="guarantee-bar">
+    <div class="glass-card guarantee-item">
+      <div class="guarantee-icon">👨‍💻</div>
+      <h4>专业团队</h4>
+      <p>四年运动数据解析经验，累计服务 3000+ 跑友</p>
+    </div>
+    <div class="glass-card guarantee-item">
+      <div class="guarantee-icon">✅</div>
+      <h4>品质保证</h4>
+      <p>数据精准，配速曲线自然，可视化效果专业</p>
+    </div>
+    <div class="glass-card guarantee-item">
+      <div class="guarantee-icon">🔐</div>
+      <h4>安全保障</h4>
+      <p>隐私保护，绝不泄露账号信息，全流程可追踪</p>
+    </div>
+    <div class="glass-card guarantee-item">
+      <div class="guarantee-icon">💬</div>
+      <h4>服务保障</h4>
+      <p>微信一对一服务，24 小时在线，不满意免费重做</p>
+    </div>
+  </div>
+</section>
+
+<section class="contact" id="contact">
+  <h2>准备复盘你的跑步数据了吗？</h2>
+  <p>微信添加好友，备注"数据分析"，快速响应</p>
+  <div class="wechat-box">
+    <div class="wechat-label">微信账号</div>
+    <div class="wechat-number">278715464</div>
+    <a href="weixin://addfriend/278715464" class="wechat-btn">打开微信添加</a>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-links">
+    <a href="#home">首页</a>
+    <a href="#features">功能优势</a>
+    <a href="#cases">案例展示</a>
+    <a href="#process">使用流程</a>
+    <a href="#faq">常见问题</a>
+    <a href="#contact">联系我们</a>
+  </div>
+  <p style="margin-top:.5rem;">© 2025 52Run.cn · 专注跑步数据可视化与科学复盘 · 微信：278715464</p>
+</footer>
+
+<div class="back-top" id="backTop">↑</div>
+
+<script>
+const greetings = [
+  "迈开腿，风自然会来。",
+  "若被时间绊住脚步，便让微风替你抵达。",
+  "城市的脉搏与心跳，将化作你最真实的注脚。",
+  "终点处的闪耀光芒，本就该属于你的胸膛。",
+  "说出一座向往的城市，余下的风景由我们铺展。"
+];
+
+const fusionEl = document.getElementById('fusionText');
+let gIdx = 0;
+
+function cycleFusion() {
+  fusionEl.classList.remove('active');
+  setTimeout(() => {
+    fusionEl.innerText = greetings[gIdx];
+    gIdx = (gIdx + 1) % greetings.length;
+    void fusionEl.offsetWidth;
+    fusionEl.classList.add('active');
+    setTimeout(cycleFusion, 3500);
+  }, 1500); 
+}
+cycleFusion();
+
+window.addEventListener('scroll',()=>{
+  document.getElementById('header').classList.toggle('scrolled',window.scrollY>50);
+  document.getElementById('backTop').classList.toggle('show',window.scrollY>500);
+});
+document.getElementById('backTop').onclick=()=>window.scrollTo({top:0,behavior:'smooth'});
+document.querySelectorAll('.faq-q').forEach(q=>{
+  q.onclick=()=>q.parentElement.classList.toggle('open');
+});
+
+const observer=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.style.opacity='1';
+      e.target.style.transform='translateY(0)';
+      observer.unobserve(e.target);
+    }
+  });
+},{threshold:0.1});
+document.querySelectorAll('.glass-card, .card').forEach(el=>{
+  el.style.opacity='0';
+  el.style.transform='translateY(30px)';
+  el.style.transition='opacity 0.6s ease, transform 0.6s ease, background 0.3s, border-color 0.3s, box-shadow 0.3s';
+  observer.observe(el);
+});
+
+const bgScene = document.getElementById('bg-scene');
+
+for (let i = 0; i < 60; i++) {
+  const node = document.createElement('div');
+  node.className = 'bg-node';
+  const size = Math.random() * 3 + 1;
+  node.style.width = size + 'px';
+  node.style.height = size + 'px';
+  node.style.left = Math.random() * 100 + '%';
+  node.style.top = Math.random() * 100 + '%';
+  node.style.setProperty('--dur', (2 + Math.random() * 4).toFixed(2) + 's');
+  node.style.setProperty('--delay', (Math.random() * 4).toFixed(2) + 's');
+  bgScene.appendChild(node);
+}
+
+function spawnScanLine() {
+  const line = document.createElement('div');
+  line.className = 'scan-line';
+  line.style.top = (Math.random() * 90 + 5) + '%';
+  line.style.setProperty('--dur', (2.5 + Math.random() * 1.5).toFixed(2) + 's');
+  bgScene.appendChild(line);
+  setTimeout(() => line.remove(), 4000);
+}
+setInterval(spawnScanLine, 4500);
+spawnScanLine();
+
+let mx = 0, my = 0, cx = 0, cy = 0;
+let lastParticleTime = 0;
+
+window.addEventListener('mousemove', e => {
+  mx = (e.clientX / window.innerWidth - 0.5) * 2;
+  my = (e.clientY / window.innerHeight - 0.5) * 2;
+
+  const now = Date.now();
+  if (now - lastParticleTime > 30) {
+    const p = document.createElement('div');
+    p.className = 'cursor-particle';
+    p.style.left = e.clientX + 'px';
+    p.style.top = e.clientY + 'px';
+    document.body.appendChild(p);
+    
+    setTimeout(() => {
+      p.style.transform = `scale(0) translate(${(Math.random() - 0.5) * 30}px, ${(Math.random() - 0.5) * 30}px)`;
+      p.style.opacity = '0';
+    }, 10);
+
+    setTimeout(() => p.remove(), 600);
+    lastParticleTime = now;
+  }
+});
+
+function tickParallax() {
+  cx += (mx - cx) * 0.05;
+  cy += (my - cy) * 0.05;
+  const px = Math.max(-8, Math.min(8, cx * -20));
+  const py = Math.max(-6, Math.min(6, cy * -15));
+  bgScene.style.transform = `translate3d(${px}px, ${py}px, 0)`;
+  requestAnimationFrame(tickParallax);
+}
+tickParallax();
+
+function animateValue(el, target, duration, suffix) {
+  let start = 0;
+  let startTimestamp = null;
+  const isFloat = target % 1 !== 0;
+
+  function step(timestamp) {
+    if (!startTimestamp) startTimestamp = timestamp;
+    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+    let current = progress * (target - start) + start;
+    
+    let displayVal;
+    if (target >= 1000) {
+      displayVal = Math.floor(current / 10) * 10;
+    } else if (isFloat) {
+      displayVal = current.toFixed(1);
+    } else {
+      displayVal = Math.floor(current);
+    }
+    
+    el.innerText = displayVal + suffix;
+
+    if (progress < 1) {
+      window.requestAnimationFrame(step);
+    } else {
+      el.innerText = target + suffix;
+    }
+  }
+  window.requestAnimationFrame(step);
+}
+
+const statsObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      document.querySelectorAll('.stat-num').forEach(el => {
+        const target = parseFloat(el.getAttribute('data-target'));
+        const suffix = el.getAttribute('data-suffix');
+        animateValue(el, target, 1500, suffix);
+      });
+      statsObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.3 });
+
+const statsSection = document.getElementById('stats');
+if (statsSection) {
+  statsObserver.observe(statsSection);
+}
+
+// ===== 轨迹随机位置工具 (等比例缩小后位移范围相应调整) =====
+function getRandomTransform() {
+  const dx = (Math.random() * 14 - 7).toFixed(1);
+  const dy = (Math.random() * 14 - 7).toFixed(1);
+  const rotation = (Math.random() * 12 - 6).toFixed(1);
+  const scale = (0.65 + Math.random() * 0.15).toFixed(2);
+  return { dx: parseFloat(dx), dy: parseFloat(dy), rotation, scale };
+}
+
+// ===== 四条轨迹轮流播放 =====
+const traces = ['trace1', 'trace2', 'trace3', 'trace4'];
+let traceIdx = 0;
+
+function getCycleDuration(idx) {
+  return (idx === 0) ? 13500 : 11500;
+}
+
+function showTrace(idx) {
+  traces.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.classList.remove('active');
+      el.style.transform = '';
+      el.style.transformOrigin = '';
+      const newEl = el.cloneNode(true);
+      el.parentNode.replaceChild(newEl, el);
+    }
+  });
+
+  const current = document.getElementById(traces[idx]);
+  if (current) {
+    const { dx, dy, rotation, scale } = getRandomTransform();
+    current.style.transformOrigin = '50px 50px';
+    current.style.transform = `translate(${dx}px, ${dy}px) rotate(${rotation}deg) scale(${scale})`;
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        current.classList.add('active');
+      });
+    });
+  }
+
+  const dur = getCycleDuration(idx);
+  traceIdx = (idx + 1) % traces.length;
+  setTimeout(() => showTrace(traceIdx), dur);
+}
+
+window.addEventListener('load', () => {
+  setTimeout(() => showTrace(0), 1000);
+});
+</script>
+</body>
+</html>
