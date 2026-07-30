@@ -44,7 +44,7 @@
 
         /* 中间画布 */
         .canvas-panel { flex: 1; background: #fff; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.06); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; min-width: 300px; }
-        .canvas-wrapper { position: relative; display: inline-block; touch-action: none; }
+        .canvas-wrapper { position: absolute; top: 0; left: 0; touch-action: none; transform-origin: 0 0; }
         #baseCanvas { display: block; box-shadow: 0 2px 14px rgba(0,0,0,.09); border-radius: 6px; background: #fff; }
         .zoom-controls { position: absolute; bottom: 14px; right: 14px; display: flex; gap: 4px; z-index: 20; background: rgba(255,255,255,.9); border-radius: 8px; padding: 4px; box-shadow: 0 1px 6px rgba(0,0,0,.1); }
         .zoom-btn { width: 34px; height: 34px; border: 1px solid #d9d9d9; border-radius: 6px; background: #fff; color: #555; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all .15s; }
@@ -1314,6 +1314,7 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         const availH = canvasPanel.clientHeight - padding * 2 - 50;
         zoom = Math.min(availW / canvasWidth, availH / canvasHeight);
         zoom = Math.min(zoom, 8); zoom = Math.max(zoom, 0.15);
+        // 修复居中计算逻辑
         panX = (canvasPanel.clientWidth - canvasWidth * zoom) / 2;
         panY = (canvasPanel.clientHeight - canvasHeight * zoom) / 2;
         applyTransform();
