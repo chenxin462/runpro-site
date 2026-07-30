@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>52Run.cn —— 跑步数据可视化与科学复盘工具</title>
 <meta name="description" content="52Run.cn 专注跑步运动数据深度分析，提供 GPS 轨迹解析、配速曲线、心率区间、跑量趋势等多维可视化与复盘服务。">
-<!-- 引入运动赛事级英文字体 Oswald -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
@@ -45,7 +44,6 @@ body::before{
 }
 
 /* ===== 动态效果 CSS 开始 ===== */
-/* 背景动态容器 */
 #bg-scene {
   position: fixed;
   top: 0;
@@ -58,7 +56,6 @@ body::before{
   transition: transform 0.6s cubic-bezier(.2,.7,.2,1);
 }
 
-/* 1. 背景数据节点 */
 .bg-node {
   position: absolute;
   background: rgba(0, 230, 118, 0.6);
@@ -72,7 +69,6 @@ body::before{
   50% { opacity: 0.8; transform: scale(1.4); }
 }
 
-/* 2. 科技感流光扫描 */
 .scan-line {
   position: absolute;
   width: 300px;
@@ -88,7 +84,6 @@ body::before{
   100% { transform: translateX(-300px); opacity: 0; }
 }
 
-/* 3. 鼠标拖尾粒子 */
 .cursor-particle {
   position: fixed;
   width: 8px;
@@ -101,7 +96,6 @@ body::before{
   transition: transform 0.6s ease-out, opacity 0.6s ease-out;
 }
 
-/* === 新增：暖色阳光光晕 === */
 .sun-glow {
   position: absolute;
   top: -15%;
@@ -119,33 +113,98 @@ body::before{
   50% { transform: scale(1.15); opacity: 0.9; }
 }
 
-/* === 新增：GPS轨迹游走线 === */
+#trace-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+
 .run-trace {
   fill: none;
-  stroke: rgba(0, 230, 118, 0.5);
-  stroke-width: 1.5;
   stroke-linecap: round;
   stroke-linejoin: round;
-  filter: drop-shadow(0 0 4px rgba(0, 230, 118, 0.6));
-  stroke-dasharray: 150;
-  stroke-dashoffset: 150;
-  animation: traceDraw var(--dur, 4s) linear forwards;
+  filter: drop-shadow(0 0 2px currentColor);
+  stroke-width: 0.8;
+  opacity: 0;
 }
-@keyframes traceDraw {
-  0% { stroke-dashoffset: 150; opacity: 0; }
-  10% { opacity: 1; }
-  80% { opacity: 1; }
-  100% { stroke-dashoffset: -150; opacity: 0; }
-}
-/* ===== 动态效果 CSS 结束 ===== */
 
-/* 确保内容在动态背景之上 */
+.trace-group {
+  display: none;
+  opacity: 0;
+  transition: opacity 1.5s ease;
+}
+.trace-group.active {
+  display: block;
+  opacity: 1;
+}
+
+@keyframes traceDrawCycle {
+  0%   { stroke-dashoffset: var(--len, 200); opacity: 0; }
+  8%   { opacity: 0.7; }
+  55%  { stroke-dashoffset: 0; opacity: 0.7; }
+  75%  { stroke-dashoffset: 0; opacity: 0.7; }
+  90%  { stroke-dashoffset: 0; opacity: 0; }
+  100% { stroke-dashoffset: var(--len, 200); opacity: 0; }
+}
+
+@keyframes dotCycle {
+  0%, 55%   { opacity: 0; transform: scale(0.2); }
+  62%       { opacity: 1; transform: scale(1.3); }
+  70%       { opacity: 1; transform: scale(1); }
+  80%       { opacity: 1; transform: scale(1); }
+  90%       { opacity: 0; transform: scale(0.4); }
+  100%      { opacity: 0; transform: scale(0.2); }
+}
+
+@keyframes glowCycle {
+  0%, 50%   { opacity: 0; }
+  60%       { opacity: 0.22; }
+  78%       { opacity: 0.3; }
+  90%       { opacity: 0; }
+  100%      { opacity: 0; }
+}
+
+@keyframes flowCycle {
+  0%, 58%   { opacity: 0; }
+  62%       { opacity: 0.4; }
+  80%       { opacity: 0.4; }
+  90%       { opacity: 0; }
+  100%      { opacity: 0; }
+}
+
+@keyframes textFadeCycle {
+  0%, 15%   { opacity: 0; }
+  25%       { opacity: 0.85; }
+  70%       { opacity: 0.85; }
+  85%       { opacity: 0; }
+  100%      { opacity: 0; }
+}
+
+@keyframes trackDrawCycle {
+  0%   { stroke-dashoffset: var(--len, 300); opacity: 0; }
+  5%   { opacity: 0.8; }
+  60%  { stroke-dashoffset: 0; opacity: 0.85; }
+  78%  { stroke-dashoffset: 0; opacity: 0.85; }
+  90%  { stroke-dashoffset: 0; opacity: 0; }
+  100% { stroke-dashoffset: var(--len, 300); opacity: 0; }
+}
+
+@keyframes dataPanelFade {
+  0%, 8%    { opacity: 0; transform: translateY(10px); }
+  20%       { opacity: 1; transform: translateY(0); }
+  78%       { opacity: 1; transform: translateY(0); }
+  90%, 100% { opacity: 0; transform: translateY(-5px); }
+}
+
 header, section, footer, .back-top {
   position: relative;
   z-index: 2;
 }
 
-/* ===== 导航 ===== */
 header{
   position:sticky;top:0;z-index:100;
   background:rgba(6,33,19,0.7); 
@@ -166,7 +225,6 @@ nav a::after {
 }
 nav a:hover::after { width: 100%; }
 
-/* ===== 通用区块 ===== */
 section{padding:5rem 5%;position:relative;}
 section h2{
   text-align:center;font-size:2.2rem;margin-bottom:.5rem;color:var(--text-main);
@@ -176,7 +234,6 @@ section h2{
 }
 section .subtitle{text-align:center;color:var(--text-dim);margin-bottom:3rem;font-size:1rem;}
 
-/* 通用毛玻璃卡片基础样式 */
 .glass-card {
   background: rgba(6, 33, 19, 0.65); 
   backdrop-filter: blur(8px);
@@ -192,7 +249,6 @@ section .subtitle{text-align:center;color:var(--text-dim);margin-bottom:3rem;fon
   transform: translateY(-5px);
 }
 
-/* === 白色实心卡片样式 === */
 .card {
   background: rgba(255, 255, 255, 0.98);
   border-radius: 16px;
@@ -209,7 +265,6 @@ section .subtitle{text-align:center;color:var(--text-dim);margin-bottom:3rem;fon
 }
 .card h3, .card h4 { color: #0a2e1a; margin:.8rem 0 .5rem; font-size:1.2rem; }
 .card p { color: #444; font-size:.9rem; line-height:1.6; }
-
 .card .step-num {
   background: linear-gradient(135deg, #00e676, #00a85c);
   color: #fff;
@@ -224,7 +279,6 @@ section .subtitle{text-align:center;color:var(--text-dim);margin-bottom:3rem;fon
   border: 1px solid rgba(0,230,118,0.3);
 }
 
-/* 绿色小标签 */
 .tag{
   display:inline-block;
   background:rgba(0,230,118,.15);
@@ -237,7 +291,6 @@ section .subtitle{text-align:center;color:var(--text-dim);margin-bottom:3rem;fon
   border: 1px solid rgba(0,230,118,0.3);
 }
 
-/* 步骤编号 */
 .step-num{
   width:52px;height:52px;border-radius:50%;
   background:linear-gradient(135deg,rgba(0,230,118,0.2),rgba(0,168,92,0.1));
@@ -248,7 +301,6 @@ section .subtitle{text-align:center;color:var(--text-dim);margin-bottom:3rem;fon
   box-shadow: 0 0 15px rgba(0,230,118,0.2);
 }
 
-/* ===== Hero ===== */
 .hero{
   padding:6rem 5% 5rem;
   text-align:center;
@@ -271,7 +323,6 @@ section .subtitle{text-align:center;color:var(--text-dim);margin-bottom:3rem;fon
   min-height: 2em; 
 }
 
-/* === 模糊极光聚焦动效 === */
 .fusion-text {
   font-family: 'Oswald', 'Microsoft YaHei', sans-serif;
   font-size: 3.2rem; 
@@ -316,23 +367,18 @@ section .subtitle{text-align:center;color:var(--text-dim);margin-bottom:3rem;fon
   transform:translateY(-3px);box-shadow:0 6px 30px rgba(0,230,118,.6);
 }
 
-/* ===== 统计数据 ===== */
 .stats-grid{ display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem; }
-.stat-item{
-  padding:2rem 1rem;text-align:center;
-}
+.stat-item{ padding:2rem 1rem;text-align:center; }
 .stat-num{
   font-size:3rem;font-weight:bold;color:var(--primary-green); 
   font-family: 'Oswald', sans-serif;
   text-shadow: 0 0 15px rgba(0,230,118,0.4);
-  font-variant-numeric: tabular-nums; /* 等宽数字，防止跳动时宽度变化 */
+  font-variant-numeric: tabular-nums;
 }
 .stat-label{color:var(--text-dim);margin-top:.3rem;font-size:.9rem; letter-spacing: 0.05em;}
 
-/* ===== 四栏通用 ===== */
 .grid-4{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.5rem;}
 
-/* ===== 案例卡片 ===== */
 .case-card{ overflow:hidden; }
 .case-card:hover{ transform:translateY(-6px); }
 .case-img{
@@ -347,11 +393,8 @@ section .subtitle{text-align:center;color:var(--text-dim);margin-bottom:3rem;fon
 .case-body p{color:var(--text-dim);font-size:.85rem;}
 .case-tag{ margin-top:.8rem; }
 
-/* ===== 流程 ===== */
 .flow-grid{ display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;position:relative; }
-.flow-item{
-  text-align:center;position:relative; padding: 2rem 1rem;
-}
+.flow-item{ text-align:center;position:relative; padding: 2rem 1rem; }
 .flow-item::after{
   content:'';position:absolute;top:48px;right:-50%;width:100%;height:1px;
   background:linear-gradient(90deg,var(--primary-green),transparent);z-index:0; opacity: 0.5;
@@ -360,7 +403,6 @@ section .subtitle{text-align:center;color:var(--text-dim);margin-bottom:3rem;fon
 .flow-item h4 { color: var(--text-main); margin-bottom: 0.5rem; }
 .flow-item p { color: var(--text-dim); font-size:.9rem; }
 
-/* ===== 场景 ===== */
 .scene-card{ padding:2rem 1.5rem;text-align:center; }
 .scene-card:hover{transform:translateY(-6px);}
 .scene-icon{
@@ -372,7 +414,6 @@ section .subtitle{text-align:center;color:var(--text-dim);margin-bottom:3rem;fon
 .scene-card h4{color:var(--text-main);margin-bottom:.4rem;}
 .scene-card p{color:var(--text-dim);font-size:.85rem;}
 
-/* ===== 购买须知 ===== */
 .notice-grid{ display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem; }
 .notice-card{ padding:1.8rem; position:relative; overflow:hidden; }
 .notice-card::before{
@@ -382,7 +423,6 @@ section .subtitle{text-align:center;color:var(--text-dim);margin-bottom:3rem;fon
 .notice-card h4{color:var(--text-main);margin-bottom:.6rem;padding-left:.8rem; font-size:1.1rem;}
 .notice-card p{color:var(--text-dim);font-size:.9rem;padding-left:.8rem;}
 
-/* ===== 保障栏 ===== */
 .guarantee-bar{ display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.5rem; }
 .guarantee-item{ padding:2rem 1rem;text-align:center; }
 .guarantee-item:hover{transform:translateY(-5px);}
@@ -395,7 +435,6 @@ section .subtitle{text-align:center;color:var(--text-dim);margin-bottom:3rem;fon
 .guarantee-item h4{color:var(--text-main);margin-bottom:.3rem;}
 .guarantee-item p{color:var(--text-dim);font-size:.85rem;}
 
-/* ===== 联系区 ===== */
 .contact{
   text-align:center;
   background:linear-gradient(180deg,transparent,rgba(6,33,19,0.6)); 
@@ -425,11 +464,8 @@ section .subtitle{text-align:center;color:var(--text-dim);margin-bottom:3rem;fon
 }
 .wechat-btn:hover{transform:translateY(-3px);box-shadow:0 8px 25px rgba(0,230,118,.5);}
 
-/* ===== FAQ ===== */
 .faq-list{max-width:800px;margin:0 auto;}
-.faq-item{
-  margin-bottom:1rem; overflow:hidden;
-}
+.faq-item{ margin-bottom:1rem; overflow:hidden; }
 .faq-q{
   padding:1.5rem 1.5rem;cursor:pointer;display:flex;justify-content:space-between;
   align-items:center;font-weight:bold;color:var(--text-main);font-size:1rem;
@@ -442,7 +478,6 @@ section .subtitle{text-align:center;color:var(--text-dim);margin-bottom:3rem;fon
 }
 .faq-item.open .faq-a{padding:0 1.5rem 1.5rem;max-height:200px;}
 
-/* ===== 页脚 ===== */
 footer{
   background:rgba(5,20,12,.9);padding:2.5rem 5%;text-align:center;color:var(--text-dim);font-size:.82rem;
   border-top: 1px solid var(--glass-border);
@@ -451,7 +486,6 @@ footer{
 .footer-links a{color:var(--text-dim);text-decoration:none;font-size:.85rem;transition:color .3s;}
 .footer-links a:hover{color:var(--primary-green);}
 
-/* ===== 回到顶部 ===== */
 .back-top{
   position:fixed;right:20px;bottom:20px;
   width:48px;height:48px;border-radius:50%;
@@ -463,7 +497,6 @@ footer{
 .back-top.show{opacity:1;visibility:visible;}
 .back-top:hover{transform:translateY(-4px);}
 
-/* ===== 响应式 ===== */
 @media(max-width:768px){
   .hero h1{font-size:2rem; min-height: 2.5em;}
   .fusion-text { font-size: 2rem; } 
@@ -472,19 +505,231 @@ footer{
   .wechat-number{font-size:1.8rem;}
   .flow-item::after{display:none;}
 }
+
+/* ===== 操场轨迹数据面板样式 ===== */
+.track-data-panel {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  animation: dataPanelFade 13s ease-in-out forwards;
+  z-index: 1;
+}
+.track-data-panel .data-title {
+  font-size: 3.5px; fill: #00e676; font-weight: bold; letter-spacing: 0.3px;
+  filter: drop-shadow(0 0 2px #00e676); font-family: 'Oswald', sans-serif;
+}
+.track-data-panel .data-label { font-size: 2.5px; fill: rgba(255,255,255,0.55); font-family: 'Segoe UI', sans-serif; }
+.track-data-panel .data-value {
+  font-size: 3px; fill: #ffffff; font-weight: bold; font-family: 'Oswald', sans-serif;
+  filter: drop-shadow(0 0 1px rgba(255,255,255,0.3));
+}
+.track-data-panel .data-unit { font-size: 2.2px; fill: rgba(255,255,255,0.5); font-family: 'Segoe UI', sans-serif; }
+.track-data-panel .data-divider { stroke: rgba(0,230,118,0.25); stroke-width: 0.2; }
 </style>
 </head>
 <body>
 
-<!-- 动态背景层容器 -->
 <div id="bg-scene">
-  <!-- 阳光光晕 -->
   <div class="sun-glow"></div>
-  <!-- GPS 轨迹 SVG 容器 -->
-  <svg id="trace-svg" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events: none;" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+
+  <svg id="trace-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
+
+    <!-- ===== 轨迹1：400米标准操场跑道 (等比例缩小) ===== -->
+    <g class="trace-group" id="trace1" style="--len:240;">
+      <defs>
+        <linearGradient id="trackGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#00e676" stop-opacity="0.95"/>
+          <stop offset="35%" stop-color="#00bcd4" stop-opacity="0.85"/>
+          <stop offset="70%" stop-color="#26c6da" stop-opacity="0.8"/>
+          <stop offset="100%" stop-color="#009688" stop-opacity="0.9"/>
+        </linearGradient>
+        <linearGradient id="trackWarm1" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#ff8a65" stop-opacity="0"/>
+          <stop offset="60%" stop-color="#ff8a65" stop-opacity="0.15"/>
+          <stop offset="100%" stop-color="#ff5722" stop-opacity="0.35"/>
+        </linearGradient>
+      </defs>
+
+      <!-- 跑道外圈光晕 -->
+      <path d="M 40,32 L 60,32 A 14,14 0 1,1 60,68 L 40,68 A 14,14 0 1,1 40,32 Z"
+            fill="none" stroke="rgba(0,230,118,0.06)" stroke-width="3.2"
+            style="animation: glowCycle 13s ease-in-out forwards;"/>
+      <path d="M 40,33 L 60,33 A 13,13 0 1,1 60,67 L 40,67 A 13,13 0 1,1 40,33 Z"
+            fill="none" stroke="rgba(0,188,212,0.05)" stroke-width="2"
+            style="animation: glowCycle 13s ease-in-out forwards;"/>
+
+      <!-- 主跑道轨迹线 -->
+      <path d="M 41,37 L 59,37 A 12,12 0 0,1 59,63 L 41,63 A 12,12 0 0,1 41,37 Z"
+            fill="none" stroke="url(#trackGrad1)" stroke-width="1.2"
+            stroke-dasharray="240" stroke-dashoffset="240"
+            stroke-linecap="round" stroke-linejoin="round"
+            style="animation: trackDrawCycle 13s ease-in-out forwards;"/>
+
+      <!-- 跑道内沿细线 -->
+      <path d="M 42,40 L 58,40 A 9.5,9.5 0 0,1 58,60 L 42,60 A 9.5,9.5 0 0,1 42,40 Z"
+            fill="none" stroke="rgba(0,230,118,0.2)" stroke-width="0.4"
+            stroke-dasharray="200" stroke-dashoffset="200"
+            style="animation: trackDrawCycle 13s ease-in-out 0.4s forwards;"/>
+
+      <!-- 流动虚线 -->
+      <path d="M 41,37 L 59,37 A 12,12 0 0,1 59,63 L 41,63 A 12,12 0 0,1 41,37 Z"
+            fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.4"
+            stroke-dasharray="2 6"
+            style="animation: flowCycle 13s ease-in-out forwards;"/>
+
+      <!-- 起点 -->
+      <circle cx="59" cy="37" r="1.4" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="0.4"
+              style="animation: dotCycle 13s ease-in-out forwards;"/>
+      <circle cx="59" cy="37" r="0.8" fill="#00e676" filter="drop-shadow(0 0 3px #00e676)"
+              style="animation: dotCycle 13s ease-in-out forwards;"/>
+
+      <!-- 终点 -->
+      <circle cx="59" cy="63" r="1.2" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="0.3"
+              style="animation: dotCycle 13s ease-in-out forwards;"/>
+      <circle cx="59" cy="63" r="0.6" fill="#ff5252" filter="drop-shadow(0 0 2px #ff5252)"
+              style="animation: dotCycle 13s ease-in-out forwards;"/>
+
+      <!-- 底部暖色弧线 -->
+      <path d="M 42,65 Q 50,69 58,65"
+            fill="none" stroke="url(#trackWarm1)" stroke-width="1.6"
+            stroke-linecap="round"
+            style="animation: glowCycle 13s ease-in-out forwards;"/>
+
+      <path d="M 59,41 A 9,9 0 0,1 59,59"
+            fill="none" stroke="rgba(0,230,118,0.12)" stroke-width="0.3"
+            stroke-dasharray="140" stroke-dashoffset="140"
+            style="animation: trackDrawCycle 13s ease-in-out 0.6s forwards;"/>
+      <path d="M 41,41 A 9,9 0 0,0 41,59"
+            fill="none" stroke="rgba(0,230,118,0.12)" stroke-width="0.3"
+            stroke-dasharray="140" stroke-dashoffset="140"
+            style="animation: trackDrawCycle 13s ease-in-out 0.6s forwards;"/>
+
+      <g class="track-data-panel">
+        <text x="78" y="22" class="data-title" text-anchor="start">🏟️ 操场10KM</text>
+        <line x1="78" y1="25" x2="98" y2="25" class="data-divider"/>
+        <text x="78" y="30" class="data-label">距离</text>
+        <text x="98" y="30" class="data-value" text-anchor="end">10.0</text>
+        <text x="98.5" y="30" class="data-unit">km</text>
+        <text x="78" y="34.5" class="data-label">配速</text>
+        <text x="98" y="34.5" class="data-value" text-anchor="end">5'30"</text>
+        <text x="98.5" y="34.5" class="data-unit">/km</text>
+        <text x="78" y="39" class="data-label">用时</text>
+        <text x="98" y="39" class="data-value" text-anchor="end">55:00</text>
+        <text x="98.5" y="39" class="data-unit">min</text>
+        <line x1="78" y1="41.5" x2="98" y2="41.5" class="data-divider"/>
+        <text x="78" y="46" class="data-label">心率</text>
+        <text x="98" y="46" class="data-value" text-anchor="end" fill="#ff8a80">158</text>
+        <text x="98.5" y="46" class="data-unit">bpm</text>
+        <text x="78" y="50.5" class="data-label">爬升</text>
+        <text x="98" y="50.5" class="data-value" text-anchor="end">10</text>
+        <text x="98.5" y="50.5" class="data-unit">m</text>
+        <text x="78" y="55" class="data-label">步频</text>
+        <text x="98" y="55" class="data-value" text-anchor="end" fill="#80deea">168</text>
+        <text x="98.5" y="55" class="data-unit">spm</text>
+      </g>
+    </g>
+
+    <!-- ===== 轨迹2：圆形路线 (等比例缩小) ===== -->
+    <g class="trace-group" id="trace2" style="--len:88;">
+      <circle cx="50" cy="50" r="14" fill="none" stroke="rgba(0,230,118,0.18)" stroke-width="2"
+              style="animation: glowCycle 11s ease-in-out forwards;"/>
+      <circle cx="50" cy="50" r="14" fill="none" stroke="rgba(0,230,118,0.7)" stroke-width="1"
+              stroke-dasharray="88" stroke-dashoffset="88"
+              style="animation: traceDrawCycle 11s ease-in-out forwards;"/>
+      <circle cx="50" cy="50" r="14" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="0.4"
+              stroke-dasharray="3 6"
+              style="animation: flowCycle 11s ease-in-out forwards;"/>
+      <circle cx="36" cy="50" r="0.8" fill="#00e676" filter="drop-shadow(0 0 2px #00e676)"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
+      <circle cx="36" cy="50" r="1.2" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="0.3"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
+      <circle cx="38" cy="42" r="0.5" fill="#ff5252" filter="drop-shadow(0 0 2px #ff5252)"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
+    </g>
+
+    <!-- ===== 轨迹3：平滑连续跑步轨迹 (等比例缩小) ===== -->
+    <g class="trace-group" id="trace3" style="--len:260;">
+      <defs>
+        <linearGradient id="smoothGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#00e676" stop-opacity="0.9"/>
+          <stop offset="25%" stop-color="#00bcd4" stop-opacity="0.85"/>
+          <stop offset="50%" stop-color="#26c6da" stop-opacity="0.8"/>
+          <stop offset="75%" stop-color="#00bcd4" stop-opacity="0.85"/>
+          <stop offset="100%" stop-color="#00e676" stop-opacity="0.9"/>
+        </linearGradient>
+      </defs>
+
+      <path d="M 20,58 C 16,46 24,30 38,26 C 52,22 66,28 72,38 C 78,48 70,60 58,66 C 46,72 30,70 24,62 C 20,58 20,58 20,58 Z"
+            fill="none" stroke="rgba(0,230,118,0.08)" stroke-width="3.2"
+            style="animation: glowCycle 11s ease-in-out forwards;"/>
+
+      <path d="M 22,60 C 22,50 28,40 36,34 C 44,28 54,25 62,30 C 70,35 74,44 70,52 C 66,60 56,66 46,64 C 36,62 26,66 20,60 C 18,56 19,54 22,60 Z"
+            fill="none" stroke="url(#smoothGrad)" stroke-width="1"
+            stroke-dasharray="260" stroke-dashoffset="260"
+            stroke-linecap="round" stroke-linejoin="round"
+            style="animation: traceDrawCycle 11s ease-in-out forwards;"/>
+
+      <path d="M 22,60 C 22,50 28,40 36,34 C 44,28 54,25 62,30 C 70,35 74,44 70,52 C 66,60 56,66 46,64 C 36,62 26,66 20,60 C 18,56 19,54 22,60 Z"
+            fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.4"
+            stroke-dasharray="2 5"
+            style="animation: flowCycle 11s ease-in-out forwards;"/>
+
+      <circle cx="22" cy="60" r="0.8" fill="#00e676" filter="drop-shadow(0 0 2px #00e676)"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
+      <circle cx="22" cy="60" r="1.2" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="0.3"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
+
+      <circle cx="25" cy="63" r="0.5" fill="#ff5252" filter="drop-shadow(0 0 2px #ff5252)"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
+      <circle cx="25" cy="63" r="0.9" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="0.2"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
+
+      <circle cx="50" cy="27" r="0.3" fill="rgba(0,230,118,0.6)" filter="drop-shadow(0 0 1px #00e676)"
+              style="animation: dotCycle 11s ease-in-out 2s forwards;"/>
+      <circle cx="75" cy="46" r="0.3" fill="rgba(38,198,218,0.6)" filter="drop-shadow(0 0 1px #26c6da)"
+              style="animation: dotCycle 11s ease-in-out 3s forwards;"/>
+      <circle cx="40" cy="68" r="0.3" fill="rgba(0,230,118,0.5)" filter="drop-shadow(0 0 1px #00e676)"
+              style="animation: dotCycle 11s ease-in-out 4s forwards;"/>
+    </g>
+
+    <!-- ===== 轨迹4：S形曲线 + 52Run.cn 域名文字 (等比例缩小) ===== -->
+    <g class="trace-group" id="trace4" style="--len:180;">
+      <defs>
+        <path id="textPath4" d="M14,50 Q26,28 38,50 T62,50 Q74,70 78,50" fill="none"/>
+      </defs>
+      <path d="M14,50 Q26,28 38,50 T62,50 Q74,70 78,50"
+            fill="none" stroke="rgba(0,230,118,0.15)" stroke-width="2"
+            style="animation: glowCycle 11s ease-in-out forwards;"/>
+      <path d="M14,50 Q26,28 38,50 T62,50 Q74,70 78,50"
+            fill="none" stroke="rgba(0,230,118,0.65)" stroke-width="1"
+            stroke-dasharray="180" stroke-dashoffset="180"
+            style="animation: traceDrawCycle 11s ease-in-out forwards;"/>
+      <path d="M14,50 Q26,28 38,50 T62,50 Q74,70 78,50"
+            fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.4"
+            stroke-dasharray="2 5"
+            style="animation: flowCycle 11s ease-in-out forwards;"/>
+      <text font-size="2.8" fill="#00e676" font-weight="bold" letter-spacing="0.5"
+            filter="drop-shadow(0 0 2px #00e676)"
+            style="animation: textFadeCycle 11s ease-in-out forwards;">
+        <textPath href="#textPath4" startOffset="0%">
+          52Run.cn
+          <animate attributeName="startOffset" from="-30%" to="100%"
+                   dur="8s" begin="1s" repeatCount="1"/>
+        </textPath>
+      </text>
+      <circle cx="14" cy="50" r="0.6" fill="#00e676" filter="drop-shadow(0 0 2px #00e676)"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
+      <circle cx="14" cy="50" r="1" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="0.3"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
+      <circle cx="78" cy="50" r="0.6" fill="#00e676" filter="drop-shadow(0 0 2px #00e676)"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
+      <circle cx="78" cy="50" r="1" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="0.3"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
+    </g>
+
+  </svg>
 </div>
 
-<!-- 导航 -->
 <header id="header">
   <div class="logo">52<span>Run.cn</span></div>
   <nav>
@@ -497,7 +742,6 @@ footer{
   </nav>
 </header>
 
-<!-- Hero -->
 <section class="hero" id="home">
   <div class="hero-badge">🏃 52Run.cn · 跑步数据可视化分析平台</div>
   <h1><span class="fusion-text" id="fusionText"></span></h1>
@@ -505,7 +749,6 @@ footer{
   <a href="sport-mosaic.html" class="btn btn-primary">Keep运动截图拼图生成器</a>
 </section>
 
-<!-- 统计数据 (修改了 HTML，加了 data-target 和 data-suffix) -->
 <section id="stats" style="background:linear-gradient(180deg,rgba(6,33,19,0.3),transparent);">
   <div class="stats-grid">
     <div class="card stat-item"><div class="stat-num" data-target="3000" data-suffix="+">0</div><div class="stat-label">服务跑友</div></div>
@@ -515,7 +758,6 @@ footer{
   </div>
 </section>
 
-<!-- 功能优势 -->
 <section id="features">
   <h2>选择 52Run.cn 的理由</h2>
   <p class="subtitle">以数据基石为核心理念，让每一次奔跑都有据可依</p>
@@ -547,7 +789,6 @@ footer{
   </div>
 </section>
 
-<!-- 核心卖点 -->
 <section id="selling" style="background:linear-gradient(180deg,transparent,rgba(0,230,118,0.03));">
   <h2>核心卖点</h2>
   <p class="subtitle">每一个细节都为你的数据安全和分析体验考虑</p>
@@ -575,7 +816,6 @@ footer{
   </div>
 </section>
 
-<!-- 案例展示 -->
 <section id="cases">
   <h2>数据分析案例</h2>
   <p class="subtitle">真实跑步数据，专业可视化呈现</p>
@@ -615,7 +855,6 @@ footer{
   </div>
 </section>
 
-<!-- 使用流程 -->
 <section id="process" style="background:linear-gradient(180deg,rgba(0,230,118,0.03),transparent);">
   <h2>四步完成数据分析</h2>
   <p class="subtitle">简单四步，轻松拿到你的跑步可视化报告</p>
@@ -643,7 +882,6 @@ footer{
   </div>
 </section>
 
-<!-- 适用场景 -->
 <section id="scenes">
   <h2>适用场景</h2>
   <p class="subtitle">无论什么需求，我们都能帮你搞定</p>
@@ -671,7 +909,6 @@ footer{
   </div>
 </section>
 
-<!-- 使用须知 -->
 <section id="notices" style="background:linear-gradient(180deg,transparent,rgba(0,230,118,0.03));">
   <h2>使用须知</h2>
   <p class="subtitle">使用前请仔细阅读，让你放心使用</p>
@@ -699,7 +936,6 @@ footer{
   </div>
 </section>
 
-<!-- FAQ -->
 <section id="faq">
   <h2>你可能关心的问题</h2>
   <p class="subtitle">新手必看，打消你的所有顾虑</p>
@@ -723,7 +959,6 @@ footer{
   </div>
 </section>
 
-<!-- 服务保障 -->
 <section id="guarantee" style="background:linear-gradient(180deg,rgba(0,230,118,0.03),transparent);">
   <h2>服务保障</h2>
   <p class="subtitle">四大承诺，让你放心使用</p>
@@ -751,7 +986,6 @@ footer{
   </div>
 </section>
 
-<!-- 联系我们 -->
 <section class="contact" id="contact">
   <h2>准备复盘你的跑步数据了吗？</h2>
   <p>微信添加好友，备注"数据分析"，快速响应</p>
@@ -762,7 +996,6 @@ footer{
   </div>
 </section>
 
-<!-- 页脚 -->
 <footer>
   <div class="footer-links">
     <a href="#home">首页</a>
@@ -775,11 +1008,9 @@ footer{
   <p style="margin-top:.5rem;">© 2025 52Run.cn · 专注跑步数据可视化与科学复盘 · 微信：278715464</p>
 </footer>
 
-<!-- 回到顶部 -->
 <div class="back-top" id="backTop">↑</div>
 
 <script>
-// === 模糊极光聚焦动效 ===
 const greetings = [
   "迈开腿，风自然会来。",
   "若被时间绊住脚步，便让微风替你抵达。",
@@ -790,7 +1021,6 @@ const greetings = [
 
 const fusionEl = document.getElementById('fusionText');
 let gIdx = 0;
-let fusionTimer;
 
 function cycleFusion() {
   fusionEl.classList.remove('active');
@@ -799,12 +1029,11 @@ function cycleFusion() {
     gIdx = (gIdx + 1) % greetings.length;
     void fusionEl.offsetWidth;
     fusionEl.classList.add('active');
-    fusionTimer = setTimeout(cycleFusion, 3500);
+    setTimeout(cycleFusion, 3500);
   }, 1500); 
 }
 cycleFusion();
 
-// === 原有交互逻辑 ===
 window.addEventListener('scroll',()=>{
   document.getElementById('header').classList.toggle('scrolled',window.scrollY>50);
   document.getElementById('backTop').classList.toggle('show',window.scrollY>500);
@@ -814,7 +1043,6 @@ document.querySelectorAll('.faq-q').forEach(q=>{
   q.onclick=()=>q.parentElement.classList.toggle('open');
 });
 
-// 卡片入场动画
 const observer=new IntersectionObserver((entries)=>{
   entries.forEach(e=>{
     if(e.isIntersecting){
@@ -831,13 +1059,8 @@ document.querySelectorAll('.glass-card, .card').forEach(el=>{
   observer.observe(el);
 });
 
-// ==========================================
-// ====== 全套动态效果 JS 实现 ========
-// ==========================================
-
 const bgScene = document.getElementById('bg-scene');
 
-// 1. 生成背景数据节点
 for (let i = 0; i < 60; i++) {
   const node = document.createElement('div');
   node.className = 'bg-node';
@@ -851,7 +1074,6 @@ for (let i = 0; i < 60; i++) {
   bgScene.appendChild(node);
 }
 
-// 2. 科技感流光扫描
 function spawnScanLine() {
   const line = document.createElement('div');
   line.className = 'scan-line';
@@ -863,7 +1085,6 @@ function spawnScanLine() {
 setInterval(spawnScanLine, 4500);
 spawnScanLine();
 
-// 3. 鼠标视差与拖尾粒子
 let mx = 0, my = 0, cx = 0, cy = 0;
 let lastParticleTime = 0;
 
@@ -892,45 +1113,13 @@ window.addEventListener('mousemove', e => {
 function tickParallax() {
   cx += (mx - cx) * 0.05;
   cy += (my - cy) * 0.05;
-  bgScene.style.transform = `translate3d(${cx * -20}px, ${cy * -15}px, 0)`;
+  const px = Math.max(-8, Math.min(8, cx * -20));
+  const py = Math.max(-6, Math.min(6, cy * -15));
+  bgScene.style.transform = `translate3d(${px}px, ${py}px, 0)`;
   requestAnimationFrame(tickParallax);
 }
 tickParallax();
 
-// === 新增 1：背景 GPS 轨迹游走 ===
-const traceSvg = document.getElementById('trace-svg');
-function spawnRunTrace() {
-  // 随机生成一条由几段贝塞尔曲线组成的蜿蜒轨迹
-  let startX = Math.random() * 100;
-  let startY = Math.random() * 100;
-  let d = `M${startX} ${startY}`;
-  
-  for(let i = 0; i < 3; i++) {
-    let cp1x = startX + (Math.random() * 30 - 15);
-    let cp1y = startY + (Math.random() * 30 - 15);
-    let endX = startX + (Math.random() * 30 - 15);
-    let endY = startY + (Math.random() * 30 - 15);
-    // 确保不跑出屏幕太远
-    endX = Math.max(5, Math.min(95, endX));
-    endY = Math.max(5, Math.min(95, endY));
-    d += ` Q${cp1x} ${cp1y}, ${endX} ${endY}`;
-    startX = endX;
-    startY = endY;
-  }
-
-  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  path.setAttribute('d', d);
-  path.setAttribute('class', 'run-trace');
-  path.style.setProperty('--dur', (3 + Math.random() * 2).toFixed(2) + 's');
-  
-  traceSvg.appendChild(path);
-  setTimeout(() => path.remove(), 5500);
-}
-setInterval(spawnRunTrace, 3500); // 每 3.5 秒生成一条轨迹
-spawnRunTrace(); // 初始立即生成
-
-
-// === 新增 2：统计数据跳动增长 ===
 function animateValue(el, target, duration, suffix) {
   let start = 0;
   let startTimestamp = null;
@@ -943,10 +1132,8 @@ function animateValue(el, target, duration, suffix) {
     
     let displayVal;
     if (target >= 1000) {
-      // 大数字显示取整到十位
       displayVal = Math.floor(current / 10) * 10;
     } else if (isFloat) {
-      // 带小数的保留一位小数
       displayVal = current.toFixed(1);
     } else {
       displayVal = Math.floor(current);
@@ -957,22 +1144,21 @@ function animateValue(el, target, duration, suffix) {
     if (progress < 1) {
       window.requestAnimationFrame(step);
     } else {
-      el.innerText = target + suffix; // 确保最后停留在精确值
+      el.innerText = target + suffix;
     }
   }
   window.requestAnimationFrame(step);
 }
 
-// 使用 IntersectionObserver 触发数字动画
 const statsObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
       document.querySelectorAll('.stat-num').forEach(el => {
         const target = parseFloat(el.getAttribute('data-target'));
         const suffix = el.getAttribute('data-suffix');
-        animateValue(el, target, 1500, suffix); // 1.5秒内跳完
+        animateValue(el, target, 1500, suffix);
       });
-      statsObserver.unobserve(entry.target); // 只执行一次
+      statsObserver.unobserve(entry.target);
     }
   });
 }, { threshold: 0.3 });
@@ -982,6 +1168,56 @@ if (statsSection) {
   statsObserver.observe(statsSection);
 }
 
+// ===== 轨迹随机位置工具 (等比例缩小后位移范围相应调整) =====
+function getRandomTransform() {
+  const dx = (Math.random() * 14 - 7).toFixed(1);
+  const dy = (Math.random() * 14 - 7).toFixed(1);
+  const rotation = (Math.random() * 12 - 6).toFixed(1);
+  const scale = (0.65 + Math.random() * 0.15).toFixed(2);
+  return { dx: parseFloat(dx), dy: parseFloat(dy), rotation, scale };
+}
+
+// ===== 四条轨迹轮流播放 =====
+const traces = ['trace1', 'trace2', 'trace3', 'trace4'];
+let traceIdx = 0;
+
+function getCycleDuration(idx) {
+  return (idx === 0) ? 13500 : 11500;
+}
+
+function showTrace(idx) {
+  traces.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.classList.remove('active');
+      el.style.transform = '';
+      el.style.transformOrigin = '';
+      const newEl = el.cloneNode(true);
+      el.parentNode.replaceChild(newEl, el);
+    }
+  });
+
+  const current = document.getElementById(traces[idx]);
+  if (current) {
+    const { dx, dy, rotation, scale } = getRandomTransform();
+    current.style.transformOrigin = '50px 50px';
+    current.style.transform = `translate(${dx}px, ${dy}px) rotate(${rotation}deg) scale(${scale})`;
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        current.classList.add('active');
+      });
+    });
+  }
+
+  const dur = getCycleDuration(idx);
+  traceIdx = (idx + 1) % traces.length;
+  setTimeout(() => showTrace(traceIdx), dur);
+}
+
+window.addEventListener('load', () => {
+  setTimeout(() => showTrace(0), 1000);
+});
 </script>
 </body>
 </html>
