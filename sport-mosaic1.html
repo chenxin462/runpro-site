@@ -647,10 +647,28 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         const img = new Image(); img.crossOrigin = 'anonymous';
         img.onload = () => {
             const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
-            const item = { img, x: Math.round((canvasWidth - w) / 2), y: Math.round((canvasHeight - h) / 2), w, h, file };
-            placedItems.push(item); selectedIndex = placedItems.length - 1; selectedCustom = null;
+            
+            // 计算当前视野中心在画布上的坐标
+            const screenCenterX = canvasPanel.clientWidth / 2;
+            const screenCenterY = canvasPanel.clientHeight / 2;
+            const canvasCenterX = (screenCenterX - panX) / zoom;
+            const canvasCenterY = (screenCenterY - panY) / zoom;
+            
+            // 让素材中心对齐视野中心
+            let x = Math.round(canvasCenterX - w / 2);
+            let y = Math.round(canvasCenterY - h / 2);
+            
+            // 限制在画布范围内
+            x = Math.max(0, Math.min(x, canvasWidth - w));
+            y = Math.max(0, Math.min(y, canvasHeight - h));
+            
+            const item = { img, x, y, w, h, file };
+            placedItems.push(item); 
+            selectedIndex = placedItems.length - 1; 
+            selectedCustom = null;
             deselectTrack();
-            renderCanvas(); updateButtonState();
+            renderCanvas(); 
+            updateButtonState();
             statusBar.textContent = `➕ 添加: ${file}  (共${placedItems.length}个)`;
         };
         img.onerror = () => { statusBar.textContent = `❌ 素材加载失败: ${file}`; };
