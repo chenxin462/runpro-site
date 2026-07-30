@@ -100,6 +100,43 @@ body::before{
   box-shadow: 0 0 10px var(--primary-green);
   transition: transform 0.6s ease-out, opacity 0.6s ease-out;
 }
+
+/* === 新增：暖色阳光光晕 === */
+.sun-glow {
+  position: absolute;
+  top: -15%;
+  right: -10%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(255, 165, 0, 0.15) 0%, rgba(255, 200, 0, 0.05) 40%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(40px);
+  animation: sunBreathe 6s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes sunBreathe {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.15); opacity: 0.9; }
+}
+
+/* === 新增：GPS轨迹游走线 === */
+.run-trace {
+  fill: none;
+  stroke: rgba(0, 230, 118, 0.5);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 4px rgba(0, 230, 118, 0.6));
+  stroke-dasharray: 150;
+  stroke-dashoffset: 150;
+  animation: traceDraw var(--dur, 4s) linear forwards;
+}
+@keyframes traceDraw {
+  0% { stroke-dashoffset: 150; opacity: 0; }
+  10% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { stroke-dashoffset: -150; opacity: 0; }
+}
 /* ===== 动态效果 CSS 结束 ===== */
 
 /* 确保内容在动态背景之上 */
@@ -179,7 +216,7 @@ section .subtitle{text-align:center;color:var(--text-dim);margin-bottom:3rem;fon
   border: none;
   box-shadow: 0 4px 10px rgba(0,230,118,0.3);
 }
-.card .stat-num { color: #00a85c; text-shadow: none; }
+.card .stat-num { color: #00a85c; text-shadow: none; font-variant-numeric: tabular-nums; }
 .card .stat-label { color: #666; }
 .card .tag {
   background: rgba(0,230,118,0.15);
@@ -288,6 +325,7 @@ section .subtitle{text-align:center;color:var(--text-dim);margin-bottom:3rem;fon
   font-size:3rem;font-weight:bold;color:var(--primary-green); 
   font-family: 'Oswald', sans-serif;
   text-shadow: 0 0 15px rgba(0,230,118,0.4);
+  font-variant-numeric: tabular-nums; /* 等宽数字，防止跳动时宽度变化 */
 }
 .stat-label{color:var(--text-dim);margin-top:.3rem;font-size:.9rem; letter-spacing: 0.05em;}
 
@@ -439,7 +477,12 @@ footer{
 <body>
 
 <!-- 动态背景层容器 -->
-<div id="bg-scene"></div>
+<div id="bg-scene">
+  <!-- 阳光光晕 -->
+  <div class="sun-glow"></div>
+  <!-- GPS 轨迹 SVG 容器 -->
+  <svg id="trace-svg" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events: none;" viewBox="0 0 100 100" preserveAspectRatio="none"></svg>
+</div>
 
 <!-- 导航 -->
 <header id="header">
@@ -462,13 +505,13 @@ footer{
   <a href="sport-mosaic.html" class="btn btn-primary">Keep运动截图拼图生成器</a>
 </section>
 
-<!-- 统计数据 -->
+<!-- 统计数据 (修改了 HTML，加了 data-target 和 data-suffix) -->
 <section id="stats" style="background:linear-gradient(180deg,rgba(6,33,19,0.3),transparent);">
   <div class="stats-grid">
-    <div class="card stat-item"><div class="stat-num">3000+</div><div class="stat-label">服务跑友</div></div>
-    <div class="card stat-item"><div class="stat-num">5000+</div><div class="stat-label">分析记录</div></div>
-    <div class="card stat-item"><div class="stat-num">99.2%</div><div class="stat-label">数据准确率</div></div>
-    <div class="card stat-item"><div class="stat-num">24h</div><div class="stat-label">极速响应</div></div>
+    <div class="card stat-item"><div class="stat-num" data-target="3000" data-suffix="+">0</div><div class="stat-label">服务跑友</div></div>
+    <div class="card stat-item"><div class="stat-num" data-target="5000" data-suffix="+">0</div><div class="stat-label">分析记录</div></div>
+    <div class="card stat-item"><div class="stat-num" data-target="99.2" data-suffix="%">0</div><div class="stat-label">数据准确率</div></div>
+    <div class="card stat-item"><div class="stat-num" data-target="24" data-suffix="h">0</div><div class="stat-label">极速响应</div></div>
   </div>
 </section>
 
@@ -771,17 +814,16 @@ document.querySelectorAll('.faq-q').forEach(q=>{
   q.onclick=()=>q.parentElement.classList.toggle('open');
 });
 
-// IntersectionObserver 优化：增加回调处理，使动画只触发一次
+// 卡片入场动画
 const observer=new IntersectionObserver((entries)=>{
   entries.forEach(e=>{
     if(e.isIntersecting){
       e.target.style.opacity='1';
       e.target.style.transform='translateY(0)';
-      observer.unobserve(e.target); // 动画执行完取消观察，提升性能
+      observer.unobserve(e.target);
     }
   });
 },{threshold:0.1});
-
 document.querySelectorAll('.glass-card, .card').forEach(el=>{
   el.style.opacity='0';
   el.style.transform='translateY(30px)';
@@ -790,16 +832,16 @@ document.querySelectorAll('.glass-card, .card').forEach(el=>{
 });
 
 // ==========================================
-// ====== 新增：全套动态效果 JS 实现 ========
+// ====== 全套动态效果 JS 实现 ========
 // ==========================================
 
 const bgScene = document.getElementById('bg-scene');
 
-// 1. 生成背景数据节点 (类似呼吸星星)
+// 1. 生成背景数据节点
 for (let i = 0; i < 60; i++) {
   const node = document.createElement('div');
   node.className = 'bg-node';
-  const size = Math.random() * 3 + 1; // 1px 到 4px
+  const size = Math.random() * 3 + 1;
   node.style.width = size + 'px';
   node.style.height = size + 'px';
   node.style.left = Math.random() * 100 + '%';
@@ -809,7 +851,7 @@ for (let i = 0; i < 60; i++) {
   bgScene.appendChild(node);
 }
 
-// 2. 生成科技感流光扫描
+// 2. 科技感流光扫描
 function spawnScanLine() {
   const line = document.createElement('div');
   line.className = 'scan-line';
@@ -818,19 +860,17 @@ function spawnScanLine() {
   bgScene.appendChild(line);
   setTimeout(() => line.remove(), 4000);
 }
-setInterval(spawnScanLine, 4500); // 每 4.5 秒扫描一次
-spawnScanLine(); // 初始立即执行一次
+setInterval(spawnScanLine, 4500);
+spawnScanLine();
 
 // 3. 鼠标视差与拖尾粒子
 let mx = 0, my = 0, cx = 0, cy = 0;
 let lastParticleTime = 0;
 
 window.addEventListener('mousemove', e => {
-  // 视差位移计算
   mx = (e.clientX / window.innerWidth - 0.5) * 2;
   my = (e.clientY / window.innerHeight - 0.5) * 2;
 
-  // 节流生成粒子 (约每 30ms 生成一个)
   const now = Date.now();
   if (now - lastParticleTime > 30) {
     const p = document.createElement('div');
@@ -839,18 +879,16 @@ window.addEventListener('mousemove', e => {
     p.style.top = e.clientY + 'px';
     document.body.appendChild(p);
     
-    // 使用 setTimeout 让浏览器有时间渲染初始状态，再加上动画
     setTimeout(() => {
       p.style.transform = `scale(0) translate(${(Math.random() - 0.5) * 30}px, ${(Math.random() - 0.5) * 30}px)`;
       p.style.opacity = '0';
     }, 10);
 
-    setTimeout(() => p.remove(), 600); // 动画结束后移除 DOM
+    setTimeout(() => p.remove(), 600);
     lastParticleTime = now;
   }
 });
 
-// 视差动画循环
 function tickParallax() {
   cx += (mx - cx) * 0.05;
   cy += (my - cy) * 0.05;
@@ -858,6 +896,91 @@ function tickParallax() {
   requestAnimationFrame(tickParallax);
 }
 tickParallax();
+
+// === 新增 1：背景 GPS 轨迹游走 ===
+const traceSvg = document.getElementById('trace-svg');
+function spawnRunTrace() {
+  // 随机生成一条由几段贝塞尔曲线组成的蜿蜒轨迹
+  let startX = Math.random() * 100;
+  let startY = Math.random() * 100;
+  let d = `M${startX} ${startY}`;
+  
+  for(let i = 0; i < 3; i++) {
+    let cp1x = startX + (Math.random() * 30 - 15);
+    let cp1y = startY + (Math.random() * 30 - 15);
+    let endX = startX + (Math.random() * 30 - 15);
+    let endY = startY + (Math.random() * 30 - 15);
+    // 确保不跑出屏幕太远
+    endX = Math.max(5, Math.min(95, endX));
+    endY = Math.max(5, Math.min(95, endY));
+    d += ` Q${cp1x} ${cp1y}, ${endX} ${endY}`;
+    startX = endX;
+    startY = endY;
+  }
+
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', d);
+  path.setAttribute('class', 'run-trace');
+  path.style.setProperty('--dur', (3 + Math.random() * 2).toFixed(2) + 's');
+  
+  traceSvg.appendChild(path);
+  setTimeout(() => path.remove(), 5500);
+}
+setInterval(spawnRunTrace, 3500); // 每 3.5 秒生成一条轨迹
+spawnRunTrace(); // 初始立即生成
+
+
+// === 新增 2：统计数据跳动增长 ===
+function animateValue(el, target, duration, suffix) {
+  let start = 0;
+  let startTimestamp = null;
+  const isFloat = target % 1 !== 0;
+
+  function step(timestamp) {
+    if (!startTimestamp) startTimestamp = timestamp;
+    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+    let current = progress * (target - start) + start;
+    
+    let displayVal;
+    if (target >= 1000) {
+      // 大数字显示取整到十位
+      displayVal = Math.floor(current / 10) * 10;
+    } else if (isFloat) {
+      // 带小数的保留一位小数
+      displayVal = current.toFixed(1);
+    } else {
+      displayVal = Math.floor(current);
+    }
+    
+    el.innerText = displayVal + suffix;
+
+    if (progress < 1) {
+      window.requestAnimationFrame(step);
+    } else {
+      el.innerText = target + suffix; // 确保最后停留在精确值
+    }
+  }
+  window.requestAnimationFrame(step);
+}
+
+// 使用 IntersectionObserver 触发数字动画
+const statsObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      document.querySelectorAll('.stat-num').forEach(el => {
+        const target = parseFloat(el.getAttribute('data-target'));
+        const suffix = el.getAttribute('data-suffix');
+        animateValue(el, target, 1500, suffix); // 1.5秒内跳完
+      });
+      statsObserver.unobserve(entry.target); // 只执行一次
+    }
+  });
+}, { threshold: 0.3 });
+
+const statsSection = document.getElementById('stats');
+if (statsSection) {
+  statsObserver.observe(statsSection);
+}
 
 </script>
 </body>
