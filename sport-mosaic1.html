@@ -314,7 +314,7 @@
                     <li>• 上传头像、填用户名日期</li>
                     <li>• 点击左侧素材添加到画布</li>
                     <li>• 拖拽到样图对应位置</li>
-                    <li>• 右上角X可删除单个素材</li>
+                    <li>• 悬停后点右上角X删除单个</li>
                 </ul>
             </div>
             <div style="flex:1;min-width:150px;background:#f8f9fc;border-radius:14px;padding:16px;">
@@ -451,7 +451,7 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
             <div class="hint-text">
                 💡 <strong>头像/用户名/日期三个元素各自独立，可在画布上分别拖拽移动</strong><br>
                 💡 <strong>点击选中后方向键微调，Delete 删除选中元素，Esc 取消选中</strong><br>
-                💡 <strong>点击素材右上角红色 X 可删除单个素材</strong>
+                💡 <strong>鼠标悬停素材时右上角出现X，点击可删除</strong>
             </div>
         </div>
 
@@ -579,8 +579,9 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
     let selectedCustom = null;
     let customDragInfo = null;
 
-    // 记录右上角删除按钮的位置和大小
+    // 记录右上角删除按钮的位置和大小，以及当前鼠标悬停的素材索引
     let deleteBtnPos = []; 
+    let hoveredItemIndex = -1; 
 
     const canvas = document.getElementById('baseCanvas');
     const ctx = canvas.getContext('2d');
@@ -654,6 +655,10 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         canvas.addEventListener('mousemove', onCanvasMouseMove);
         canvas.addEventListener('mouseleave', () => {
             if (!isTrackResizing) canvasWrapper.classList.remove('resizing');
+            if (hoveredItemIndex !== -1) {
+                hoveredItemIndex = -1;
+                renderCanvas();
+            }
         });
 
         refzoomOverlay.addEventListener('click', () => refzoomOverlay.classList.remove('active'));
@@ -700,6 +705,7 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
     async function loadProject(projectId) {
         currentProject = projectId;
         placedItems = []; selectedIndex = -1; selectedCustom = null;
+        hoveredItemIndex = -1; // 重置悬停状态
         isDragging = false; dragIndex = -1; guideV = null; guideH = null;
         resetTrackImage();
 
@@ -793,32 +799,33 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
             ctx.drawImage(item.img, item.x, item.y, item.w, item.h);
             if (i === selectedIndex) drawSelectionRect(item.x, item.y, item.w, item.h);
             
-            // 绘制右上角删除X
-            const btnSize = 24; 
-            const btnX = item.x + item.w - btnSize / 2;
-            const btnY = item.y - btnSize / 2;
-            
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(btnX, btnY, btnSize / 2, 0, Math.PI * 2);
-            ctx.fillStyle = '#ff4d4f';
-            ctx.fill();
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-            
-            // 画X
-            ctx.strokeStyle = '#fff';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(btnX - 5, btnY - 5);
-            ctx.lineTo(btnX + 5, btnY + 5);
-            ctx.moveTo(btnX + 5, btnY - 5);
-            ctx.lineTo(btnX - 5, btnY + 5);
-            ctx.stroke();
-            ctx.restore();
-            
-            deleteBtnPos.push({ index: i, x: btnX, y: btnY, size: btnSize });
+            // 只有在悬停(hoveredItemIndex)或选中(selectedIndex)时才绘制删除按钮
+            if (i === selectedIndex || i === hoveredItemIndex) {
+                const btnSize = 24; 
+                const btnX = item.x + item.w - btnSize / 2;
+                const btnY = item.y - btnSize / 2;
+                
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(btnX, btnY, btnSize / 2, 0, Math.PI * 2);
+                ctx.fillStyle = '#ff4d4f';
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+                
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(btnX - 5, btnY - 5);
+                ctx.lineTo(btnX + 5, btnY + 5);
+                ctx.moveTo(btnX + 5, btnY - 5);
+                ctx.lineTo(btnX - 5, btnY + 5);
+                ctx.stroke();
+                ctx.restore();
+                
+                deleteBtnPos.push({ index: i, x: btnX, y: btnY, size: btnSize });
+            }
         }
 
         drawAvatar();
@@ -1054,6 +1061,7 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         if (placedItems.length === 0) return;
         const removed = placedItems.pop();
         if (selectedIndex >= placedItems.length) selectedIndex = placedItems.length - 1;
+        hoveredItemIndex = -1;
         renderCanvas(); updateButtonState();
         statusBar.textContent = `↩️ 撤销: ${removed.file}  (剩余${placedItems.length}个)`;
     }
@@ -1062,6 +1070,7 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         if (placedItems.length === 0 && !trackImage) return;
         if (!confirm('确定要清空画布上所有素材吗？')) return;
         placedItems = []; selectedIndex = -1; selectedCustom = null;
+        hoveredItemIndex = -1;
         guideV = null; guideH = null;
         resetTrackImage();
         renderCanvas(); updateButtonState();
@@ -1076,6 +1085,7 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         placedItems = []; 
         selectedIndex = -1; 
         selectedCustom = null;
+        hoveredItemIndex = -1;
         guideV = null; guideH = null;
         
         // 清空轨迹图
@@ -1199,7 +1209,9 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
 
     function hitCustomElement(cx, cy) {
         const a = customElements.avatar;
-        if (a.img && cx >= a.x && cx <= a.x + a.size && cy >= a.y && cy <= a.y + a.size) return 'avatar';
+        // 移除 a.img 限制，即使没有图片也可以拖动默认占位框
+        if (cx >= a.x && cx <= a.x + a.size && cy >= a.y && cy <= a.y + a.size) return 'avatar';
+        
         const u = customElements.username;
         if (u.text) {
             ctx.save();
@@ -1421,6 +1433,7 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         if (hitDelete !== -1) {
             placedItems.splice(hitDelete, 1);
             selectedIndex = -1;
+            hoveredItemIndex = -1;
             renderCanvas(); 
             updateButtonState();
             statusBar.textContent = `🗑️ 删除素材 (剩余${placedItems.length}个)`;
@@ -1469,16 +1482,30 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
     function onPointerUp() { endTrackResize(); endTrackDrag(); endCustomDrag(); endDrag(); }
 
     function onCanvasMouseMove(e) {
-        if (isTrackResizing || isTrackDragging) return;
-        if (!trackImage || !trackSelected) {
-            canvasWrapper.classList.remove('resizing');
+        if (isTrackResizing || isTrackDragging || isDragging || customDragInfo) {
+            if (hoveredItemIndex !== -1) {
+                hoveredItemIndex = -1;
+                renderCanvas();
+            }
             return;
         }
+
         const c = getCanvasCoords(e.clientX, e.clientY);
-        if (hitTrackResizeHandle(c.x, c.y)) {
-            canvasWrapper.classList.add('resizing');
-        } else {
-            canvasWrapper.classList.remove('resizing');
+        
+        // 轨迹图手柄cursor检测
+        if (trackImage && trackSelected) {
+            if (hitTrackResizeHandle(c.x, c.y)) {
+                canvasWrapper.classList.add('resizing');
+            } else {
+                canvasWrapper.classList.remove('resizing');
+            }
+        }
+
+        // 素材hover检测
+        const hit = findHitItem(c.x, c.y);
+        if (hit !== hoveredItemIndex) {
+            hoveredItemIndex = hit;
+            renderCanvas();
         }
     }
 
@@ -1492,6 +1519,7 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
         if (hitDelete !== -1) {
             placedItems.splice(hitDelete, 1);
             selectedIndex = -1;
+            hoveredItemIndex = -1;
             renderCanvas(); 
             updateButtonState();
             statusBar.textContent = `🗑️ 删除素材 (剩余${placedItems.length}个)`;
@@ -1609,6 +1637,7 @@ document.getElementById('helpOverlay').addEventListener('click', function(e){
             case 'Delete': case 'Backspace':
                 placedItems.splice(selectedIndex, 1);
                 selectedIndex = placedItems.length > 0 ? placedItems.length - 1 : -1;
+                hoveredItemIndex = -1;
                 updateButtonState();
                 statusBar.textContent = `🗑️ 删除选中素材 (剩余${placedItems.length}个)`;
                 break;
