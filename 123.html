@@ -29,7 +29,6 @@ body{
   position:relative;
 }
 
-/* ===== 跑步背景图与全局光晕 ===== */
 body::before{
   content:'';
   position:fixed;
@@ -43,7 +42,7 @@ body::before{
   background-color: var(--deep-green);
 }
 
-/* ===== 动态效果 CSS ===== */
+/* ===== 动态效果 CSS 开始 ===== */
 #bg-scene {
   position: fixed;
   top: 0;
@@ -56,21 +55,37 @@ body::before{
   transition: transform 0.6s cubic-bezier(.2,.7,.2,1);
 }
 
+/* 1. 背景数据节点 */
 .bg-node {
   position: absolute;
   background: rgba(0, 230, 118, 0.6);
   border-radius: 50%;
   box-shadow: 0 0 8px rgba(0, 230, 118, 0.4);
+  animation: nodeTwinkle var(--dur, 4s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+@keyframes nodeTwinkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.8); }
+  50% { opacity: 0.8; transform: scale(1.4); }
 }
 
+/* 2. 科技感流光扫描 */
 .scan-line {
   position: absolute;
   width: 300px;
   height: 1px;
   background: linear-gradient(90deg, rgba(0,230,118,0), #00e676, rgba(0,230,118,0));
   filter: drop-shadow(0 0 4px #00e676);
+  animation: scanMove var(--dur, 2.5s) linear forwards;
+}
+@keyframes scanMove {
+  0% { transform: translateX(100vw); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateX(-300px); opacity: 0; }
 }
 
+/* 3. 鼠标拖尾粒子 */
 .cursor-particle {
   position: fixed;
   width: 8px;
@@ -83,6 +98,7 @@ body::before{
   transition: transform 0.6s ease-out, opacity 0.6s ease-out;
 }
 
+/* 暖色阳光光晕 */
 .sun-glow {
   position: absolute;
   top: -15%;
@@ -92,42 +108,270 @@ body::before{
   background: radial-gradient(circle, rgba(255, 165, 0, 0.15) 0%, rgba(255, 200, 0, 0.05) 40%, transparent 70%);
   border-radius: 50%;
   filter: blur(40px);
+  animation: sunBreathe 6s ease-in-out infinite;
   pointer-events: none;
 }
+@keyframes sunBreathe {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.15); opacity: 0.9; }
+}
 
-#trace-svg {
+/* === 网址轨迹文字描边动画 === */
+.text-trace {
+  fill: none;
+  stroke: rgba(0, 230, 118, 0.7);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 10px rgba(0, 230, 118, 0.8));
+  stroke-dasharray: 5000;
+  stroke-dashoffset: 5000;
+  animation: textTraceDraw var(--dur, 4s) ease-in-out forwards;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes textTraceDraw {
+  0% { stroke-dashoffset: 5000; opacity: 0; }
+  15% { opacity: 1; }
+  65% { stroke-dashoffset: 0; opacity: 1; }
+  85% { opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+
+/* === 速度渐变图例 === */
+.speed-legend {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  overflow: visible;
-}
-
-/* ===== 轨迹组：纯 opacity 切换，不用 display:none ===== */
-.trace-group {
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(6, 33, 19, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 230, 118, 0.2);
+  border-radius: 20px;
+  padding: 6px 16px;
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  z-index: 10;
   opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.8s ease;
+  transition: opacity 0.5s ease;
 }
-.trace-group.active {
-  opacity: 1;
-  visibility: visible;
+.speed-legend.show { opacity: 1; }
+.speed-legend-bar {
+  width: 120px;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #1a237e, #00bcd4, #00e676, #ffeb3b, #ff9800, #f44336);
 }
+.speed-legend span { font-size: 10px; font-weight: 600; }
 
-/* SVG 元素基础样式 —— 由 JS 控制 opacity 和 stroke-dashoffset */
-.run-trace {
+/* === 轨迹分段通用样式 === */
+.track-seg {
   fill: none;
   stroke-linecap: round;
   stroke-linejoin: round;
+  filter: drop-shadow(0 0 4px currentColor);
+  stroke-dasharray: 6000;
+  stroke-dashoffset: 6000;
+  animation: segDraw var(--dur, 8s) ease-in-out forwards;
+  animation-delay: var(--seg-delay, 0s);
 }
+@keyframes segDraw {
+  0% { stroke-dashoffset: 6000; opacity: 0; }
+  5% { opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 1; }
+}
+
+/* 操场整体容器动画 - 淡入淡出 */
+.track-group {
+  opacity: 0;
+  animation: trackGroupFade var(--dur, 8s) ease-in-out forwards;
+}
+@keyframes trackGroupFade {
+  0% { opacity: 0; }
+  5% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 操场内部装饰线 */
+.track-lane {
+  fill: none;
+  stroke: rgba(0, 230, 118, 0.25);
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+  animation: trackFade var(--dur, 8s) ease-in-out forwards;
+}
+@keyframes trackFade {
+  0%, 10% { opacity: 0; }
+  30% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* 操场中心标记 */
+.track-center {
+  filter: drop-shadow(0 0 6px rgba(0, 230, 118, 0.8));
+  animation: centerPulse var(--dur, 8s) ease-in-out forwards;
+}
+@keyframes centerPulse {
+  0%, 20% { opacity: 0; transform: scale(0.5); }
+  40% { opacity: 1; transform: scale(1); }
+  70% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.8); }
+}
+
+/* 距离标注 */
+.track-label {
+  font-family: 'Oswald', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  text-anchor: middle;
+  letter-spacing: 1px;
+  animation: labelFade var(--dur, 8s) ease-in-out forwards;
+}
+@keyframes labelFade {
+  0%, 30% { opacity: 0; }
+  50% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* === 轨迹起点（绿色） === */
+.trace-start {
+  animation: markerAppear var(--dur, 8s) ease-in-out forwards;
+}
+.trace-start-dot {
+  filter: drop-shadow(0 0 10px #00e676);
+}
+@keyframes markerAppear {
+  0%, 5% { opacity: 0; transform: scale(0); }
+  15% { opacity: 1; transform: scale(1.3); }
+  25%, 75% { opacity: 1; transform: scale(1); }
+  90%, 100% { opacity: 0; transform: scale(0.5); }
+}
+
+/* === 轨迹终点（红色） === */
+.trace-end {
+  animation: markerAppearEnd var(--dur, 8s) ease-in-out forwards;
+}
+.trace-end-dot {
+  filter: drop-shadow(0 0 10px #ff1744);
+}
+@keyframes markerAppearEnd {
+  0%, 55% { opacity: 0; transform: scale(0); }
+  65% { opacity: 1; transform: scale(1.3); }
+  75%, 85% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.5); }
+}
+
+/* === 起点脉冲光环 === */
+.trace-start-ring {
+  fill: none;
+  stroke: #00e676;
+  stroke-width: 2.5;
+  opacity: 0;
+  animation: startRingPulse var(--dur, 8s) ease-in-out forwards;
+}
+@keyframes startRingPulse {
+  0%, 10% { opacity: 0; r: 8; }
+  20% { opacity: 0.8; r: 22; }
+  35% { opacity: 0; r: 36; }
+  36%, 100% { opacity: 0; }
+}
+
+/* === 终点脉冲光环 === */
+.trace-end-ring {
+  fill: none;
+  stroke: #ff1744;
+  stroke-width: 2.5;
+  opacity: 0;
+  animation: endRingPulse var(--dur, 8s) ease-in-out forwards;
+}
+@keyframes endRingPulse {
+  0%, 60% { opacity: 0; r: 8; }
+  70% { opacity: 0.8; r: 22; }
+  85% { opacity: 0; r: 36; }
+  86%, 100% { opacity: 0; }
+}
+
+/* === 爱心轨迹 === */
+.heart-group {
+  opacity: 0;
+  animation: heartGroupFade var(--dur, 10s) ease-in-out forwards;
+}
+@keyframes heartGroupFade {
+  0% { opacity: 0; }
+  5% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.heart-seg {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 5px currentColor);
+  stroke-dasharray: 6000;
+  stroke-dashoffset: 6000;
+  animation: segDraw var(--dur, 10s) ease-in-out forwards;
+  animation-delay: var(--seg-delay, 0s);
+}
+
+/* === 爱心内部填充渐显 === */
+.heart-fill {
+  opacity: 0;
+  animation: heartFillFade var(--dur, 10s) ease-in-out forwards;
+}
+@keyframes heartFillFade {
+  0%, 40% { opacity: 0; }
+  65% { opacity: 1; }
+  85% { opacity: 0.6; }
+  100% { opacity: 0; }
+}
+
+/* === 爱心中心文字 === */
+.heart-label {
+  font-family: 'Oswald', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  text-anchor: middle;
+  letter-spacing: 1px;
+  animation: heartLabelFade var(--dur, 10s) ease-in-out forwards;
+}
+@keyframes heartLabelFade {
+  0%, 50% { opacity: 0; }
+  70% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* === 速度标注文字（在分段旁边） === */
+.speed-tag {
+  font-family: 'Oswald', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  opacity: 0;
+  animation: speedTagFade var(--dur, 8s) ease-in-out forwards;
+}
+@keyframes speedTagFade {
+  0%, 40% { opacity: 0; }
+  55% { opacity: 0.9; }
+  80% { opacity: 0.9; }
+  100% { opacity: 0; }
+}
+
+/* ===== 动态效果 CSS 结束 ===== */
 
 header, section, footer, .back-top {
   position: relative;
   z-index: 2;
 }
 
+/* ===== 导航 ===== */
 header{
   position:sticky;top:0;z-index:100;
   background:rgba(6,33,19,0.7); 
@@ -188,6 +432,7 @@ section .subtitle{text-align:center;color:var(--text-dim);margin-bottom:3rem;fon
 }
 .card h3, .card h4 { color: #0a2e1a; margin:.8rem 0 .5rem; font-size:1.2rem; }
 .card p { color: #444; font-size:.9rem; line-height:1.6; }
+
 .card .step-num {
   background: linear-gradient(135deg, #00e676, #00a85c);
   color: #fff;
@@ -224,6 +469,7 @@ section .subtitle{text-align:center;color:var(--text-dim);margin-bottom:3rem;fon
   box-shadow: 0 0 15px rgba(0,230,118,0.2);
 }
 
+/* ===== Hero ===== */
 .hero{
   padding:6rem 5% 5rem;
   text-align:center;
@@ -290,8 +536,11 @@ section .subtitle{text-align:center;color:var(--text-dim);margin-bottom:3rem;fon
   transform:translateY(-3px);box-shadow:0 6px 30px rgba(0,230,118,.6);
 }
 
+/* ===== 统计数据 ===== */
 .stats-grid{ display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem; }
-.stat-item{ padding:2rem 1rem;text-align:center; }
+.stat-item{
+  padding:2rem 1rem;text-align:center;
+}
 .stat-num{
   font-size:3rem;font-weight:bold;color:var(--primary-green); 
   font-family: 'Oswald', sans-serif;
@@ -317,7 +566,9 @@ section .subtitle{text-align:center;color:var(--text-dim);margin-bottom:3rem;fon
 .case-tag{ margin-top:.8rem; }
 
 .flow-grid{ display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;position:relative; }
-.flow-item{ text-align:center;position:relative; padding: 2rem 1rem; }
+.flow-item{
+  text-align:center;position:relative; padding: 2rem 1rem;
+}
 .flow-item::after{
   content:'';position:absolute;top:48px;right:-50%;width:100%;height:1px;
   background:linear-gradient(90deg,var(--primary-green),transparent);z-index:0; opacity: 0.5;
@@ -388,7 +639,9 @@ section .subtitle{text-align:center;color:var(--text-dim);margin-bottom:3rem;fon
 .wechat-btn:hover{transform:translateY(-3px);box-shadow:0 8px 25px rgba(0,230,118,.5);}
 
 .faq-list{max-width:800px;margin:0 auto;}
-.faq-item{ margin-bottom:1rem; overflow:hidden; }
+.faq-item{
+  margin-bottom:1rem; overflow:hidden;
+}
 .faq-q{
   padding:1.5rem 1.5rem;cursor:pointer;display:flex;justify-content:space-between;
   align-items:center;font-weight:bold;color:var(--text-main);font-size:1rem;
@@ -428,190 +681,25 @@ footer{
   .wechat-number{font-size:1.8rem;}
   .flow-item::after{display:none;}
 }
-
-/* ===== 操场轨迹数据面板样式（始终可见，不依赖动画） ===== */
-.track-data-panel {
-  position: absolute;
-  pointer-events: none;
-  opacity: 1 !important;
-  z-index: 10;
-}
-.track-data-panel .data-title {
-  font-size: 4px; fill: #00e676; font-weight: bold; letter-spacing: 0.3px;
-  filter: drop-shadow(0 0 2px #00e676); font-family: 'Oswald', sans-serif;
-}
-.track-data-panel .data-label { font-size: 3px; fill: rgba(255,255,255,0.7); font-family: 'Segoe UI', sans-serif; }
-.track-data-panel .data-value {
-  font-size: 3.5px; fill: #ffffff; font-weight: bold; font-family: 'Oswald', sans-serif;
-  filter: drop-shadow(0 0 1px rgba(255,255,255,0.5));
-}
-.track-data-panel .data-unit { font-size: 2.5px; fill: rgba(255,255,255,0.6); font-family: 'Segoe UI', sans-serif; }
-.track-data-panel .data-divider { stroke: rgba(0,230,118,0.35); stroke-width: 0.3; }
 </style>
 </head>
 <body>
 
+<!-- 动态背景层容器 -->
 <div id="bg-scene">
+  <!-- 阳光光晕 -->
   <div class="sun-glow"></div>
-
-  <svg id="trace-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-
-    <!-- ===== 轨迹1：400米标准操场跑道 ===== -->
-    <g class="trace-group" id="trace1" data-cycle="13500">
-      <defs>
-        <linearGradient id="trackGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#00e676" stop-opacity="0.95"/>
-          <stop offset="35%" stop-color="#00bcd4" stop-opacity="0.85"/>
-          <stop offset="70%" stop-color="#26c6da" stop-opacity="0.8"/>
-          <stop offset="100%" stop-color="#009688" stop-opacity="0.9"/>
-        </linearGradient>
-        <linearGradient id="trackWarm1" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stop-color="#ff8a65" stop-opacity="0"/>
-          <stop offset="60%" stop-color="#ff8a65" stop-opacity="0.15"/>
-          <stop offset="100%" stop-color="#ff5722" stop-opacity="0.35"/>
-        </linearGradient>
-      </defs>
-
-      <!-- 跑道外圈光晕 -->
-      <path class="t-glow1" d="M 40,32 L 60,32 A 14,14 0 1,1 60,68 L 40,68 A 14,14 0 1,1 40,32 Z"
-            fill="none" stroke="rgba(0,230,118,0.06)" stroke-width="3.2"/>
-      <path class="t-glow2" d="M 40,33 L 60,33 A 13,13 0 1,1 60,67 L 40,67 A 13,13 0 1,1 40,33 Z"
-            fill="none" stroke="rgba(0,188,212,0.05)" stroke-width="2"/>
-
-      <!-- 主跑道轨迹线 -->
-      <path class="t-main" d="M 41,37 L 59,37 A 12,12 0 0,1 59,63 L 41,63 A 12,12 0 0,1 41,37 Z"
-            fill="none" stroke="url(#trackGrad1)" stroke-width="1.2"
-            stroke-dasharray="240" stroke-dashoffset="240"
-            stroke-linecap="round" stroke-linejoin="round"/>
-
-      <!-- 跑道内沿细线 -->
-      <path class="t-inner1" d="M 42,40 L 58,40 A 9.5,9.5 0 0,1 58,60 L 42,60 A 9.5,9.5 0 0,1 42,40 Z"
-            fill="none" stroke="rgba(0,230,118,0.2)" stroke-width="0.4"
-            stroke-dasharray="200" stroke-dashoffset="200"/>
-
-      <!-- 流动虚线 -->
-      <path class="t-flow" d="M 41,37 L 59,37 A 12,12 0 0,1 59,63 L 41,63 A 12,12 0 0,1 41,37 Z"
-            fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.4"
-            stroke-dasharray="2 6"/>
-
-      <!-- 起点 -->
-      <circle class="t-dot-start-ring" cx="59" cy="37" r="1.4" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="0.4"/>
-      <circle class="t-dot-start" cx="59" cy="37" r="0.8" fill="#00e676" filter="drop-shadow(0 0 3px #00e676)"/>
-
-      <!-- 终点 -->
-      <circle class="t-dot-end-ring" cx="59" cy="63" r="1.2" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="0.3"/>
-      <circle class="t-dot-end" cx="59" cy="63" r="0.6" fill="#ff5252" filter="drop-shadow(0 0 2px #ff5252)"/>
-
-      <!-- 底部暖色弧线 -->
-      <path class="t-warm" d="M 42,65 Q 50,69 58,65"
-            fill="none" stroke="url(#trackWarm1)" stroke-width="1.6"
-            stroke-linecap="round"/>
-
-      <path class="t-inner2" d="M 59,41 A 9,9 0 0,1 59,59"
-            fill="none" stroke="rgba(0,230,118,0.12)" stroke-width="0.3"
-            stroke-dasharray="140" stroke-dashoffset="140"/>
-      <path class="t-inner3" d="M 41,41 A 9,9 0 0,0 41,59"
-            fill="none" stroke="rgba(0,230,118,0.12)" stroke-width="0.3"
-            stroke-dasharray="140" stroke-dashoffset="140"/>
-
-      <!-- 数据面板（始终可见） -->
-      <g class="track-data-panel">
-        <text x="76" y="22" class="data-title" text-anchor="start">🏟️ 操场10KM</text>
-        <line x1="76" y1="25" x2="98" y2="25" class="data-divider"/>
-        <text x="76" y="30" class="data-label">距离</text>
-        <text x="98" y="30" class="data-value" text-anchor="end">10.0</text>
-        <text x="98.8" y="30" class="data-unit">km</text>
-        <text x="76" y="34.5" class="data-label">配速</text>
-        <text x="98" y="34.5" class="data-value" text-anchor="end">5'30"</text>
-        <text x="98.8" y="34.5" class="data-unit">/km</text>
-        <text x="76" y="39" class="data-label">用时</text>
-        <text x="98" y="39" class="data-value" text-anchor="end">55:00</text>
-        <text x="98.8" y="39" class="data-unit">min</text>
-        <line x1="76" y1="41.5" x2="98" y2="41.5" class="data-divider"/>
-        <text x="76" y="46" class="data-label">心率</text>
-        <text x="98" y="46" class="data-value" text-anchor="end" fill="#ff8a80">158</text>
-        <text x="98.8" y="46" class="data-unit">bpm</text>
-        <text x="76" y="50.5" class="data-label">爬升</text>
-        <text x="98" y="50.5" class="data-value" text-anchor="end">10</text>
-        <text x="98.8" y="50.5" class="data-unit">m</text>
-        <text x="76" y="55" class="data-label">步频</text>
-        <text x="98" y="55" class="data-value" text-anchor="end" fill="#80deea">168</text>
-        <text x="98.8" y="55" class="data-unit">spm</text>
-      </g>
-    </g>
-
-    <!-- ===== 轨迹2：圆形路线 ===== -->
-    <g class="trace-group" id="trace2" data-cycle="11500">
-      <circle class="t2-glow" cx="50" cy="50" r="14" fill="none" stroke="rgba(0,230,118,0.18)" stroke-width="2"/>
-      <circle class="t2-main" cx="50" cy="50" r="14" fill="none" stroke="rgba(0,230,118,0.7)" stroke-width="1"
-              stroke-dasharray="88" stroke-dashoffset="88"/>
-      <circle class="t2-flow" cx="50" cy="50" r="14" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="0.4"
-              stroke-dasharray="3 6"/>
-      <circle class="t2-dot1-ring" cx="36" cy="50" r="1.2" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="0.3"/>
-      <circle class="t2-dot1" cx="36" cy="50" r="0.8" fill="#00e676" filter="drop-shadow(0 0 2px #00e676)"/>
-      <circle class="t2-dot2" cx="38" cy="42" r="0.5" fill="#ff5252" filter="drop-shadow(0 0 2px #ff5252)"/>
-    </g>
-
-    <!-- ===== 轨迹3：平滑连续跑步轨迹 ===== -->
-    <g class="trace-group" id="trace3" data-cycle="11500">
-      <defs>
-        <linearGradient id="smoothGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stop-color="#00e676" stop-opacity="0.9"/>
-          <stop offset="25%" stop-color="#00bcd4" stop-opacity="0.85"/>
-          <stop offset="50%" stop-color="#26c6da" stop-opacity="0.8"/>
-          <stop offset="75%" stop-color="#00bcd4" stop-opacity="0.85"/>
-          <stop offset="100%" stop-color="#00e676" stop-opacity="0.9"/>
-        </linearGradient>
-      </defs>
-
-      <path class="t3-glow" d="M 20,58 C 16,46 24,30 38,26 C 52,22 66,28 72,38 C 78,48 70,60 58,66 C 46,72 30,70 24,62 C 20,58 20,58 20,58 Z"
-            fill="none" stroke="rgba(0,230,118,0.08)" stroke-width="3.2"/>
-
-      <path class="t3-main" d="M 22,60 C 22,50 28,40 36,34 C 44,28 54,25 62,30 C 70,35 74,44 70,52 C 66,60 56,66 46,64 C 36,62 26,66 20,60 C 18,56 19,54 22,60 Z"
-            fill="none" stroke="url(#smoothGrad)" stroke-width="1"
-            stroke-dasharray="260" stroke-dashoffset="260"
-            stroke-linecap="round" stroke-linejoin="round"/>
-
-      <path class="t3-flow" d="M 22,60 C 22,50 28,40 36,34 C 44,28 54,25 62,30 C 70,35 74,44 70,52 C 66,60 56,66 46,64 C 36,62 26,66 20,60 C 18,56 19,54 22,60 Z"
-            fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.4"
-            stroke-dasharray="2 5"/>
-
-      <circle class="t3-dot1-ring" cx="22" cy="60" r="1.2" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="0.3"/>
-      <circle class="t3-dot1" cx="22" cy="60" r="0.8" fill="#00e676" filter="drop-shadow(0 0 2px #00e676)"/>
-      <circle class="t3-dot2-ring" cx="25" cy="63" r="0.9" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="0.2"/>
-      <circle class="t3-dot2" cx="25" cy="63" r="0.5" fill="#ff5252" filter="drop-shadow(0 0 2px #ff5252)"/>
-
-      <circle class="t3-spark1" cx="50" cy="27" r="0.3" fill="rgba(0,230,118,0.6)" filter="drop-shadow(0 0 1px #00e676)"/>
-      <circle class="t3-spark2" cx="75" cy="46" r="0.3" fill="rgba(38,198,218,0.6)" filter="drop-shadow(0 0 1px #26c6da)"/>
-      <circle class="t3-spark3" cx="40" cy="68" r="0.3" fill="rgba(0,230,118,0.5)" filter="drop-shadow(0 0 1px #00e676)"/>
-    </g>
-
-    <!-- ===== 轨迹4：S形曲线 + 52Run.cn 文字 ===== -->
-    <g class="trace-group" id="trace4" data-cycle="11500">
-      <defs>
-        <path id="textPath4" d="M14,50 Q26,28 38,50 T62,50 Q74,70 78,50" fill="none"/>
-      </defs>
-      <path class="t4-glow" d="M14,50 Q26,28 38,50 T62,50 Q74,70 78,50"
-            fill="none" stroke="rgba(0,230,118,0.15)" stroke-width="2"/>
-      <path class="t4-main" d="M14,50 Q26,28 38,50 T62,50 Q74,70 78,50"
-            fill="none" stroke="rgba(0,230,118,0.65)" stroke-width="1"
-            stroke-dasharray="180" stroke-dashoffset="180"/>
-      <path class="t4-flow" d="M14,50 Q26,28 38,50 T62,50 Q74,70 78,50"
-            fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.4"
-            stroke-dasharray="2 5"/>
-      <text class="t4-text" font-size="2.8" fill="#00e676" font-weight="bold" letter-spacing="0.5"
-            filter="drop-shadow(0 0 2px #00e676)" opacity="0">
-        <textPath href="#textPath4" startOffset="0%">52Run.cn</textPath>
-      </text>
-      <circle class="t4-dot1-ring" cx="14" cy="50" r="1" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="0.3"/>
-      <circle class="t4-dot1" cx="14" cy="50" r="0.6" fill="#00e676" filter="drop-shadow(0 0 2px #00e676)"/>
-      <circle class="t4-dot2-ring" cx="78" cy="50" r="1" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="0.3"/>
-      <circle class="t4-dot2" cx="78" cy="50" r="0.6" fill="#00e676" filter="drop-shadow(0 0 2px #00e676)"/>
-    </g>
-
-  </svg>
+  <!-- 文字轨迹 SVG 容器 -->
+  <svg id="trace-svg" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events: none;"></svg>
+  <!-- 速度图例 -->
+  <div class="speed-legend" id="speedLegend">
+    <span>慢</span>
+    <div class="speed-legend-bar" id="legendBar"></div>
+    <span>快</span>
+  </div>
 </div>
 
+<!-- 导航 -->
 <header id="header">
   <div class="logo">52<span>Run.cn</span></div>
   <nav>
@@ -624,6 +712,7 @@ footer{
   </nav>
 </header>
 
+<!-- Hero -->
 <section class="hero" id="home">
   <div class="hero-badge">🏃 52Run.cn · 跑步数据可视化分析平台</div>
   <h1><span class="fusion-text" id="fusionText"></span></h1>
@@ -631,6 +720,7 @@ footer{
   <a href="sport-mosaic.html" class="btn btn-primary">Keep运动截图拼图生成器</a>
 </section>
 
+<!-- 统计数据 -->
 <section id="stats" style="background:linear-gradient(180deg,rgba(6,33,19,0.3),transparent);">
   <div class="stats-grid">
     <div class="card stat-item"><div class="stat-num" data-target="3000" data-suffix="+">0</div><div class="stat-label">服务跑友</div></div>
@@ -640,6 +730,7 @@ footer{
   </div>
 </section>
 
+<!-- 功能优势 -->
 <section id="features">
   <h2>选择 52Run.cn 的理由</h2>
   <p class="subtitle">以数据基石为核心理念，让每一次奔跑都有据可依</p>
@@ -671,6 +762,7 @@ footer{
   </div>
 </section>
 
+<!-- 核心卖点 -->
 <section id="selling" style="background:linear-gradient(180deg,transparent,rgba(0,230,118,0.03));">
   <h2>核心卖点</h2>
   <p class="subtitle">每一个细节都为你的数据安全和分析体验考虑</p>
@@ -698,6 +790,7 @@ footer{
   </div>
 </section>
 
+<!-- 案例展示 -->
 <section id="cases">
   <h2>数据分析案例</h2>
   <p class="subtitle">真实跑步数据，专业可视化呈现</p>
@@ -737,6 +830,7 @@ footer{
   </div>
 </section>
 
+<!-- 使用流程 -->
 <section id="process" style="background:linear-gradient(180deg,rgba(0,230,118,0.03),transparent);">
   <h2>四步完成数据分析</h2>
   <p class="subtitle">简单四步，轻松拿到你的跑步可视化报告</p>
@@ -764,6 +858,7 @@ footer{
   </div>
 </section>
 
+<!-- 适用场景 -->
 <section id="scenes">
   <h2>适用场景</h2>
   <p class="subtitle">无论什么需求，我们都能帮你搞定</p>
@@ -791,6 +886,7 @@ footer{
   </div>
 </section>
 
+<!-- 使用须知 -->
 <section id="notices" style="background:linear-gradient(180deg,transparent,rgba(0,230,118,0.03));">
   <h2>使用须知</h2>
   <p class="subtitle">使用前请仔细阅读，让你放心使用</p>
@@ -818,6 +914,7 @@ footer{
   </div>
 </section>
 
+<!-- FAQ -->
 <section id="faq">
   <h2>你可能关心的问题</h2>
   <p class="subtitle">新手必看，打消你的所有顾虑</p>
@@ -841,6 +938,7 @@ footer{
   </div>
 </section>
 
+<!-- 服务保障 -->
 <section id="guarantee" style="background:linear-gradient(180deg,rgba(0,230,118,0.03),transparent);">
   <h2>服务保障</h2>
   <p class="subtitle">四大承诺，让你放心使用</p>
@@ -868,6 +966,7 @@ footer{
   </div>
 </section>
 
+<!-- 联系我们 -->
 <section class="contact" id="contact">
   <h2>准备复盘你的跑步数据了吗？</h2>
   <p>微信添加好友，备注"数据分析"，快速响应</p>
@@ -878,6 +977,7 @@ footer{
   </div>
 </section>
 
+<!-- 页脚 -->
 <footer>
   <div class="footer-links">
     <a href="#home">首页</a>
@@ -890,10 +990,11 @@ footer{
   <p style="margin-top:.5rem;">© 2025 52Run.cn · 专注跑步数据可视化与科学复盘 · 微信：278715464</p>
 </footer>
 
+<!-- 回到顶部 -->
 <div class="back-top" id="backTop">↑</div>
 
 <script>
-/* ========== 融合文字轮播 ========== */
+// === 模糊极光聚焦动效 ===
 const greetings = [
   "迈开腿，风自然会来。",
   "若被时间绊住脚步，便让微风替你抵达。",
@@ -901,8 +1002,11 @@ const greetings = [
   "终点处的闪耀光芒，本就该属于你的胸膛。",
   "说出一座向往的城市，余下的风景由我们铺展。"
 ];
+
 const fusionEl = document.getElementById('fusionText');
 let gIdx = 0;
+let fusionTimer;
+
 function cycleFusion() {
   fusionEl.classList.remove('active');
   setTimeout(() => {
@@ -910,24 +1014,22 @@ function cycleFusion() {
     gIdx = (gIdx + 1) % greetings.length;
     void fusionEl.offsetWidth;
     fusionEl.classList.add('active');
-    setTimeout(cycleFusion, 3500);
-  }, 1500);
+    fusionTimer = setTimeout(cycleFusion, 3500);
+  }, 1500); 
 }
 cycleFusion();
 
-/* ========== 滚动 & 返回顶部 ========== */
+// === 原有交互逻辑 ===
 window.addEventListener('scroll',()=>{
   document.getElementById('header').classList.toggle('scrolled',window.scrollY>50);
   document.getElementById('backTop').classList.toggle('show',window.scrollY>500);
 });
 document.getElementById('backTop').onclick=()=>window.scrollTo({top:0,behavior:'smooth'});
-
-/* ========== FAQ 手风琴 ========== */
 document.querySelectorAll('.faq-q').forEach(q=>{
   q.onclick=()=>q.parentElement.classList.toggle('open');
 });
 
-/* ========== 卡片入场动画 ========== */
+// 卡片入场动画
 const observer=new IntersectionObserver((entries)=>{
   entries.forEach(e=>{
     if(e.isIntersecting){
@@ -944,9 +1046,13 @@ document.querySelectorAll('.glass-card, .card').forEach(el=>{
   observer.observe(el);
 });
 
-/* ========== 背景粒子 & 扫描线 & 视差 ========== */
+// ==========================================
+// ====== 全套动态效果 JS 实现 ========
+// ==========================================
+
 const bgScene = document.getElementById('bg-scene');
 
+// 1. 生成背景数据节点
 for (let i = 0; i < 60; i++) {
   const node = document.createElement('div');
   node.className = 'bg-node';
@@ -955,51 +1061,31 @@ for (let i = 0; i < 60; i++) {
   node.style.height = size + 'px';
   node.style.left = Math.random() * 100 + '%';
   node.style.top = Math.random() * 100 + '%';
-  node.style.opacity = (Math.random() * 0.4 + 0.2).toFixed(2);
+  node.style.setProperty('--dur', (2 + Math.random() * 4).toFixed(2) + 's');
+  node.style.setProperty('--delay', (Math.random() * 4).toFixed(2) + 's');
   bgScene.appendChild(node);
 }
 
-// 用 JS 驱动粒子闪烁，不依赖 CSS animation
-const bgNodes = bgScene.querySelectorAll('.bg-node');
-function animateBgNodes() {
-  bgNodes.forEach((node, i) => {
-    const baseOpacity = parseFloat(node.style.opacity) || 0.3;
-    const t = Date.now() / 1000 + i * 0.5;
-    const flicker = baseOpacity * (0.5 + 0.5 * Math.sin(t * (0.5 + (i % 5) * 0.3)));
-    node.style.opacity = flicker.toFixed(3);
-    const scale = 0.8 + 0.6 * Math.abs(Math.sin(t * 0.4));
-    node.style.transform = `scale(${scale.toFixed(2)})`;
-  });
-  requestAnimationFrame(animateBgNodes);
-}
-requestAnimationFrame(animateBgNodes);
-
+// 2. 科技感流光扫描
 function spawnScanLine() {
   const line = document.createElement('div');
   line.className = 'scan-line';
   line.style.top = (Math.random() * 90 + 5) + '%';
+  line.style.setProperty('--dur', (2.5 + Math.random() * 1.5).toFixed(2) + 's');
   bgScene.appendChild(line);
-  const duration = 2500 + Math.random() * 1500;
-  const startTime = performance.now();
-  function moveScan() {
-    const elapsed = performance.now() - startTime;
-    const progress = elapsed / duration;
-    if (progress >= 1) { line.remove(); return; }
-    const opacity = progress < 0.1 ? progress / 0.1 : (progress > 0.9 ? (1 - progress) / 0.1 : 1);
-    line.style.opacity = opacity.toFixed(2);
-    line.style.transform = `translateX(${100 - progress * 130}vw)`;
-    requestAnimationFrame(moveScan);
-  }
-  requestAnimationFrame(moveScan);
+  setTimeout(() => line.remove(), 4000);
 }
 setInterval(spawnScanLine, 4500);
 spawnScanLine();
 
+// 3. 鼠标视差与拖尾粒子
 let mx = 0, my = 0, cx = 0, cy = 0;
 let lastParticleTime = 0;
+
 window.addEventListener('mousemove', e => {
   mx = (e.clientX / window.innerWidth - 0.5) * 2;
   my = (e.clientY / window.innerHeight - 0.5) * 2;
+
   const now = Date.now();
   if (now - lastParticleTime > 30) {
     const p = document.createElement('div');
@@ -1007,390 +1093,1147 @@ window.addEventListener('mousemove', e => {
     p.style.left = e.clientX + 'px';
     p.style.top = e.clientY + 'px';
     document.body.appendChild(p);
-    requestAnimationFrame(() => {
-      p.style.transform = `scale(0) translate(${(Math.random()-0.5)*30}px,${(Math.random()-0.5)*30}px)`;
+    
+    setTimeout(() => {
+      p.style.transform = `scale(0) translate(${(Math.random() - 0.5) * 30}px, ${(Math.random() - 0.5) * 30}px)`;
       p.style.opacity = '0';
-    });
+    }, 10);
+
     setTimeout(() => p.remove(), 600);
     lastParticleTime = now;
   }
 });
+
 function tickParallax() {
   cx += (mx - cx) * 0.05;
   cy += (my - cy) * 0.05;
-  const px = Math.max(-8, Math.min(8, cx * -20));
-  const py = Math.max(-6, Math.min(6, cy * -15));
-  bgScene.style.transform = `translate3d(${px}px, ${py}px, 0)`;
+  bgScene.style.transform = `translate3d(${cx * -20}px, ${cy * -15}px, 0)`;
   requestAnimationFrame(tickParallax);
 }
 tickParallax();
 
-/* ========== 统计数字动画 ========== */
+// ==========================================
+// ====== 速度渐变轨迹系统 ========
+// ==========================================
+
+// 多种速度配色方案（慢→快 渐变）
+// 参考主流跑步APP：慢=蓝/绿(冷色) 平均=绿/黄 快=橙/红(暖色)
+const SPEED_PALETTES = [
+  // 方案1: 经典 Keep 风格 - 蓝绿黄橙红
+  ['#1a237e', '#0d47a1', '#00bcd4', '#00e676', '#ffeb3b', '#ff9800', '#f44336'],
+  // 方案2: 咕咚风格 - 深蓝青绿黄红
+  ['#0d47a1', '#0097a7', '#4caf50', '#8bc34a', '#ffc107', '#ff5722', '#d32f2f'],
+  // 方案3: 华为风格 - 紫蓝绿黄橙红
+  ['#4a148c', '#1976d2', '#00acc1', '#66bb6a', '#fdd835', '#ef6c00', '#e53935'],
+  // 方案4: Strava 风格 - 深蓝浅蓝绿黄橙红
+  ['#1565c0', '#42a5f5', '#26a69a', '#9ccc65', '#ffee58', '#ffa726', '#ef5350'],
+  // 方案5: 冷色为主 - 深蓝蓝青绿黄
+  ['#1b2838', '#2a5298', '#00b4d8', '#48cae4', '#90e0ef', '#80ed99', '#52b788'],
+  // 方案6: 暖色为主 - 绿黄橙红深红
+  ['#2e7d32', '#689f38', '#cddc39', '#ffc107', '#ff9800', '#f44336', '#b71c1c'],
+];
+
+// 生成速度渐变 SVG defs（线性渐变）
+function createGradientDefs(svg, palette, gradId) {
+  const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+  const grad = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+  grad.setAttribute('id', gradId);
+  grad.setAttribute('x1', '0%');
+  grad.setAttribute('y1', '0%');
+  grad.setAttribute('x2', '100%');
+  grad.setAttribute('y2', '100%');
+  
+  palette.forEach((color, i) => {
+    const stop = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    stop.setAttribute('offset', `${(i / (palette.length - 1) * 100).toFixed(1)}%`);
+    stop.setAttribute('stop-color', color);
+    grad.appendChild(stop);
+  });
+  
+  defs.appendChild(grad);
+  svg.appendChild(defs);
+  return gradId;
+}
+
+// 根据速度值(0~1)从调色板取色
+function getSpeedColor(palette, t) {
+  t = Math.max(0, Math.min(1, t));
+  const idx = t * (palette.length - 1);
+  const i = Math.floor(idx);
+  const frac = idx - i;
+  if (i >= palette.length - 1) return palette[palette.length - 1];
+  
+  // 简单插值
+  const c1 = hexToRgb(palette[i]);
+  const c2 = hexToRgb(palette[i + 1]);
+  const r = Math.round(c1.r + (c2.r - c1.r) * frac);
+  const g = Math.round(c1.g + (c2.g - c1.g) * frac);
+  const b = Math.round(c1.b + (c2.b - c1.b) * frac);
+  return `rgb(${r},${g},${b})`;
+}
+
+function hexToRgb(hex) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : { r: 0, g: 230, b: 118 };
+}
+
+// 为轨迹生成模拟速度数据（每段一个速度值 0~1）
+// 使用柏林噪声风格的平滑随机，让速度变化自然
+function generateSpeedProfile(numSegments, avgSpeed = 0.5) {
+  const speeds = [];
+  let current = avgSpeed + (Math.random() - 0.5) * 0.3;
+  for (let i = 0; i < numSegments; i++) {
+    // 平滑过渡 + 偶尔冲刺/慢跑
+    const change = (Math.random() - 0.5) * 0.25;
+    current += change;
+    // 偶尔来个大变化（冲刺或疲劳）
+    if (Math.random() < 0.12) {
+      current += (Math.random() - 0.3) * 0.4;
+    }
+    current = Math.max(0.05, Math.min(0.98, current));
+    speeds.push(current);
+  }
+  return speeds;
+}
+
+// 将长路径分成多段，每段用不同颜色
+function splitPathIntoSegments(d, numSegments) {
+  // 对于简单路径，我们用 getTotalLength 等分
+  // 但 SVG path 在创建后才有 getTotalLength
+  return numSegments;
+}
+
+const traceSvg = document.getElementById('trace-svg');
+const speedLegend = document.getElementById('speedLegend');
+const legendBar = document.getElementById('legendBar');
+let traceMode = 0; // 0=文字52run 1=操场 2=爱心 3=文字13.14 4=环湖 5=Keep
+let paletteIdx = 0;
+
+// 更新图例
+function updateLegend(palette) {
+  const gradStops = palette.map((c, i) => 
+    `<stop offset="${(i/(palette.length-1)*100).toFixed(0)}%" stop-color="${c}"/>`
+  ).join('');
+  legendBar.style.background = `linear-gradient(90deg, ${palette.join(', ')})`;
+}
+
+// --- 生成 52run.Cn 文字轨迹（无起点终点，独立缩小版）---
+function spawnTextTrace() {
+  const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  
+  textEl.setAttribute('x', (Math.random() * 50 + 25) + '%');
+  textEl.setAttribute('y', (Math.random() * 50 + 25) + '%');
+  
+  textEl.setAttribute('font-family', "'Oswald', sans-serif");
+  textEl.setAttribute('font-size', '3.2vw');
+  textEl.setAttribute('font-weight', '700');
+  textEl.setAttribute('text-anchor', 'middle');
+  
+  textEl.classList.add('text-trace');
+  textEl.textContent = '52run.Cn';
+
+  const scale = 0.5 + Math.random() * 0.3;
+  const rotate = Math.random() * 16 - 8;
+  textEl.style.transform = `scale(${scale}) rotate(${rotate}deg)`;
+
+  const dur = (3 + Math.random() * 1).toFixed(2);
+  textEl.style.setProperty('--dur', dur + 's');
+  
+  traceSvg.appendChild(textEl);
+  // 绘制完成 + 停留1.5秒后移除
+  setTimeout(() => textEl.remove(), parseFloat(dur) * 1000 + 1500);
+}
+
+// --- 生成 "13.14" 文字轨迹（浪漫配色描边）---
+function spawn1314Trace() {
+  const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  
+  textEl.setAttribute('x', (Math.random() * 50 + 25) + '%');
+  textEl.setAttribute('y', (Math.random() * 50 + 25) + '%');
+  
+  textEl.setAttribute('font-family', "'Oswald', sans-serif");
+  textEl.setAttribute('font-size', '4.5vw');
+  textEl.setAttribute('font-weight', '700');
+  textEl.setAttribute('text-anchor', 'middle');
+  
+  // 浪漫粉红描边 + 发光
+  textEl.setAttribute('stroke', 'rgba(255, 80, 120, 0.85)');
+  textEl.setAttribute('stroke-width', '3');
+  textEl.style.filter = 'drop-shadow(0 0 8px rgba(255, 80, 120, 0.7))';
+  
+  textEl.classList.add('text-trace');
+  textEl.textContent = '13.14km';
+
+  const scale = 0.55 + Math.random() * 0.3;
+  const rotate = Math.random() * 12 - 6;
+  textEl.style.transform = `scale(${scale}) rotate(${rotate}deg)`;
+
+  const dur = (3.5 + Math.random() * 1).toFixed(2);
+  textEl.style.setProperty('--dur', dur + 's');
+  
+  traceSvg.appendChild(textEl);
+  setTimeout(() => textEl.remove(), parseFloat(dur) * 1000 + 1500);
+}
+
+// --- 生成环湖闭合路线 GPS 轨迹（带速度渐变色 + 起点终点）---
+function spawnLakeTrace() {
+  const palette = SPEED_PALETTES[paletteIdx % SPEED_PALETTES.length];
+  paletteIdx++;
+  updateLegend(palette);
+  
+  const dur = (8 + Math.random() * 2).toFixed(2);
+  
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  g.classList.add('track-group');
+  g.style.setProperty('--dur', dur + 's');
+  
+  const vw = window.innerWidth || 1920;
+  const vh = window.innerHeight || 1080;
+  const tx = (Math.random() * 0.3 + 0.35) * vw;
+  const ty = (Math.random() * 0.3 + 0.35) * vh;
+  const scale = 1.0 + Math.random() * 0.4;
+  const rotate = Math.random() * 20 - 10;
+  g.setAttribute('transform', `translate(${tx}, ${ty}) scale(${scale}) rotate(${rotate})`);
+
+  // 参数方程生成不规则湖泊形状（闭合曲线）
+  const numPoints = 200;
+  const baseR = 90;
+  const pts = [];
+  
+  for (let i = 0; i <= numPoints; i++) {
+    const angle = (i / numPoints) * Math.PI * 2;
+    const r = baseR 
+      + 18 * Math.sin(3 * angle + 0.5)
+      + 12 * Math.cos(5 * angle + 1.2)
+      + 8 * Math.sin(7 * angle + 2.1)
+      + 5 * Math.cos(2 * angle + 0.8)
+      + 4 * Math.sin(11 * angle);
+    const x = r * Math.cos(angle);
+    const y = r * Math.sin(angle) * 0.85;
+    pts.push({ x, y });
+  }
+
+  // 分段
+  const numSegs = 14;
+  const segSpeeds = generateSpeedProfile(numSegs, 0.45 + Math.random() * 0.2);
+  const ptsPerSeg = Math.floor(numPoints / numSegs);
+
+  for (let s = 0; s < numSegs; s++) {
+    const startIdx = s * ptsPerSeg;
+    const endIdx = (s === numSegs - 1) ? numPoints : (s + 1) * ptsPerSeg;
+    
+    let d = '';
+    for (let i = startIdx; i <= endIdx; i++) {
+      d += `${i === startIdx ? 'M' : 'L'} ${pts[i].x.toFixed(2)} ${pts[i].y.toFixed(2)} `;
+    }
+    
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', d.trim());
+    
+    const color = getSpeedColor(palette, segSpeeds[s]);
+    path.setAttribute('stroke', color);
+    path.setAttribute('stroke-width', '5');
+    path.classList.add('track-seg');
+    
+    const segDur = (dur * 0.72).toFixed(2);
+    path.style.setProperty('--dur', segDur + 's');
+    const delay = (s / numSegs * dur * 0.62).toFixed(2);
+    path.style.setProperty('--seg-delay', delay + 's');
+    path.style.filter = `drop-shadow(0 0 4px ${color})`;
+    
+    g.appendChild(path);
+  }
+
+  // 湖泊内部浅色填充（水面感）
+  let fillD = '';
+  for (let i = 0; i <= numPoints; i++) {
+    fillD += `${i === 0 ? 'M' : 'L'} ${pts[i].x.toFixed(2)} ${pts[i].y.toFixed(2)} `;
+  }
+  fillD += 'Z';
+  
+  const lakeFill = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  lakeFill.setAttribute('d', fillD);
+  lakeFill.setAttribute('fill', 'rgba(0, 180, 216, 0.06)');
+  lakeFill.classList.add('heart-fill');
+  lakeFill.style.setProperty('--dur', dur + 's');
+  g.appendChild(lakeFill);
+
+  // 内圈装饰线（湖岸步道感）
+  let innerD = '';
+  for (let i = 0; i <= numPoints; i++) {
+    const angle = (i / numPoints) * Math.PI * 2;
+    const r = baseR * 0.78
+      + 14 * Math.sin(3 * angle + 0.5)
+      + 9 * Math.cos(5 * angle + 1.2)
+      + 6 * Math.sin(7 * angle + 2.1);
+    const x = r * Math.cos(angle);
+    const y = r * Math.sin(angle) * 0.85;
+    innerD += `${i === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)} `;
+  }
+  innerD += 'Z';
+  const innerPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  innerPath.setAttribute('d', innerD.trim());
+  innerPath.classList.add('track-lane');
+  innerPath.style.setProperty('--dur', dur + 's');
+  g.appendChild(innerPath);
+
+  // 中心 "环湖 5km" 标注
+  const lakeLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  lakeLabel.setAttribute('x', '0');
+  lakeLabel.setAttribute('y', '5');
+  lakeLabel.setAttribute('fill', 'rgba(0, 180, 216, 0.85)');
+  lakeLabel.setAttribute('font-size', '15');
+  lakeLabel.setAttribute('font-weight', '700');
+  lakeLabel.setAttribute('font-family', 'Oswald, sans-serif');
+  lakeLabel.setAttribute('text-anchor', 'middle');
+  lakeLabel.classList.add('track-label');
+  lakeLabel.style.setProperty('--dur', dur + 's');
+  lakeLabel.textContent = '🏞️ 环湖 5km';
+  g.appendChild(lakeLabel);
+
+  // ===== 起点（绿色）===== 右侧湖岸
+  const startAngle = 0;
+  const startX = baseR * Math.cos(startAngle);
+  const startY = baseR * Math.sin(startAngle) * 0.85;
+
+  const startG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  startG.classList.add('trace-start');
+  startG.style.setProperty('--dur', dur + 's');
+  
+  const startRing = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  startRing.setAttribute('cx', startX.toFixed(2));
+  startRing.setAttribute('cy', startY.toFixed(2));
+  startRing.setAttribute('r', '8');
+  startRing.classList.add('trace-start-ring');
+  startRing.style.setProperty('--dur', dur + 's');
+  startG.appendChild(startRing);
+  
+  const startPt = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  startPt.setAttribute('cx', startX.toFixed(2));
+  startPt.setAttribute('cy', startY.toFixed(2));
+  startPt.setAttribute('r', '10');
+  startPt.setAttribute('fill', '#00e676');
+  startPt.classList.add('trace-start-dot');
+  startG.appendChild(startPt);
+  g.appendChild(startG);
+
+  const startLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  startLabel.setAttribute('x', (startX + 16).toFixed(2));
+  startLabel.setAttribute('y', (startY - 12).toFixed(2));
+  startLabel.setAttribute('fill', '#00e676');
+  startLabel.setAttribute('font-size', '11');
+  startLabel.setAttribute('font-weight', '700');
+  startLabel.setAttribute('font-family', 'Oswald, sans-serif');
+  startLabel.style.animation = `markerAppear ${dur}s ease-in-out forwards`;
+  startLabel.textContent = 'START';
+  g.appendChild(startLabel);
+
+  // ===== 终点（红色）===== 约 70% 位置
+  const endAngle = Math.PI * 2 * 0.7;
+  const endR = baseR + 18 * Math.sin(3 * endAngle + 0.5) + 12 * Math.cos(5 * endAngle + 1.2);
+  const endX = endR * Math.cos(endAngle);
+  const endY = endR * Math.sin(endAngle) * 0.85;
+
+  const endG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  endG.classList.add('trace-end');
+  endG.style.setProperty('--dur', dur + 's');
+  
+  const endRing = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  endRing.setAttribute('cx', endX.toFixed(2));
+  endRing.setAttribute('cy', endY.toFixed(2));
+  endRing.setAttribute('r', '8');
+  endRing.classList.add('trace-end-ring');
+  endRing.style.setProperty('--dur', dur + 's');
+  endG.appendChild(endRing);
+  
+  const endPt = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  endPt.setAttribute('cx', endX.toFixed(2));
+  endPt.setAttribute('cy', endY.toFixed(2));
+  endPt.setAttribute('r', '10');
+  endPt.setAttribute('fill', '#ff1744');
+  endPt.classList.add('trace-end-dot');
+  endG.appendChild(endPt);
+  g.appendChild(endG);
+
+  const endLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  endLabel.setAttribute('x', (endX + 16).toFixed(2));
+  endLabel.setAttribute('y', (endY + 18).toFixed(2));
+  endLabel.setAttribute('fill', '#ff1744');
+  endLabel.setAttribute('font-size', '11');
+  endLabel.setAttribute('font-weight', '700');
+  endLabel.setAttribute('font-family', 'Oswald, sans-serif');
+  endLabel.style.animation = `markerAppearEnd ${dur}s ease-in-out forwards`;
+  endLabel.textContent = 'END';
+  g.appendChild(endLabel);
+
+  // 速度标注
+  const speedAnns = [
+    { idx: 2, label: '4\'20"', dx: 25, dy: -18 },
+    { idx: 7, label: '5\'45"', dx: -35, dy: 15 },
+    { idx: 11, label: '4\'05"', dx: 25, dy: 10 },
+  ];
+  speedAnns.forEach(ann => {
+    if (ann.idx < numSegs) {
+      const pIdx = Math.min(numPoints, ann.idx * ptsPerSeg + Math.floor(ptsPerSeg / 2));
+      const px = pts[pIdx].x + ann.dx;
+      const py = pts[pIdx].y + ann.dy;
+      const tagColor = getSpeedColor(palette, segSpeeds[ann.idx]);
+      const tag = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      tag.setAttribute('x', px.toFixed(1));
+      tag.setAttribute('y', py.toFixed(1));
+      tag.setAttribute('fill', tagColor);
+      tag.setAttribute('font-size', '13');
+      tag.classList.add('speed-tag');
+      tag.style.setProperty('--dur', dur + 's');
+      tag.textContent = ann.label;
+      g.appendChild(tag);
+    }
+  });
+
+  traceSvg.appendChild(g);
+  speedLegend.classList.add('show');
+  
+  setTimeout(() => {
+    g.remove();
+    speedLegend.classList.remove('show');
+  }, parseFloat(dur) * 1000 + 1500);
+}
+
+// --- 生成 Keep 品牌 K 字轨迹（带速度渐变色 + 起点终点）---
+function spawnKeepTrace() {
+  const palette = SPEED_PALETTES[paletteIdx % SPEED_PALETTES.length];
+  paletteIdx++;
+  updateLegend(palette);
+  
+  const dur = (8 + Math.random() * 2).toFixed(2);
+  
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  g.classList.add('track-group');
+  g.style.setProperty('--dur', dur + 's');
+  
+  const vw = window.innerWidth || 1920;
+  const vh = window.innerHeight || 1080;
+  const tx = (Math.random() * 0.3 + 0.35) * vw;
+  const ty = (Math.random() * 0.3 + 0.35) * vh;
+  const scale = 0.9 + Math.random() * 0.4;
+  const rotate = Math.random() * 16 - 8;
+  g.setAttribute('transform', `translate(${tx}, ${ty}) scale(${scale}) rotate(${rotate})`);
+
+  // K 字母笔画：竖线 + 上斜线 + 下斜线
+  const segDefs = [];
+  segDefs.push({ type: 'L', x1: -40, y1: -80, x2: -40, y2: 80 });
+  segDefs.push({ type: 'L', x1: -40, y1: 0, x2: 45, y2: -80 });
+  segDefs.push({ type: 'L', x1: -40, y1: 0, x2: 45, y2: 80 });
+
+  const segSpeeds = generateSpeedProfile(segDefs.length, 0.5 + Math.random() * 0.2);
+
+  segDefs.forEach((seg, i) => {
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const d = `M ${seg.x1} ${seg.y1} L ${seg.x2} ${seg.y2}`;
+    path.setAttribute('d', d);
+    
+    const color = getSpeedColor(palette, segSpeeds[i]);
+    path.setAttribute('stroke', color);
+    path.setAttribute('stroke-width', '8');
+    path.setAttribute('stroke-linecap', 'round');
+    path.classList.add('track-seg');
+    
+    const segDur = (dur * 0.6).toFixed(2);
+    path.style.setProperty('--dur', segDur + 's');
+    const delay = (i / segDefs.length * dur * 0.5).toFixed(2);
+    path.style.setProperty('--seg-delay', delay + 's');
+    path.style.filter = `drop-shadow(0 0 5px ${color})`;
+    
+    g.appendChild(path);
+  });
+
+  // Keep 圆角矩形背景框（装饰）
+  const rectW = 110;
+  const rectH = 110;
+  const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  rect.setAttribute('x', (-rectW/2 - 20).toFixed(1));
+  rect.setAttribute('y', (-rectH/2 - 20).toFixed(1));
+  rect.setAttribute('width', (rectW + 40).toFixed(1));
+  rect.setAttribute('height', (rectH + 40).toFixed(1));
+  rect.setAttribute('rx', '20');
+  rect.setAttribute('ry', '20');
+  rect.setAttribute('fill', 'none');
+  rect.setAttribute('stroke', 'rgba(0, 230, 118, 0.3)');
+  rect.setAttribute('stroke-width', '2');
+  rect.setAttribute('stroke-dasharray', '8 6');
+  rect.classList.add('track-lane');
+  rect.style.setProperty('--dur', dur + 's');
+  g.appendChild(rect);
+
+  // 中心 "KEEP" 标注
+  const keepLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  keepLabel.setAttribute('x', '0');
+  keepLabel.setAttribute('y', '105');
+  keepLabel.setAttribute('fill', 'rgba(0, 230, 118, 0.9)');
+  keepLabel.setAttribute('font-size', '15');
+  keepLabel.setAttribute('font-weight', '700');
+  keepLabel.setAttribute('font-family', 'Oswald, sans-serif');
+  keepLabel.setAttribute('text-anchor', 'middle');
+  keepLabel.classList.add('track-label');
+  keepLabel.style.setProperty('--dur', dur + 's');
+  keepLabel.textContent = 'KEEP';
+  g.appendChild(keepLabel);
+
+  // ===== 起点（绿色）===== K字左上
+  const startX = -40;
+  const startY = -80;
+  const startG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  startG.classList.add('trace-start');
+  startG.style.setProperty('--dur', dur + 's');
+  
+  const startRing = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  startRing.setAttribute('cx', startX);
+  startRing.setAttribute('cy', startY);
+  startRing.setAttribute('r', '8');
+  startRing.classList.add('trace-start-ring');
+  startRing.style.setProperty('--dur', dur + 's');
+  startG.appendChild(startRing);
+  
+  const startPt = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  startPt.setAttribute('cx', startX);
+  startPt.setAttribute('cy', startY);
+  startPt.setAttribute('r', '10');
+  startPt.setAttribute('fill', '#00e676');
+  startPt.classList.add('trace-start-dot');
+  startG.appendChild(startPt);
+  g.appendChild(startG);
+
+  const startLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  startLabel.setAttribute('x', startX - 40);
+  startLabel.setAttribute('y', startY - 12);
+  startLabel.setAttribute('fill', '#00e676');
+  startLabel.setAttribute('font-size', '11');
+  startLabel.setAttribute('font-weight', '700');
+  startLabel.setAttribute('font-family', 'Oswald, sans-serif');
+  startLabel.style.animation = `markerAppear ${dur}s ease-in-out forwards`;
+  startLabel.textContent = 'START';
+  g.appendChild(startLabel);
+
+  // ===== 终点（红色）===== K字右下
+  const endX = 45;
+  const endY = 80;
+  const endG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  endG.classList.add('trace-end');
+  endG.style.setProperty('--dur', dur + 's');
+  
+  const endRing = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  endRing.setAttribute('cx', endX);
+  endRing.setAttribute('cy', endY);
+  endRing.setAttribute('r', '8');
+  endRing.classList.add('trace-end-ring');
+  endRing.style.setProperty('--dur', dur + 's');
+  endG.appendChild(endRing);
+  
+  const endPt = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  endPt.setAttribute('cx', endX);
+  endPt.setAttribute('cy', endY);
+  endPt.setAttribute('r', '10');
+  endPt.setAttribute('fill', '#ff1744');
+  endPt.classList.add('trace-end-dot');
+  endG.appendChild(endPt);
+  g.appendChild(endG);
+
+  const endLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  endLabel.setAttribute('x', endX + 14);
+  endLabel.setAttribute('y', endY + 18);
+  endLabel.setAttribute('fill', '#ff1744');
+  endLabel.setAttribute('font-size', '11');
+  endLabel.setAttribute('font-weight', '700');
+  endLabel.setAttribute('font-family', 'Oswald, sans-serif');
+  endLabel.style.animation = `markerAppearEnd ${dur}s ease-in-out forwards`;
+  endLabel.textContent = 'END';
+  g.appendChild(endLabel);
+
+  // 速度标注
+  const speedAnns = [
+    { idx: 0, label: '4\'50"', dx: -55, dy: 0 },
+    { idx: 1, label: '4\'10"', dx: 20, dy: -20 },
+    { idx: 2, label: '5\'30"', dx: 20, dy: 20 },
+  ];
+  speedAnns.forEach(ann => {
+    if (ann.idx < segDefs.length) {
+      const seg = segDefs[ann.idx];
+      const mx = (seg.x1 + seg.x2) / 2 + ann.dx;
+      const my = (seg.y1 + seg.y2) / 2 + ann.dy;
+      const tagColor = getSpeedColor(palette, segSpeeds[ann.idx]);
+      const tag = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      tag.setAttribute('x', mx.toFixed(1));
+      tag.setAttribute('y', my.toFixed(1));
+      tag.setAttribute('fill', tagColor);
+      tag.setAttribute('font-size', '13');
+      tag.classList.add('speed-tag');
+      tag.style.setProperty('--dur', dur + 's');
+      tag.textContent = ann.label;
+      g.appendChild(tag);
+    }
+  });
+
+  traceSvg.appendChild(g);
+  speedLegend.classList.add('show');
+  
+  setTimeout(() => {
+    g.remove();
+    speedLegend.classList.remove('show');
+  }, parseFloat(dur) * 1000 + 1500);
+}
+
+// --- 生成 400米标准操场 SVG 轨迹（带速度渐变色）---
+function spawnTrackTrace() {
+  const palette = SPEED_PALETTES[paletteIdx % SPEED_PALETTES.length];
+  paletteIdx++;
+  updateLegend(palette);
+  
+  const dur = (7 + Math.random() * 2).toFixed(2); // 7~9s 慢速绘制
+  
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  g.classList.add('track-group');
+  g.style.setProperty('--dur', dur + 's');
+  
+  const vw = window.innerWidth || 1920;
+  const vh = window.innerHeight || 1080;
+  const tx = (Math.random() * 0.3 + 0.35) * vw;
+  const ty = (Math.random() * 0.3 + 0.35) * vh;
+  const scale = 0.9 + Math.random() * 0.4; // 更大！
+  const rotate = Math.random() * 20 - 10;
+  g.setAttribute('transform', `translate(${tx}, ${ty}) scale(${scale}) rotate(${rotate})`);
+
+  // 操场参数
+  const straight = 160;
+  const r = 70;
+  const totalW = straight + 2 * r;
+  const totalH = 2 * r;
+  const ox = -totalW / 2;
+  const oy = -totalH / 2;
+
+  // 完整路径
+  const fullD = `
+    M ${ox + r} ${oy}
+    L ${ox + r + straight} ${oy}
+    A ${r} ${r} 0 1 1 ${ox + r + straight} ${oy + 2 * r}
+    L ${ox + r} ${oy + 2 * r}
+    A ${r} ${r} 0 1 1 ${ox + r} ${oy}
+    Z
+  `;
+
+  // 用 path 分段绘制
+  // 上直道: 2段, 上弯道: 3段, 下直道: 2段, 下弯道: 3段, 连接段: 2段
+  const segDefs = [];
+  // 上直道 (从左到右)
+  segDefs.push({ type: 'L', x1: ox+r, y1: oy, x2: ox+r+straight*0.5, y2: oy });
+  segDefs.push({ type: 'L', x1: ox+r+straight*0.5, y1: oy, x2: ox+r+straight, y2: oy });
+
+  // 简化方案：用均匀角度分段画圆弧
+  // 上弯道: 从角度 -90° 到 90° (经过右侧)
+  const arcSegs = 3;
+  for (let i = 0; i < arcSegs; i++) {
+    const a1 = -Math.PI/2 + (i/arcSegs) * Math.PI;
+    const a2 = -Math.PI/2 + ((i+1)/arcSegs) * Math.PI;
+    const cx_a = ox + r + straight;
+    const cy_a = oy + r;
+    segDefs.push({
+      type: 'A',
+      x1: cx_a + r * Math.cos(a1),
+      y1: cy_a + r * Math.sin(a1),
+      x2: cx_a + r * Math.cos(a2),
+      y2: cy_a + r * Math.sin(a2),
+      r: r,
+      sweep: 1
+    });
+  }
+  // 下直道 (从右到左)
+  segDefs.push({ type: 'L', x1: ox+r+straight, y1: oy+2*r, x2: ox+r+straight*0.5, y2: oy+2*r });
+  segDefs.push({ type: 'L', x1: ox+r+straight*0.5, y1: oy+2*r, x2: ox+r, y2: oy+2*r });
+  // 下弯道: 从角度 90° 到 270° (经过左侧)
+  for (let i = 0; i < arcSegs; i++) {
+    const a1 = Math.PI/2 + (i/arcSegs) * Math.PI;
+    const a2 = Math.PI/2 + ((i+1)/arcSegs) * Math.PI;
+    const cx_a = ox + r;
+    const cy_a = oy + r;
+    segDefs.push({
+      type: 'A',
+      x1: cx_a + r * Math.cos(a1),
+      y1: cy_a + r * Math.sin(a1),
+      x2: cx_a + r * Math.cos(a2),
+      y2: cy_a + r * Math.sin(a2),
+      r: r,
+      sweep: 1
+    });
+  }
+
+  // 生成速度数据
+  const segSpeeds = generateSpeedProfile(segDefs.length, 0.4 + Math.random() * 0.25);
+
+  // 绘制每段
+  segDefs.forEach((seg, i) => {
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    let d;
+    if (seg.type === 'L') {
+      d = `M ${seg.x1.toFixed(1)} ${seg.y1.toFixed(1)} L ${seg.x2.toFixed(1)} ${seg.y2.toFixed(1)}`;
+    } else {
+      d = `M ${seg.x1.toFixed(1)} ${seg.y1.toFixed(1)} A ${seg.r} ${seg.r} 0 0 ${seg.sweep} ${seg.x2.toFixed(1)} ${seg.y2.toFixed(1)}`;
+    }
+    path.setAttribute('d', d);
+    
+    const color = getSpeedColor(palette, segSpeeds[i]);
+    path.setAttribute('stroke', color);
+    path.setAttribute('stroke-width', '5');
+    path.classList.add('track-seg');
+    
+    // 每段依次延迟绘制，形成沿轨迹推进的效果
+    const segDur = (dur * 0.7).toFixed(2);
+    path.style.setProperty('--dur', segDur + 's');
+    const delay = (i / segDefs.length * dur * 0.6).toFixed(2);
+    path.style.setProperty('--seg-delay', delay + 's');
+    
+    // 添加轻微发光
+    path.style.filter = `drop-shadow(0 0 3px ${color})`;
+    
+    g.appendChild(path);
+  });
+
+  // 内圈装饰线
+  const innerR = r - 12;
+  const innerPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  const dInner = `
+    M ${ox + r} ${oy + 6}
+    L ${ox + r + straight} ${oy + 6}
+    A ${innerR} ${innerR} 0 1 1 ${ox + r + straight} ${oy + 2 * r - 6}
+    L ${ox + r} ${oy + 2 * r - 6}
+    A ${innerR} ${innerR} 0 1 1 ${ox + r} ${oy + 6}
+    Z
+  `;
+  innerPath.setAttribute('d', dInner);
+  innerPath.classList.add('track-lane');
+  innerPath.style.setProperty('--dur', dur + 's');
+  g.appendChild(innerPath);
+
+  // 中心标记
+  const centerCircle = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+  centerCircle.setAttribute('cx', '0');
+  centerCircle.setAttribute('cy', '0');
+  centerCircle.setAttribute('rx', '20');
+  centerCircle.setAttribute('ry', '12');
+  centerCircle.setAttribute('fill', 'rgba(0, 230, 118, 0.5)');
+  centerCircle.classList.add('track-center');
+  centerCircle.style.setProperty('--dur', dur + 's');
+  g.appendChild(centerCircle);
+
+  // 距离标注
+  const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  label.setAttribute('x', '0');
+  label.setAttribute('y', '5');
+  label.setAttribute('fill', 'rgba(0, 230, 118, 0.9)');
+  label.classList.add('track-label');
+  label.style.setProperty('--dur', dur + 's');
+  label.textContent = '400m';
+  g.appendChild(label);
+
+  // ===== 起点（绿色点）===== 左上角
+  const startX = ox + r;
+  const startY = oy;
+  const startG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  startG.classList.add('trace-start');
+  startG.style.setProperty('--dur', dur + 's');
+  
+  const startRing = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  startRing.setAttribute('cx', startX);
+  startRing.setAttribute('cy', startY);
+  startRing.setAttribute('r', '5');
+  startRing.classList.add('trace-start-ring');
+  startRing.style.setProperty('--dur', dur + 's');
+  startG.appendChild(startRing);
+  
+  const startPt = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  startPt.setAttribute('cx', startX);
+  startPt.setAttribute('cy', startY);
+  startPt.setAttribute('r', '6');
+  startPt.setAttribute('fill', '#00e676');
+  startPt.classList.add('trace-start-dot');
+  startG.appendChild(startPt);
+  g.appendChild(startG);
+
+  // 起点文字
+  const startLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  startLabel.setAttribute('x', startX + 12);
+  startLabel.setAttribute('y', startY - 10);
+  startLabel.setAttribute('fill', '#00e676');
+  startLabel.setAttribute('font-size', '11');
+  startLabel.setAttribute('font-weight', '700');
+  startLabel.setAttribute('font-family', 'Oswald, sans-serif');
+  startLabel.style.animation = `markerAppear ${dur}s ease-in-out forwards`;
+  startLabel.textContent = 'START';
+  g.appendChild(startLabel);
+
+  // ===== 终点（红色点）===== 右下角
+  const endX = ox + r;
+  const endY = oy + 2 * r;
+  const endG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  endG.classList.add('trace-end');
+  endG.style.setProperty('--dur', dur + 's');
+  
+  const endRing = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  endRing.setAttribute('cx', endX);
+  endRing.setAttribute('cy', endY);
+  endRing.setAttribute('r', '5');
+  endRing.classList.add('trace-end-ring');
+  endRing.style.setProperty('--dur', dur + 's');
+  endG.appendChild(endRing);
+  
+  const endPt = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  endPt.setAttribute('cx', endX);
+  endPt.setAttribute('cy', endY);
+  endPt.setAttribute('r', '6');
+  endPt.setAttribute('fill', '#ff1744');
+  endPt.classList.add('trace-end-dot');
+  endG.appendChild(endPt);
+  g.appendChild(endG);
+
+  // 终点文字
+  const endLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  endLabel.setAttribute('x', endX + 12);
+  endLabel.setAttribute('y', endY + 16);
+  endLabel.setAttribute('fill', '#ff1744');
+  endLabel.setAttribute('font-size', '11');
+  endLabel.setAttribute('font-weight', '700');
+  endLabel.setAttribute('font-family', 'Oswald, sans-serif');
+  endLabel.style.animation = `markerAppearEnd ${dur}s ease-in-out forwards`;
+  endLabel.textContent = 'END';
+  g.appendChild(endLabel);
+
+  // 速度标注 - 在几段旁边标注速度
+  const speedAnnotations = [
+    { idx: 1, label: '4\'32"', offset: { x: 15, y: -8 } },   // 上直道中段 - 快
+    { idx: 5, label: '5\'48"', offset: { x: 15, y: 8 } },    // 下直道中段 - 慢
+    { idx: 9, label: '4\'15"', offset: { x: -30, y: 8 } },   // 下弯道 - 冲刺
+  ];
+  
+  speedAnnotations.forEach(ann => {
+    if (ann.idx < segDefs.length) {
+      const seg = segDefs[ann.idx];
+      const mx = (seg.x1 + seg.x2) / 2 + ann.offset.x;
+      const my = (seg.y1 + seg.y2) / 2 + ann.offset.y;
+      const tagColor = getSpeedColor(palette, segSpeeds[ann.idx]);
+      const tag = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      tag.setAttribute('x', mx.toFixed(1));
+      tag.setAttribute('y', my.toFixed(1));
+      tag.setAttribute('fill', tagColor);
+      tag.classList.add('speed-tag');
+      tag.style.setProperty('--dur', dur + 's');
+      tag.textContent = ann.label;
+      g.appendChild(tag);
+    }
+  });
+
+  traceSvg.appendChild(g);
+  
+  // 显示图例
+  speedLegend.classList.add('show');
+  
+  // 总时长 = 绘制时间 + 停留1.5秒 + 淡出
+  setTimeout(() => {
+    g.remove();
+    speedLegend.classList.remove('show');
+  }, parseFloat(dur) * 1000 + 1500);
+}
+
+// --- 生成爱心形状 GPS 轨迹（带速度渐变色）---
+function spawnHeartTrace() {
+  const palette = SPEED_PALETTES[paletteIdx % SPEED_PALETTES.length];
+  paletteIdx++;
+  updateLegend(palette);
+  
+  const dur = (9 + Math.random() * 2).toFixed(2); // 9~11s 更慢！
+  
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  g.classList.add('heart-group');
+  g.style.setProperty('--dur', dur + 's');
+  
+  const vw = window.innerWidth || 1920;
+  const vh = window.innerHeight || 1080;
+  const tx = (Math.random() * 0.3 + 0.35) * vw;
+  const ty = (Math.random() * 0.3 + 0.35) * vh;
+  const scale = 2.0 + Math.random() * 0.6; // 确保爱心展示面积与操场相当
+  const rotate = Math.random() * 16 - 8;
+  g.setAttribute('transform', `translate(${tx}, ${ty}) scale(${scale}) rotate(${rotate})`);
+
+  const numPoints = 240;
+  const heartScale = 4.5; // 大幅增大，让爱心展示面积与操场相当
+  const bottomOffset = 5.375;
+
+  // 生成所有点
+  const pts = [];
+  for (let i = 0; i <= numPoints; i++) {
+    const t = ((i / numPoints) * Math.PI * 2 + bottomOffset) % (Math.PI * 2);
+    const x = 16 * Math.pow(Math.sin(t), 3) * heartScale;
+    const y = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t)) * heartScale;
+    pts.push({ x, y, t });
+  }
+
+  // 将路径分成多段，每段不同速度颜色
+  const numSegs = 16;
+  const segSpeeds = generateSpeedProfile(numSegs, 0.4 + Math.random() * 0.25);
+  const ptsPerSeg = Math.floor(numPoints / numSegs);
+
+  for (let s = 0; s < numSegs; s++) {
+    const startIdx = s * ptsPerSeg;
+    const endIdx = (s === numSegs - 1) ? numPoints : (s + 1) * ptsPerSeg;
+    
+    let d = '';
+    for (let i = startIdx; i <= endIdx; i++) {
+      d += `${i === startIdx ? 'M' : 'L'} ${pts[i].x.toFixed(2)} ${pts[i].y.toFixed(2)} `;
+    }
+    
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', d.trim());
+    
+    const color = getSpeedColor(palette, segSpeeds[s]);
+    path.setAttribute('stroke', color);
+    path.setAttribute('stroke-width', '5');
+    path.classList.add('heart-seg');
+    
+    const segDur = (dur * 0.75).toFixed(2);
+    path.style.setProperty('--dur', segDur + 's');
+    const delay = (s / numSegs * dur * 0.65).toFixed(2);
+    path.style.setProperty('--seg-delay', delay + 's');
+    path.style.filter = `drop-shadow(0 0 4px ${color})`;
+    
+    g.appendChild(path);
+  }
+
+  // 爱心内部填充
+  let fillD = '';
+  for (let i = 0; i <= numPoints; i++) {
+    fillD += `${i === 0 ? 'M' : 'L'} ${pts[i].x.toFixed(2)} ${pts[i].y.toFixed(2)} `;
+  }
+  fillD += 'Z';
+  
+  const heartFill = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  heartFill.setAttribute('d', fillD);
+  heartFill.setAttribute('fill', 'rgba(255, 23, 68, 0.06)');
+  heartFill.classList.add('heart-fill');
+  heartFill.style.setProperty('--dur', dur + 's');
+  g.appendChild(heartFill);
+
+  // ===== 起点（绿色）===== 底部尖端
+  // 精确计算底部尖端坐标
+  const tStart = bottomOffset;
+  const startX = 16 * Math.pow(Math.sin(tStart), 3) * heartScale;
+  const startY = -(13 * Math.cos(tStart) - 5 * Math.cos(2*tStart) - 2 * Math.cos(3*tStart) - Math.cos(4*tStart)) * heartScale;
+
+  const startG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  startG.classList.add('trace-start');
+  startG.style.setProperty('--dur', dur + 's');
+  
+  const startRing = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  startRing.setAttribute('cx', startX.toFixed(2));
+  startRing.setAttribute('cy', startY.toFixed(2));
+  startRing.setAttribute('r', '8');
+  startRing.classList.add('trace-start-ring');
+  startRing.style.setProperty('--dur', dur + 's');
+  startG.appendChild(startRing);
+  
+  const startPt = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  startPt.setAttribute('cx', startX.toFixed(2));
+  startPt.setAttribute('cy', startY.toFixed(2));
+  startPt.setAttribute('r', '10');
+  startPt.setAttribute('fill', '#00e676');
+  startPt.classList.add('trace-start-dot');
+  startG.appendChild(startPt);
+  g.appendChild(startG);
+
+  // 起点文字
+  const startLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  startLabel.setAttribute('x', (startX + 18).toFixed(2));
+  startLabel.setAttribute('y', (startY + 30).toFixed(2));
+  startLabel.setAttribute('fill', '#00e676');
+  startLabel.setAttribute('font-size', '11');
+  startLabel.setAttribute('font-weight', '700');
+  startLabel.setAttribute('font-family', 'Oswald, sans-serif');
+  startLabel.style.animation = `markerAppear ${dur}s ease-in-out forwards`;
+  startLabel.textContent = 'START';
+  g.appendChild(startLabel);
+
+  // ===== 终点（红色）===== 大约在 60% 位置（顶部附近右侧）
+  const tEnd = (0.6 * Math.PI * 2 + bottomOffset) % (Math.PI * 2);
+  const endX = 16 * Math.pow(Math.sin(tEnd), 3) * heartScale;
+  const endY = -(13 * Math.cos(tEnd) - 5 * Math.cos(2*tEnd) - 2 * Math.cos(3*tEnd) - Math.cos(4*tEnd)) * heartScale;
+
+  const endG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  endG.classList.add('trace-end');
+  endG.style.setProperty('--dur', dur + 's');
+  
+  const endRing = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  endRing.setAttribute('cx', endX.toFixed(2));
+  endRing.setAttribute('cy', endY.toFixed(2));
+  endRing.setAttribute('r', '8');
+  endRing.classList.add('trace-end-ring');
+  endRing.style.setProperty('--dur', dur + 's');
+  endG.appendChild(endRing);
+  
+  const endPt = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  endPt.setAttribute('cx', endX.toFixed(2));
+  endPt.setAttribute('cy', endY.toFixed(2));
+  endPt.setAttribute('r', '10');
+  endPt.setAttribute('fill', '#ff1744');
+  endPt.classList.add('trace-end-dot');
+  endG.appendChild(endPt);
+  g.appendChild(endG);
+
+  // 终点文字
+  const endLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  endLabel.setAttribute('x', (endX + 18).toFixed(2));
+  endLabel.setAttribute('y', (endY - 14).toFixed(2));
+  endLabel.setAttribute('fill', '#ff1744');
+  endLabel.setAttribute('font-size', '11');
+  endLabel.setAttribute('font-weight', '700');
+  endLabel.setAttribute('font-family', 'Oswald, sans-serif');
+  endLabel.style.animation = `markerAppearEnd ${dur}s ease-in-out forwards`;
+  endLabel.textContent = 'END';
+  g.appendChild(endLabel);
+
+  // 中心 "LOVE" 标注
+  const loveLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  loveLabel.setAttribute('x', '0');
+  loveLabel.setAttribute('y', '-5');
+  loveLabel.setAttribute('fill', 'rgba(255, 100, 130, 0.9)');
+  loveLabel.classList.add('heart-label');
+  loveLabel.style.setProperty('--dur', dur + 's');
+  loveLabel.textContent = 'LOVE';
+  g.appendChild(loveLabel);
+
+  // 速度标注
+  const speedAnns = [
+    { idx: 3, label: '3\'50"', dx: 45, dy: -20 },
+    { idx: 9, label: '5\'20"', dx: -50, dy: 20 },
+    { idx: 13, label: '4\'05"', dx: 45, dy: 10 },
+  ];
+  speedAnns.forEach(ann => {
+    if (ann.idx < numSegs) {
+      const pIdx = Math.min(numPoints, ann.idx * ptsPerSeg + Math.floor(ptsPerSeg/2));
+      const px = pts[pIdx].x + ann.dx;
+      const py = pts[pIdx].y + ann.dy;
+      const tagColor = getSpeedColor(palette, segSpeeds[ann.idx]);
+      const tag = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      tag.setAttribute('x', px.toFixed(1));
+      tag.setAttribute('y', py.toFixed(1));
+      tag.setAttribute('fill', tagColor);
+      tag.setAttribute('font-size', '14');
+      tag.classList.add('speed-tag');
+      tag.style.setProperty('--dur', dur + 's');
+      tag.textContent = ann.label;
+      g.appendChild(tag);
+    }
+  });
+
+  traceSvg.appendChild(g);
+  
+  // 显示图例
+  speedLegend.classList.add('show');
+  
+  setTimeout(() => {
+    g.remove();
+    speedLegend.classList.remove('show');
+  }, parseFloat(dur) * 1000 + 1500);
+}
+
+// --- 轮流调度（链式 setTimeout，上一条消失后1.5秒立即开始下一条）---
+let spawnTimer = null;
+
+function spawnNext() {
+  // 先清除 SVG 中残留的旧元素
+  while (traceSvg.firstChild) {
+    traceSvg.removeChild(traceSvg.firstChild);
+  }
+  
+  let dur = 5; // 默认，下面会覆盖
+  
+  if (traceMode === 0) {
+    spawnTextTrace();      // 52run.Cn 文字（缩小版，无起点终点）
+    dur = 3.5;
+  } else if (traceMode === 1) {
+    spawnTrackTrace();     // 400米操场轨迹（带速度渐变+起点终点）
+    dur = 8;
+  } else if (traceMode === 2) {
+    spawnHeartTrace();     // 爱心轨迹（带速度渐变+起点终点）
+    dur = 10;
+  } else if (traceMode === 3) {
+    spawn1314Trace();      // "13.14" 文字轨迹（浪漫配色）
+    dur = 4;
+  } else if (traceMode === 4) {
+    spawnLakeTrace();      // 环湖闭合路线轨迹（带速度渐变+起点终点）
+    dur = 9;
+  } else {
+    spawnKeepTrace();      // Keep K字轨迹（带速度渐变+起点终点）
+    dur = 8;
+  }
+  traceMode = (traceMode + 1) % 6;
+  
+  // 绘制完成 + 停留1.5秒 + 0.3秒淡出缓冲 → 立即开始下一条
+  const nextDelay = dur * 1000 + 1500 + 300;
+  spawnTimer = setTimeout(spawnNext, nextDelay);
+}
+
+// 启动循环
+spawnNext();
+
+
+// === 统计数据跳动增长 ===
 function animateValue(el, target, duration, suffix) {
+  let start = 0;
   let startTimestamp = null;
   const isFloat = target % 1 !== 0;
+
   function step(timestamp) {
     if (!startTimestamp) startTimestamp = timestamp;
     const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-    let current = progress * target;
-    let displayVal = isFloat ? current.toFixed(1) : Math.floor(current);
-    if (target >= 1000) displayVal = Math.floor(current / 10) * 10;
+    let current = progress * (target - start) + start;
+    
+    let displayVal;
+    if (target >= 1000) {
+      displayVal = Math.floor(current / 10) * 10;
+    } else if (isFloat) {
+      displayVal = current.toFixed(1);
+    } else {
+      displayVal = Math.floor(current);
+    }
+    
     el.innerText = displayVal + suffix;
-    if (progress < 1) requestAnimationFrame(step);
-    else el.innerText = target + suffix;
+
+    if (progress < 1) {
+      window.requestAnimationFrame(step);
+    } else {
+      el.innerText = target + suffix;
+    }
   }
-  requestAnimationFrame(step);
+  window.requestAnimationFrame(step);
 }
+
 const statsObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
       document.querySelectorAll('.stat-num').forEach(el => {
-        animateValue(el, parseFloat(el.dataset.target), 1500, el.dataset.suffix);
+        const target = parseFloat(el.getAttribute('data-target'));
+        const suffix = el.getAttribute('data-suffix');
+        animateValue(el, target, 1500, suffix);
       });
       statsObserver.unobserve(entry.target);
     }
   });
 }, { threshold: 0.3 });
+
 const statsSection = document.getElementById('stats');
-if (statsSection) statsObserver.observe(statsSection);
-
-/* ========== 轨迹系统 —— 纯 JS 时间线驱动 ========== */
-/*
-  设计思路：
-  - 每条轨迹一个完整的生命周期（trace1=13.5s，其余=11.5s）
-  - 用 requestAnimationFrame + performance.now() 做精确计时
-  - 手动设置每个 SVG 元素的 opacity / stroke-dashoffset / transform
-  - 不依赖任何 CSS @keyframes animation
-  - 数据面板始终 opacity:1，不做任何动画
-*/
-
-function getRandomTransform() {
-  const dx = (Math.random() * 14 - 7).toFixed(1);
-  const dy = (Math.random() * 14 - 7).toFixed(1);
-  const rotation = (Math.random() * 12 - 6).toFixed(1);
-  const scale = (0.65 + Math.random() * 0.15).toFixed(2);
-  return { dx: parseFloat(dx), dy: parseFloat(dy), rotation, scale };
+if (statsSection) {
+  statsObserver.observe(statsSection);
 }
-
-/* --- 工具函数：线性插值 + easeInOut --- */
-function lerp(a, b, t) { return a + (b - a) * t; }
-function easeInOut(t) { return t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2; }
-function clamp01(t) { return Math.max(0, Math.min(1, t)); }
-function range(t, start, end) { return clamp01((t - start) / (end - start)); }
-
-/* --- 轨迹1 渲染函数 --- */
-function renderTrace1(group, elapsed, totalDur) {
-  const t = elapsed;
-  const dur = totalDur;
-
-  // 整体淡入淡出
-  const fadeIn = range(t, 0, 0.08);
-  const fadeOut = 1 - range(t, 0.85, 1.0);
-  const groupOpacity = Math.min(fadeIn, fadeOut);
-
-  group.style.opacity = groupOpacity.toFixed(3);
-
-  // 主跑道轨迹线：stroke-dashoffset 从 240 → 0（0.05~0.55），保持到 0.78，然后淡出
-  const mainDraw = easeInOut(range(t, 0.05, 0.55));
-  const mainFade = 1 - range(t, 0.78, 0.92);
-  const mainPath = group.querySelector('.t-main');
-  if (mainPath) {
-    mainPath.style.strokeDashoffset = (240 * (1 - mainDraw)).toFixed(1);
-    mainPath.style.opacity = (0.85 * mainFade).toFixed(3);
-  }
-
-  // 内沿细线1：延迟 0.4s
-  const inner1Draw = easeInOut(range(t, 0.09, 0.55));
-  const inner1Path = group.querySelector('.t-inner1');
-  if (inner1Path) inner1Path.style.strokeDashoffset = (200 * (1 - inner1Draw)).toFixed(1);
-
-  // 内沿细线2 & 3：延迟 0.6s
-  const inner23Draw = easeInOut(range(t, 0.11, 0.55));
-  const inner2 = group.querySelector('.t-inner2');
-  const inner3 = group.querySelector('.t-inner3');
-  if (inner2) inner2.style.strokeDashoffset = (140 * (1 - inner23Draw)).toFixed(1);
-  if (inner3) inner3.style.strokeDashoffset = (140 * (1 - inner23Draw)).toFixed(1);
-
-  // 流动虚线
-  const flowFade = range(t, 0.58, 0.80) * (1 - range(t, 0.80, 0.92));
-  const flowPath = group.querySelector('.t-flow');
-  if (flowPath) {
-    flowPath.style.opacity = (0.4 * flowFade).toFixed(3);
-    // 让 dashoffset 持续滚动产生流动感
-    const dashOffset = (t * 30) % 8;
-    flowPath.style.strokeDashoffset = dashOffset.toFixed(1);
-  }
-
-  // 光晕
-  const glowFade = range(t, 0.10, 0.60) * (1 - range(t, 0.60, 0.90));
-  const glow1 = group.querySelector('.t-glow1');
-  const glow2 = group.querySelector('.t-glow2');
-  if (glow1) glow1.style.opacity = (0.8 * glowFade).toFixed(3);
-  if (glow2) glow2.style.opacity = (0.5 * glowFade).toFixed(3);
-
-  // 暖色弧线
-  const warmFade = range(t, 0.15, 0.65) * (1 - range(t, 0.65, 0.90));
-  const warm = group.querySelector('.t-warm');
-  if (warm) warm.style.opacity = (0.7 * warmFade).toFixed(3);
-
-  // 起点圆点
-  const startAppear = easeInOut(range(t, 0.50, 0.62));
-  const startFade = 1 - range(t, 0.80, 0.92);
-  const startDot = group.querySelector('.t-dot-start');
-  const startRing = group.querySelector('.t-dot-start-ring');
-  if (startDot) {
-    startDot.style.opacity = (startAppear * startFade).toFixed(3);
-    const s = lerp(0.3, 1.3, startAppear);
-    startDot.style.transform = `scale(${s.toFixed(2)})`;
-  }
-  if (startRing) startRing.style.opacity = (0.65 * startAppear * startFade).toFixed(3);
-
-  // 终点圆点
-  const endAppear = easeInOut(range(t, 0.55, 0.68));
-  const endFade = 1 - range(t, 0.82, 0.92);
-  const endDot = group.querySelector('.t-dot-end');
-  const endRing = group.querySelector('.t-dot-end-ring');
-  if (endDot) {
-    endDot.style.opacity = (endAppear * endFade).toFixed(3);
-    const s = lerp(0.3, 1.0, endAppear);
-    endDot.style.transform = `scale(${s.toFixed(2)})`;
-  }
-  if (endRing) endRing.style.opacity = (0.55 * endAppear * endFade).toFixed(3);
-
-  // 数据面板 —— 始终可见，不做动画
-  const panel = group.querySelector('.track-data-panel');
-  if (panel) panel.style.opacity = '1';
-}
-
-/* --- 轨迹2 渲染函数 --- */
-function renderTrace2(group, elapsed, totalDur) {
-  const t = elapsed;
-  const fadeIn = range(t, 0, 0.08);
-  const fadeOut = 1 - range(t, 0.85, 1.0);
-  group.style.opacity = Math.min(fadeIn, fadeOut).toFixed(3);
-
-  // 主圆
-  const mainDraw = easeInOut(range(t, 0.05, 0.55));
-  const mainFade = 1 - range(t, 0.78, 0.92);
-  const main = group.querySelector('.t2-main');
-  if (main) {
-    main.style.strokeDashoffset = (88 * (1 - mainDraw)).toFixed(1);
-    main.style.opacity = (0.85 * mainFade).toFixed(3);
-  }
-
-  // 光晕
-  const glow = group.querySelector('.t2-glow');
-  const glowFade = range(t, 0.10, 0.50) * (1 - range(t, 0.50, 0.90));
-  if (glow) glow.style.opacity = (0.6 * glowFade).toFixed(3);
-
-  // 流动虚线
-  const flow = group.querySelector('.t2-flow');
-  const flowFade = range(t, 0.58, 0.78) * (1 - range(t, 0.80, 0.92));
-  if (flow) {
-    flow.style.opacity = (0.4 * flowFade).toFixed(3);
-    flow.style.strokeDashoffset = ((t * 20) % 9).toFixed(1);
-  }
-
-  // 起点/终点圆点
-  const dotAppear = easeInOut(range(t, 0.50, 0.65));
-  const dotFade = 1 - range(t, 0.80, 0.92);
-  const d1 = group.querySelector('.t2-dot1');
-  const d1r = group.querySelector('.t2-dot1-ring');
-  if (d1) { d1.style.opacity = (dotAppear * dotFade).toFixed(3); d1.style.transform = `scale(${lerp(0.3,1.3,dotAppear).toFixed(2)})`; }
-  if (d1r) d1r.style.opacity = (0.6 * dotAppear * dotFade).toFixed(3);
-
-  const d2Appear = easeInOut(range(t, 0.55, 0.70));
-  const d2 = group.querySelector('.t2-dot2');
-  if (d2) d2.style.opacity = (d2Appear * dotFade).toFixed(3);
-}
-
-/* --- 轨迹3 渲染函数 --- */
-function renderTrace3(group, elapsed, totalDur) {
-  const t = elapsed;
-  const fadeIn = range(t, 0, 0.08);
-  const fadeOut = 1 - range(t, 0.85, 1.0);
-  group.style.opacity = Math.min(fadeIn, fadeOut).toFixed(3);
-
-  // 主轨迹
-  const mainDraw = easeInOut(range(t, 0.05, 0.55));
-  const mainFade = 1 - range(t, 0.78, 0.92);
-  const main = group.querySelector('.t3-main');
-  if (main) {
-    main.style.strokeDashoffset = (260 * (1 - mainDraw)).toFixed(1);
-    main.style.opacity = (0.85 * mainFade).toFixed(3);
-  }
-
-  // 光晕
-  const glow = group.querySelector('.t3-glow');
-  const glowFade = range(t, 0.10, 0.50) * (1 - range(t, 0.50, 0.90));
-  if (glow) glow.style.opacity = (0.6 * glowFade).toFixed(3);
-
-  // 流动虚线
-  const flow = group.querySelector('.t3-flow');
-  const flowFade = range(t, 0.58, 0.78) * (1 - range(t, 0.80, 0.92));
-  if (flow) {
-    flow.style.opacity = (0.4 * flowFade).toFixed(3);
-    flow.style.strokeDashoffset = ((t * 25) % 7).toFixed(1);
-  }
-
-  // 主圆点
-  const dotFade = 1 - range(t, 0.80, 0.92);
-  const d1Appear = easeInOut(range(t, 0.50, 0.62));
-  const d1 = group.querySelector('.t3-dot1');
-  const d1r = group.querySelector('.t3-dot1-ring');
-  if (d1) { d1.style.opacity = (d1Appear * dotFade).toFixed(3); d1.style.transform = `scale(${lerp(0.3,1.3,d1Appear).toFixed(2)})`; }
-  if (d1r) d1r.style.opacity = (0.6 * d1Appear * dotFade).toFixed(3);
-
-  const d2Appear = easeInOut(range(t, 0.55, 0.68));
-  const d2 = group.querySelector('.t3-dot2');
-  const d2r = group.querySelector('.t3-dot2-ring');
-  if (d2) d2.style.opacity = (d2Appear * dotFade).toFixed(3);
-  if (d2r) d2r.style.opacity = (0.5 * d2Appear * dotFade).toFixed(3);
-
-  // 散点闪烁
-  const sparks = [
-    { el: group.querySelector('.t3-spark1'), delay: 2.0 },
-    { el: group.querySelector('.t3-spark2'), delay: 3.0 },
-    { el: group.querySelector('.t3-spark3'), delay: 4.0 },
-  ];
-  sparks.forEach(s => {
-    if (!s.el) return;
-    const st = t - s.delay;
-    if (st < 0) { s.el.style.opacity = '0'; return; }
-    const sparkFade = Math.sin(clamp01(st * 0.8) * Math.PI);
-    s.el.style.opacity = (0.6 * sparkFade * dotFade).toFixed(3);
-  });
-}
-
-/* --- 轨迹4 渲染函数 --- */
-function renderTrace4(group, elapsed, totalDur) {
-  const t = elapsed;
-  const fadeIn = range(t, 0, 0.08);
-  const fadeOut = 1 - range(t, 0.85, 1.0);
-  group.style.opacity = Math.min(fadeIn, fadeOut).toFixed(3);
-
-  // 主轨迹
-  const mainDraw = easeInOut(range(t, 0.05, 0.55));
-  const mainFade = 1 - range(t, 0.78, 0.92);
-  const main = group.querySelector('.t4-main');
-  if (main) {
-    main.style.strokeDashoffset = (180 * (1 - mainDraw)).toFixed(1);
-    main.style.opacity = (0.8 * mainFade).toFixed(3);
-  }
-
-  // 光晕
-  const glow = group.querySelector('.t4-glow');
-  const glowFade = range(t, 0.10, 0.50) * (1 - range(t, 0.50, 0.90));
-  if (glow) glow.style.opacity = (0.5 * glowFade).toFixed(3);
-
-  // 流动虚线
-  const flow = group.querySelector('.t4-flow');
-  const flowFade = range(t, 0.58, 0.78) * (1 - range(t, 0.80, 0.92));
-  if (flow) {
-    flow.style.opacity = (0.4 * flowFade).toFixed(3);
-    flow.style.strokeDashoffset = ((t * 22) % 7).toFixed(1);
-  }
-
-  // 文字
-  const textEl = group.querySelector('.t4-text');
-  if (textEl) {
-    const textFade = range(t, 0.15, 0.30) * (1 - range(t, 0.75, 0.90));
-    textEl.style.opacity = textFade.toFixed(3);
-    const tsp = textEl.querySelector('textPath');
-    if (tsp) {
-      // 从 -30% 到 100%
-      const textProgress = clamp01(range(t, 0.15, 0.85));
-      tsp.setAttribute('startOffset', (-30 + 130 * easeInOut(textProgress)).toFixed(1) + '%');
-    }
-  }
-
-  // 两端圆点
-  const dotFade = 1 - range(t, 0.80, 0.92);
-  const d1Appear = easeInOut(range(t, 0.50, 0.65));
-  const d1 = group.querySelector('.t4-dot1');
-  const d1r = group.querySelector('.t4-dot1-ring');
-  if (d1) { d1.style.opacity = (d1Appear * dotFade).toFixed(3); d1.style.transform = `scale(${lerp(0.3,1.3,d1Appear).toFixed(2)})`; }
-  if (d1r) d1r.style.opacity = (0.6 * d1Appear * dotFade).toFixed(3);
-
-  const d2Appear = easeInOut(range(t, 0.52, 0.67));
-  const d2 = group.querySelector('.t4-dot2');
-  const d2r = group.querySelector('.t4-dot2-ring');
-  if (d2) d2.style.opacity = (d2Appear * dotFade).toFixed(3);
-  if (d2r) d2r.style.opacity = (0.6 * d2Appear * dotFade).toFixed(3);
-}
-
-/* --- 主循环：轮流播放四条轨迹 --- */
-const traceConfigs = [
-  { id: 'trace1', dur: 13500, render: renderTrace1 },
-  { id: 'trace2', dur: 11500, render: renderTrace2 },
-  { id: 'trace3', dur: 11500, render: renderTrace3 },
-  { id: 'trace4', dur: 11500, render: renderTrace4 },
-];
-
-let currentTraceIdx = 0;
-let cycleStartTime = 0;
-let activeGroup = null;
-
-function startTrace(idx, now) {
-  // 隐藏所有
-  traceConfigs.forEach(cfg => {
-    const el = document.getElementById(cfg.id);
-    if (el) {
-      el.classList.remove('active');
-      el.style.opacity = '0';
-      el.style.visibility = 'hidden';
-    }
-  });
-
-  const cfg = traceConfigs[idx];
-  const group = document.getElementById(cfg.id);
-  if (!group) return;
-
-  // 随机位移
-  const { dx, dy, rotation, scale } = getRandomTransform();
-  group.style.transformOrigin = '50px 50px';
-  group.style.transform = `translate(${dx}px, ${dy}px) rotate(${rotation}deg) scale(${scale})`;
-
-  // 重置所有子元素的内联样式
-  group.querySelectorAll('[style]').forEach(el => {
-    // 保留 transform 在 group 上，清除子元素可能残留的 opacity 等
-    if (el === group) return;
-  });
-
-  group.style.visibility = 'visible';
-  group.classList.add('active');
-  activeGroup = group;
-  cycleStartTime = now;
-  currentTraceIdx = idx;
-}
-
-function traceLoop(now) {
-  if (!activeGroup) {
-    startTrace(0, now);
-  }
-
-  const cfg = traceConfigs[currentTraceIdx];
-  const elapsed = (now - cycleStartTime) / cfg.dur; // 0~1+
-
-  if (elapsed >= 1.0) {
-    // 切换到下一条
-    const nextIdx = (currentTraceIdx + 1) % traceConfigs.length;
-    startTrace(nextIdx, now);
-  } else {
-    cfg.render(activeGroup, elapsed, cfg.dur / 1000);
-  }
-
-  requestAnimationFrame(traceLoop);
-}
-
-// 启动
-window.addEventListener('load', () => {
-  // 等待一帧确保 DOM 就绪
-  requestAnimationFrame((now) => {
-    startTrace(0, now);
-    requestAnimationFrame(traceLoop);
-  });
-});
 </script>
 </body>
 </html>
