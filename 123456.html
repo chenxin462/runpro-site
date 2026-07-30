@@ -43,7 +43,7 @@ body::before{
   background-color: var(--deep-green);
 }
 
-/* ===== 动态效果 CSS ===== */
+/* ===== 动态效果 CSS 开始 ===== */
 #bg-scene {
   position: fixed;
   top: 0;
@@ -61,6 +61,12 @@ body::before{
   background: rgba(0, 230, 118, 0.6);
   border-radius: 50%;
   box-shadow: 0 0 8px rgba(0, 230, 118, 0.4);
+  animation: nodeTwinkle var(--dur, 4s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+@keyframes nodeTwinkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.8); }
+  50% { opacity: 0.8; transform: scale(1.4); }
 }
 
 .scan-line {
@@ -69,6 +75,13 @@ body::before{
   height: 1px;
   background: linear-gradient(90deg, rgba(0,230,118,0), #00e676, rgba(0,230,118,0));
   filter: drop-shadow(0 0 4px #00e676);
+  animation: scanMove var(--dur, 2.5s) linear forwards;
+}
+@keyframes scanMove {
+  0% { transform: translateX(100vw); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateX(-300px); opacity: 0; }
 }
 
 .cursor-particle {
@@ -92,7 +105,12 @@ body::before{
   background: radial-gradient(circle, rgba(255, 165, 0, 0.15) 0%, rgba(255, 200, 0, 0.05) 40%, transparent 70%);
   border-radius: 50%;
   filter: blur(40px);
+  animation: sunBreathe 6s ease-in-out infinite;
   pointer-events: none;
+}
+@keyframes sunBreathe {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.15); opacity: 0.9; }
 }
 
 #trace-svg {
@@ -105,22 +123,81 @@ body::before{
   overflow: visible;
 }
 
-/* ===== 轨迹组：纯 opacity 切换，不用 display:none ===== */
-.trace-group {
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.8s ease;
-}
-.trace-group.active {
-  opacity: 1;
-  visibility: visible;
-}
-
-/* SVG 元素基础样式 —— 由 JS 控制 opacity 和 stroke-dashoffset */
 .run-trace {
   fill: none;
   stroke-linecap: round;
   stroke-linejoin: round;
+  filter: drop-shadow(0 0 2px currentColor);
+  stroke-width: 0.8;
+  opacity: 0;
+}
+
+.trace-group {
+  display: none;
+  opacity: 0;
+  transition: opacity 1.5s ease;
+}
+.trace-group.active {
+  display: block;
+  opacity: 1;
+}
+
+@keyframes traceDrawCycle {
+  0%   { stroke-dashoffset: var(--len, 200); opacity: 0; }
+  8%   { opacity: 0.7; }
+  55%  { stroke-dashoffset: 0; opacity: 0.7; }
+  75%  { stroke-dashoffset: 0; opacity: 0.7; }
+  90%  { stroke-dashoffset: 0; opacity: 0; }
+  100% { stroke-dashoffset: var(--len, 200); opacity: 0; }
+}
+
+@keyframes dotCycle {
+  0%, 55%   { opacity: 0; transform: scale(0.2); }
+  62%       { opacity: 1; transform: scale(1.3); }
+  70%       { opacity: 1; transform: scale(1); }
+  80%       { opacity: 1; transform: scale(1); }
+  90%       { opacity: 0; transform: scale(0.4); }
+  100%      { opacity: 0; transform: scale(0.2); }
+}
+
+@keyframes glowCycle {
+  0%, 50%   { opacity: 0; }
+  60%       { opacity: 0.22; }
+  78%       { opacity: 0.3; }
+  90%       { opacity: 0; }
+  100%      { opacity: 0; }
+}
+
+@keyframes flowCycle {
+  0%, 58%   { opacity: 0; }
+  62%       { opacity: 0.4; }
+  80%       { opacity: 0.4; }
+  90%       { opacity: 0; }
+  100%      { opacity: 0; }
+}
+
+@keyframes textFadeCycle {
+  0%, 15%   { opacity: 0; }
+  25%       { opacity: 0.85; }
+  70%       { opacity: 0.85; }
+  85%       { opacity: 0; }
+  100%      { opacity: 0; }
+}
+
+@keyframes trackDrawCycle {
+  0%   { stroke-dashoffset: var(--len, 300); opacity: 0; }
+  5%   { opacity: 0.8; }
+  60%  { stroke-dashoffset: 0; opacity: 0.85; }
+  78%  { stroke-dashoffset: 0; opacity: 0.85; }
+  90%  { stroke-dashoffset: 0; opacity: 0; }
+  100% { stroke-dashoffset: var(--len, 300); opacity: 0; }
+}
+
+@keyframes dataPanelFade {
+  0%, 8%    { opacity: 0; transform: translateY(15px); }
+  20%       { opacity: 1; transform: translateY(0); }
+  78%       { opacity: 1; transform: translateY(0); }
+  90%, 100% { opacity: 0; transform: translateY(-8px); }
 }
 
 header, section, footer, .back-top {
@@ -429,24 +506,39 @@ footer{
   .flow-item::after{display:none;}
 }
 
-/* ===== 操场轨迹数据面板样式（始终可见，不依赖动画） ===== */
+/* ===== 操场轨迹数据面板样式（优化版：大字号+背景卡片+高对比度） ===== */
 .track-data-panel {
   position: absolute;
   pointer-events: none;
-  opacity: 1 !important;
-  z-index: 10;
+  opacity: 0;
+  animation: dataPanelFade 13s ease-in-out forwards;
+  z-index: 1;
+}
+/* 面板背景卡片 */
+.track-data-panel .data-bg {
+  fill: rgba(6, 33, 19, 0.88);
+  stroke: rgba(0, 230, 118, 0.45);
+  stroke-width: 0.3;
+  filter: drop-shadow(0 0 4px rgba(0,0,0,0.6));
+  rx: 1.5;
 }
 .track-data-panel .data-title {
-  font-size: 4px; fill: #00e676; font-weight: bold; letter-spacing: 0.3px;
-  filter: drop-shadow(0 0 2px #00e676); font-family: 'Oswald', sans-serif;
+  font-size: 6px; fill: #00e676; font-weight: bold; letter-spacing: 0.5px;
+  filter: drop-shadow(0 0 3px #00e676); font-family: 'Oswald', sans-serif;
 }
-.track-data-panel .data-label { font-size: 3px; fill: rgba(255,255,255,0.7); font-family: 'Segoe UI', sans-serif; }
+.track-data-panel .data-label {
+  font-size: 4px; fill: rgba(255,255,255,0.85); font-weight: 500;
+  font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+}
 .track-data-panel .data-value {
-  font-size: 3.5px; fill: #ffffff; font-weight: bold; font-family: 'Oswald', sans-serif;
-  filter: drop-shadow(0 0 1px rgba(255,255,255,0.5));
+  font-size: 5px; fill: #ffffff; font-weight: bold; font-family: 'Oswald', sans-serif;
+  filter: drop-shadow(0 0 2px rgba(255,255,255,0.4));
 }
-.track-data-panel .data-unit { font-size: 2.5px; fill: rgba(255,255,255,0.6); font-family: 'Segoe UI', sans-serif; }
-.track-data-panel .data-divider { stroke: rgba(0,230,118,0.35); stroke-width: 0.3; }
+.track-data-panel .data-unit {
+  font-size: 3.2px; fill: rgba(255,255,255,0.7); font-weight: 500;
+  font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+}
+.track-data-panel .data-divider { stroke: rgba(0,230,118,0.5); stroke-width: 0.3; }
 </style>
 </head>
 <body>
@@ -454,10 +546,10 @@ footer{
 <div id="bg-scene">
   <div class="sun-glow"></div>
 
-  <svg id="trace-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+  <svg id="trace-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
 
-    <!-- ===== 轨迹1：400米标准操场跑道 ===== -->
-    <g class="trace-group" id="trace1" data-cycle="13500">
+    <!-- ===== 轨迹1：400米标准操场跑道 (等比例缩小) ===== -->
+    <g class="trace-group" id="trace1" style="--len:240;">
       <defs>
         <linearGradient id="trackGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stop-color="#00e676" stop-opacity="0.95"/>
@@ -473,87 +565,114 @@ footer{
       </defs>
 
       <!-- 跑道外圈光晕 -->
-      <path class="t-glow1" d="M 40,32 L 60,32 A 14,14 0 1,1 60,68 L 40,68 A 14,14 0 1,1 40,32 Z"
-            fill="none" stroke="rgba(0,230,118,0.06)" stroke-width="3.2"/>
-      <path class="t-glow2" d="M 40,33 L 60,33 A 13,13 0 1,1 60,67 L 40,67 A 13,13 0 1,1 40,33 Z"
-            fill="none" stroke="rgba(0,188,212,0.05)" stroke-width="2"/>
+      <path d="M 40,32 L 60,32 A 14,14 0 1,1 60,68 L 40,68 A 14,14 0 1,1 40,32 Z"
+            fill="none" stroke="rgba(0,230,118,0.06)" stroke-width="3.2"
+            style="animation: glowCycle 13s ease-in-out forwards;"/>
+      <path d="M 40,33 L 60,33 A 13,13 0 1,1 60,67 L 40,67 A 13,13 0 1,1 40,33 Z"
+            fill="none" stroke="rgba(0,188,212,0.05)" stroke-width="2"
+            style="animation: glowCycle 13s ease-in-out forwards;"/>
 
       <!-- 主跑道轨迹线 -->
-      <path class="t-main" d="M 41,37 L 59,37 A 12,12 0 0,1 59,63 L 41,63 A 12,12 0 0,1 41,37 Z"
+      <path d="M 41,37 L 59,37 A 12,12 0 0,1 59,63 L 41,63 A 12,12 0 0,1 41,37 Z"
             fill="none" stroke="url(#trackGrad1)" stroke-width="1.2"
             stroke-dasharray="240" stroke-dashoffset="240"
-            stroke-linecap="round" stroke-linejoin="round"/>
+            stroke-linecap="round" stroke-linejoin="round"
+            style="animation: trackDrawCycle 13s ease-in-out forwards;"/>
 
       <!-- 跑道内沿细线 -->
-      <path class="t-inner1" d="M 42,40 L 58,40 A 9.5,9.5 0 0,1 58,60 L 42,60 A 9.5,9.5 0 0,1 42,40 Z"
+      <path d="M 42,40 L 58,40 A 9.5,9.5 0 0,1 58,60 L 42,60 A 9.5,9.5 0 0,1 42,40 Z"
             fill="none" stroke="rgba(0,230,118,0.2)" stroke-width="0.4"
-            stroke-dasharray="200" stroke-dashoffset="200"/>
+            stroke-dasharray="200" stroke-dashoffset="200"
+            style="animation: trackDrawCycle 13s ease-in-out 0.4s forwards;"/>
 
       <!-- 流动虚线 -->
-      <path class="t-flow" d="M 41,37 L 59,37 A 12,12 0 0,1 59,63 L 41,63 A 12,12 0 0,1 41,37 Z"
+      <path d="M 41,37 L 59,37 A 12,12 0 0,1 59,63 L 41,63 A 12,12 0 0,1 41,37 Z"
             fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.4"
-            stroke-dasharray="2 6"/>
+            stroke-dasharray="2 6"
+            style="animation: flowCycle 13s ease-in-out forwards;"/>
 
       <!-- 起点 -->
-      <circle class="t-dot-start-ring" cx="59" cy="37" r="1.4" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="0.4"/>
-      <circle class="t-dot-start" cx="59" cy="37" r="0.8" fill="#00e676" filter="drop-shadow(0 0 3px #00e676)"/>
+      <circle cx="59" cy="37" r="1.4" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="0.4"
+              style="animation: dotCycle 13s ease-in-out forwards;"/>
+      <circle cx="59" cy="37" r="0.8" fill="#00e676" filter="drop-shadow(0 0 3px #00e676)"
+              style="animation: dotCycle 13s ease-in-out forwards;"/>
 
       <!-- 终点 -->
-      <circle class="t-dot-end-ring" cx="59" cy="63" r="1.2" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="0.3"/>
-      <circle class="t-dot-end" cx="59" cy="63" r="0.6" fill="#ff5252" filter="drop-shadow(0 0 2px #ff5252)"/>
+      <circle cx="59" cy="63" r="1.2" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="0.3"
+              style="animation: dotCycle 13s ease-in-out forwards;"/>
+      <circle cx="59" cy="63" r="0.6" fill="#ff5252" filter="drop-shadow(0 0 2px #ff5252)"
+              style="animation: dotCycle 13s ease-in-out forwards;"/>
 
       <!-- 底部暖色弧线 -->
-      <path class="t-warm" d="M 42,65 Q 50,69 58,65"
+      <path d="M 42,65 Q 50,69 58,65"
             fill="none" stroke="url(#trackWarm1)" stroke-width="1.6"
-            stroke-linecap="round"/>
+            stroke-linecap="round"
+            style="animation: glowCycle 13s ease-in-out forwards;"/>
 
-      <path class="t-inner2" d="M 59,41 A 9,9 0 0,1 59,59"
+      <path d="M 59,41 A 9,9 0 0,1 59,59"
             fill="none" stroke="rgba(0,230,118,0.12)" stroke-width="0.3"
-            stroke-dasharray="140" stroke-dashoffset="140"/>
-      <path class="t-inner3" d="M 41,41 A 9,9 0 0,0 41,59"
+            stroke-dasharray="140" stroke-dashoffset="140"
+            style="animation: trackDrawCycle 13s ease-in-out 0.6s forwards;"/>
+      <path d="M 41,41 A 9,9 0 0,0 41,59"
             fill="none" stroke="rgba(0,230,118,0.12)" stroke-width="0.3"
-            stroke-dasharray="140" stroke-dashoffset="140"/>
+            stroke-dasharray="140" stroke-dashoffset="140"
+            style="animation: trackDrawCycle 13s ease-in-out 0.6s forwards;"/>
 
-      <!-- 数据面板（始终可见） -->
       <g class="track-data-panel">
-        <text x="76" y="22" class="data-title" text-anchor="start">🏟️ 操场10KM</text>
-        <line x1="76" y1="25" x2="98" y2="25" class="data-divider"/>
-        <text x="76" y="30" class="data-label">距离</text>
-        <text x="98" y="30" class="data-value" text-anchor="end">10.0</text>
-        <text x="98.8" y="30" class="data-unit">km</text>
-        <text x="76" y="34.5" class="data-label">配速</text>
-        <text x="98" y="34.5" class="data-value" text-anchor="end">5'30"</text>
-        <text x="98.8" y="34.5" class="data-unit">/km</text>
-        <text x="76" y="39" class="data-label">用时</text>
-        <text x="98" y="39" class="data-value" text-anchor="end">55:00</text>
-        <text x="98.8" y="39" class="data-unit">min</text>
-        <line x1="76" y1="41.5" x2="98" y2="41.5" class="data-divider"/>
-        <text x="76" y="46" class="data-label">心率</text>
-        <text x="98" y="46" class="data-value" text-anchor="end" fill="#ff8a80">158</text>
-        <text x="98.8" y="46" class="data-unit">bpm</text>
-        <text x="76" y="50.5" class="data-label">爬升</text>
-        <text x="98" y="50.5" class="data-value" text-anchor="end">10</text>
-        <text x="98.8" y="50.5" class="data-unit">m</text>
-        <text x="76" y="55" class="data-label">步频</text>
-        <text x="98" y="55" class="data-value" text-anchor="end" fill="#80deea">168</text>
-        <text x="98.8" y="55" class="data-unit">spm</text>
+        <!-- 背景卡片 -->
+        <rect x="75" y="17" width="26" height="44" class="data-bg"/>
+        <!-- 标题 -->
+        <text x="88" y="23" class="data-title" text-anchor="middle">🏟️ 操场10KM</text>
+        <line x1="78" y1="26" x2="98" y2="26" class="data-divider"/>
+        <!-- 距离 -->
+        <text x="78" y="32" class="data-label">距离</text>
+        <text x="97" y="32" class="data-value" text-anchor="end">10.0</text>
+        <text x="98" y="32" class="data-unit">km</text>
+        <!-- 配速 -->
+        <text x="78" y="38.5" class="data-label">配速</text>
+        <text x="97" y="38.5" class="data-value" text-anchor="end">5'30"</text>
+        <text x="98" y="38.5" class="data-unit">/km</text>
+        <!-- 用时 -->
+        <text x="78" y="45" class="data-label">用时</text>
+        <text x="97" y="45" class="data-value" text-anchor="end">55:00</text>
+        <text x="98" y="45" class="data-unit">min</text>
+        <!-- 分隔线 -->
+        <line x1="78" y1="47.5" x2="98" y2="47.5" class="data-divider"/>
+        <!-- 心率 -->
+        <text x="78" y="53" class="data-label">心率</text>
+        <text x="97" y="53" class="data-value" text-anchor="end" fill="#ff8a80">158</text>
+        <text x="98" y="53" class="data-unit">bpm</text>
+        <!-- 爬升 -->
+        <text x="78" y="59" class="data-label">爬升</text>
+        <text x="97" y="59" class="data-value" text-anchor="end">10</text>
+        <text x="98" y="59" class="data-unit">m</text>
+        <!-- 步频 -->
+        <text x="78" y="65" class="data-label">步频</text>
+        <text x="97" y="65" class="data-value" text-anchor="end" fill="#80deea">168</text>
+        <text x="98" y="65" class="data-unit">spm</text>
       </g>
     </g>
 
-    <!-- ===== 轨迹2：圆形路线 ===== -->
-    <g class="trace-group" id="trace2" data-cycle="11500">
-      <circle class="t2-glow" cx="50" cy="50" r="14" fill="none" stroke="rgba(0,230,118,0.18)" stroke-width="2"/>
-      <circle class="t2-main" cx="50" cy="50" r="14" fill="none" stroke="rgba(0,230,118,0.7)" stroke-width="1"
-              stroke-dasharray="88" stroke-dashoffset="88"/>
-      <circle class="t2-flow" cx="50" cy="50" r="14" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="0.4"
-              stroke-dasharray="3 6"/>
-      <circle class="t2-dot1-ring" cx="36" cy="50" r="1.2" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="0.3"/>
-      <circle class="t2-dot1" cx="36" cy="50" r="0.8" fill="#00e676" filter="drop-shadow(0 0 2px #00e676)"/>
-      <circle class="t2-dot2" cx="38" cy="42" r="0.5" fill="#ff5252" filter="drop-shadow(0 0 2px #ff5252)"/>
+    <!-- ===== 轨迹2：圆形路线 (等比例缩小) ===== -->
+    <g class="trace-group" id="trace2" style="--len:88;">
+      <circle cx="50" cy="50" r="14" fill="none" stroke="rgba(0,230,118,0.18)" stroke-width="2"
+              style="animation: glowCycle 11s ease-in-out forwards;"/>
+      <circle cx="50" cy="50" r="14" fill="none" stroke="rgba(0,230,118,0.7)" stroke-width="1"
+              stroke-dasharray="88" stroke-dashoffset="88"
+              style="animation: traceDrawCycle 11s ease-in-out forwards;"/>
+      <circle cx="50" cy="50" r="14" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="0.4"
+              stroke-dasharray="3 6"
+              style="animation: flowCycle 11s ease-in-out forwards;"/>
+      <circle cx="36" cy="50" r="0.8" fill="#00e676" filter="drop-shadow(0 0 2px #00e676)"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
+      <circle cx="36" cy="50" r="1.2" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="0.3"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
+      <circle cx="38" cy="42" r="0.5" fill="#ff5252" filter="drop-shadow(0 0 2px #ff5252)"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
     </g>
 
-    <!-- ===== 轨迹3：平滑连续跑步轨迹 ===== -->
-    <g class="trace-group" id="trace3" data-cycle="11500">
+    <!-- ===== 轨迹3：平滑连续跑步轨迹 (等比例缩小) ===== -->
+    <g class="trace-group" id="trace3" style="--len:260;">
       <defs>
         <linearGradient id="smoothGrad" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stop-color="#00e676" stop-opacity="0.9"/>
@@ -564,49 +683,72 @@ footer{
         </linearGradient>
       </defs>
 
-      <path class="t3-glow" d="M 20,58 C 16,46 24,30 38,26 C 52,22 66,28 72,38 C 78,48 70,60 58,66 C 46,72 30,70 24,62 C 20,58 20,58 20,58 Z"
-            fill="none" stroke="rgba(0,230,118,0.08)" stroke-width="3.2"/>
+      <path d="M 20,58 C 16,46 24,30 38,26 C 52,22 66,28 72,38 C 78,48 70,60 58,66 C 46,72 30,70 24,62 C 20,58 20,58 20,58 Z"
+            fill="none" stroke="rgba(0,230,118,0.08)" stroke-width="3.2"
+            style="animation: glowCycle 11s ease-in-out forwards;"/>
 
-      <path class="t3-main" d="M 22,60 C 22,50 28,40 36,34 C 44,28 54,25 62,30 C 70,35 74,44 70,52 C 66,60 56,66 46,64 C 36,62 26,66 20,60 C 18,56 19,54 22,60 Z"
+      <path d="M 22,60 C 22,50 28,40 36,34 C 44,28 54,25 62,30 C 70,35 74,44 70,52 C 66,60 56,66 46,64 C 36,62 26,66 20,60 C 18,56 19,54 22,60 Z"
             fill="none" stroke="url(#smoothGrad)" stroke-width="1"
             stroke-dasharray="260" stroke-dashoffset="260"
-            stroke-linecap="round" stroke-linejoin="round"/>
+            stroke-linecap="round" stroke-linejoin="round"
+            style="animation: traceDrawCycle 11s ease-in-out forwards;"/>
 
-      <path class="t3-flow" d="M 22,60 C 22,50 28,40 36,34 C 44,28 54,25 62,30 C 70,35 74,44 70,52 C 66,60 56,66 46,64 C 36,62 26,66 20,60 C 18,56 19,54 22,60 Z"
+      <path d="M 22,60 C 22,50 28,40 36,34 C 44,28 54,25 62,30 C 70,35 74,44 70,52 C 66,60 56,66 46,64 C 36,62 26,66 20,60 C 18,56 19,54 22,60 Z"
             fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.4"
-            stroke-dasharray="2 5"/>
+            stroke-dasharray="2 5"
+            style="animation: flowCycle 11s ease-in-out forwards;"/>
 
-      <circle class="t3-dot1-ring" cx="22" cy="60" r="1.2" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="0.3"/>
-      <circle class="t3-dot1" cx="22" cy="60" r="0.8" fill="#00e676" filter="drop-shadow(0 0 2px #00e676)"/>
-      <circle class="t3-dot2-ring" cx="25" cy="63" r="0.9" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="0.2"/>
-      <circle class="t3-dot2" cx="25" cy="63" r="0.5" fill="#ff5252" filter="drop-shadow(0 0 2px #ff5252)"/>
+      <circle cx="22" cy="60" r="0.8" fill="#00e676" filter="drop-shadow(0 0 2px #00e676)"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
+      <circle cx="22" cy="60" r="1.2" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="0.3"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
 
-      <circle class="t3-spark1" cx="50" cy="27" r="0.3" fill="rgba(0,230,118,0.6)" filter="drop-shadow(0 0 1px #00e676)"/>
-      <circle class="t3-spark2" cx="75" cy="46" r="0.3" fill="rgba(38,198,218,0.6)" filter="drop-shadow(0 0 1px #26c6da)"/>
-      <circle class="t3-spark3" cx="40" cy="68" r="0.3" fill="rgba(0,230,118,0.5)" filter="drop-shadow(0 0 1px #00e676)"/>
+      <circle cx="25" cy="63" r="0.5" fill="#ff5252" filter="drop-shadow(0 0 2px #ff5252)"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
+      <circle cx="25" cy="63" r="0.9" fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="0.2"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
+
+      <circle cx="50" cy="27" r="0.3" fill="rgba(0,230,118,0.6)" filter="drop-shadow(0 0 1px #00e676)"
+              style="animation: dotCycle 11s ease-in-out 2s forwards;"/>
+      <circle cx="75" cy="46" r="0.3" fill="rgba(38,198,218,0.6)" filter="drop-shadow(0 0 1px #26c6da)"
+              style="animation: dotCycle 11s ease-in-out 3s forwards;"/>
+      <circle cx="40" cy="68" r="0.3" fill="rgba(0,230,118,0.5)" filter="drop-shadow(0 0 1px #00e676)"
+              style="animation: dotCycle 11s ease-in-out 4s forwards;"/>
     </g>
 
-    <!-- ===== 轨迹4：S形曲线 + 52Run.cn 文字 ===== -->
-    <g class="trace-group" id="trace4" data-cycle="11500">
+    <!-- ===== 轨迹4：S形曲线 + 52Run.cn 域名文字 (等比例缩小) ===== -->
+    <g class="trace-group" id="trace4" style="--len:180;">
       <defs>
         <path id="textPath4" d="M14,50 Q26,28 38,50 T62,50 Q74,70 78,50" fill="none"/>
       </defs>
-      <path class="t4-glow" d="M14,50 Q26,28 38,50 T62,50 Q74,70 78,50"
-            fill="none" stroke="rgba(0,230,118,0.15)" stroke-width="2"/>
-      <path class="t4-main" d="M14,50 Q26,28 38,50 T62,50 Q74,70 78,50"
+      <path d="M14,50 Q26,28 38,50 T62,50 Q74,70 78,50"
+            fill="none" stroke="rgba(0,230,118,0.15)" stroke-width="2"
+            style="animation: glowCycle 11s ease-in-out forwards;"/>
+      <path d="M14,50 Q26,28 38,50 T62,50 Q74,70 78,50"
             fill="none" stroke="rgba(0,230,118,0.65)" stroke-width="1"
-            stroke-dasharray="180" stroke-dashoffset="180"/>
-      <path class="t4-flow" d="M14,50 Q26,28 38,50 T62,50 Q74,70 78,50"
+            stroke-dasharray="180" stroke-dashoffset="180"
+            style="animation: traceDrawCycle 11s ease-in-out forwards;"/>
+      <path d="M14,50 Q26,28 38,50 T62,50 Q74,70 78,50"
             fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="0.4"
-            stroke-dasharray="2 5"/>
-      <text class="t4-text" font-size="2.8" fill="#00e676" font-weight="bold" letter-spacing="0.5"
-            filter="drop-shadow(0 0 2px #00e676)" opacity="0">
-        <textPath href="#textPath4" startOffset="0%">52Run.cn</textPath>
+            stroke-dasharray="2 5"
+            style="animation: flowCycle 11s ease-in-out forwards;"/>
+      <text font-size="2.8" fill="#00e676" font-weight="bold" letter-spacing="0.5"
+            filter="drop-shadow(0 0 2px #00e676)"
+            style="animation: textFadeCycle 11s ease-in-out forwards;">
+        <textPath href="#textPath4" startOffset="0%">
+          52Run.cn
+          <animate attributeName="startOffset" from="-30%" to="100%"
+                   dur="8s" begin="1s" repeatCount="1"/>
+        </textPath>
       </text>
-      <circle class="t4-dot1-ring" cx="14" cy="50" r="1" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="0.3"/>
-      <circle class="t4-dot1" cx="14" cy="50" r="0.6" fill="#00e676" filter="drop-shadow(0 0 2px #00e676)"/>
-      <circle class="t4-dot2-ring" cx="78" cy="50" r="1" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="0.3"/>
-      <circle class="t4-dot2" cx="78" cy="50" r="0.6" fill="#00e676" filter="drop-shadow(0 0 2px #00e676)"/>
+      <circle cx="14" cy="50" r="0.6" fill="#00e676" filter="drop-shadow(0 0 2px #00e676)"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
+      <circle cx="14" cy="50" r="1" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="0.3"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
+      <circle cx="78" cy="50" r="0.6" fill="#00e676" filter="drop-shadow(0 0 2px #00e676)"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
+      <circle cx="78" cy="50" r="1" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="0.3"
+              style="animation: dotCycle 11s ease-in-out forwards;"/>
     </g>
 
   </svg>
@@ -893,7 +1035,6 @@ footer{
 <div class="back-top" id="backTop">↑</div>
 
 <script>
-/* ========== 融合文字轮播 ========== */
 const greetings = [
   "迈开腿，风自然会来。",
   "若被时间绊住脚步，便让微风替你抵达。",
@@ -901,8 +1042,10 @@ const greetings = [
   "终点处的闪耀光芒，本就该属于你的胸膛。",
   "说出一座向往的城市，余下的风景由我们铺展。"
 ];
+
 const fusionEl = document.getElementById('fusionText');
 let gIdx = 0;
+
 function cycleFusion() {
   fusionEl.classList.remove('active');
   setTimeout(() => {
@@ -911,23 +1054,19 @@ function cycleFusion() {
     void fusionEl.offsetWidth;
     fusionEl.classList.add('active');
     setTimeout(cycleFusion, 3500);
-  }, 1500);
+  }, 1500); 
 }
 cycleFusion();
 
-/* ========== 滚动 & 返回顶部 ========== */
 window.addEventListener('scroll',()=>{
   document.getElementById('header').classList.toggle('scrolled',window.scrollY>50);
   document.getElementById('backTop').classList.toggle('show',window.scrollY>500);
 });
 document.getElementById('backTop').onclick=()=>window.scrollTo({top:0,behavior:'smooth'});
-
-/* ========== FAQ 手风琴 ========== */
 document.querySelectorAll('.faq-q').forEach(q=>{
   q.onclick=()=>q.parentElement.classList.toggle('open');
 });
 
-/* ========== 卡片入场动画 ========== */
 const observer=new IntersectionObserver((entries)=>{
   entries.forEach(e=>{
     if(e.isIntersecting){
@@ -944,7 +1083,6 @@ document.querySelectorAll('.glass-card, .card').forEach(el=>{
   observer.observe(el);
 });
 
-/* ========== 背景粒子 & 扫描线 & 视差 ========== */
 const bgScene = document.getElementById('bg-scene');
 
 for (let i = 0; i < 60; i++) {
@@ -955,51 +1093,29 @@ for (let i = 0; i < 60; i++) {
   node.style.height = size + 'px';
   node.style.left = Math.random() * 100 + '%';
   node.style.top = Math.random() * 100 + '%';
-  node.style.opacity = (Math.random() * 0.4 + 0.2).toFixed(2);
+  node.style.setProperty('--dur', (2 + Math.random() * 4).toFixed(2) + 's');
+  node.style.setProperty('--delay', (Math.random() * 4).toFixed(2) + 's');
   bgScene.appendChild(node);
 }
-
-// 用 JS 驱动粒子闪烁，不依赖 CSS animation
-const bgNodes = bgScene.querySelectorAll('.bg-node');
-function animateBgNodes() {
-  bgNodes.forEach((node, i) => {
-    const baseOpacity = parseFloat(node.style.opacity) || 0.3;
-    const t = Date.now() / 1000 + i * 0.5;
-    const flicker = baseOpacity * (0.5 + 0.5 * Math.sin(t * (0.5 + (i % 5) * 0.3)));
-    node.style.opacity = flicker.toFixed(3);
-    const scale = 0.8 + 0.6 * Math.abs(Math.sin(t * 0.4));
-    node.style.transform = `scale(${scale.toFixed(2)})`;
-  });
-  requestAnimationFrame(animateBgNodes);
-}
-requestAnimationFrame(animateBgNodes);
 
 function spawnScanLine() {
   const line = document.createElement('div');
   line.className = 'scan-line';
   line.style.top = (Math.random() * 90 + 5) + '%';
+  line.style.setProperty('--dur', (2.5 + Math.random() * 1.5).toFixed(2) + 's');
   bgScene.appendChild(line);
-  const duration = 2500 + Math.random() * 1500;
-  const startTime = performance.now();
-  function moveScan() {
-    const elapsed = performance.now() - startTime;
-    const progress = elapsed / duration;
-    if (progress >= 1) { line.remove(); return; }
-    const opacity = progress < 0.1 ? progress / 0.1 : (progress > 0.9 ? (1 - progress) / 0.1 : 1);
-    line.style.opacity = opacity.toFixed(2);
-    line.style.transform = `translateX(${100 - progress * 130}vw)`;
-    requestAnimationFrame(moveScan);
-  }
-  requestAnimationFrame(moveScan);
+  setTimeout(() => line.remove(), 4000);
 }
 setInterval(spawnScanLine, 4500);
 spawnScanLine();
 
 let mx = 0, my = 0, cx = 0, cy = 0;
 let lastParticleTime = 0;
+
 window.addEventListener('mousemove', e => {
   mx = (e.clientX / window.innerWidth - 0.5) * 2;
   my = (e.clientY / window.innerHeight - 0.5) * 2;
+
   const now = Date.now();
   if (now - lastParticleTime > 30) {
     const p = document.createElement('div');
@@ -1007,14 +1123,17 @@ window.addEventListener('mousemove', e => {
     p.style.left = e.clientX + 'px';
     p.style.top = e.clientY + 'px';
     document.body.appendChild(p);
-    requestAnimationFrame(() => {
-      p.style.transform = `scale(0) translate(${(Math.random()-0.5)*30}px,${(Math.random()-0.5)*30}px)`;
+    
+    setTimeout(() => {
+      p.style.transform = `scale(0) translate(${(Math.random() - 0.5) * 30}px, ${(Math.random() - 0.5) * 30}px)`;
       p.style.opacity = '0';
-    });
+    }, 10);
+
     setTimeout(() => p.remove(), 600);
     lastParticleTime = now;
   }
 });
+
 function tickParallax() {
   cx += (mx - cx) * 0.05;
   cy += (my - cy) * 0.05;
@@ -1025,45 +1144,55 @@ function tickParallax() {
 }
 tickParallax();
 
-/* ========== 统计数字动画 ========== */
 function animateValue(el, target, duration, suffix) {
+  let start = 0;
   let startTimestamp = null;
   const isFloat = target % 1 !== 0;
+
   function step(timestamp) {
     if (!startTimestamp) startTimestamp = timestamp;
     const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-    let current = progress * target;
-    let displayVal = isFloat ? current.toFixed(1) : Math.floor(current);
-    if (target >= 1000) displayVal = Math.floor(current / 10) * 10;
+    let current = progress * (target - start) + start;
+    
+    let displayVal;
+    if (target >= 1000) {
+      displayVal = Math.floor(current / 10) * 10;
+    } else if (isFloat) {
+      displayVal = current.toFixed(1);
+    } else {
+      displayVal = Math.floor(current);
+    }
+    
     el.innerText = displayVal + suffix;
-    if (progress < 1) requestAnimationFrame(step);
-    else el.innerText = target + suffix;
+
+    if (progress < 1) {
+      window.requestAnimationFrame(step);
+    } else {
+      el.innerText = target + suffix;
+    }
   }
-  requestAnimationFrame(step);
+  window.requestAnimationFrame(step);
 }
+
 const statsObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
       document.querySelectorAll('.stat-num').forEach(el => {
-        animateValue(el, parseFloat(el.dataset.target), 1500, el.dataset.suffix);
+        const target = parseFloat(el.getAttribute('data-target'));
+        const suffix = el.getAttribute('data-suffix');
+        animateValue(el, target, 1500, suffix);
       });
       statsObserver.unobserve(entry.target);
     }
   });
 }, { threshold: 0.3 });
+
 const statsSection = document.getElementById('stats');
-if (statsSection) statsObserver.observe(statsSection);
+if (statsSection) {
+  statsObserver.observe(statsSection);
+}
 
-/* ========== 轨迹系统 —— 纯 JS 时间线驱动 ========== */
-/*
-  设计思路：
-  - 每条轨迹一个完整的生命周期（trace1=13.5s，其余=11.5s）
-  - 用 requestAnimationFrame + performance.now() 做精确计时
-  - 手动设置每个 SVG 元素的 opacity / stroke-dashoffset / transform
-  - 不依赖任何 CSS @keyframes animation
-  - 数据面板始终 opacity:1，不做任何动画
-*/
-
+// ===== 轨迹随机位置工具 (等比例缩小后位移范围相应调整) =====
 function getRandomTransform() {
   const dx = (Math.random() * 14 - 7).toFixed(1);
   const dy = (Math.random() * 14 - 7).toFixed(1);
@@ -1072,324 +1201,46 @@ function getRandomTransform() {
   return { dx: parseFloat(dx), dy: parseFloat(dy), rotation, scale };
 }
 
-/* --- 工具函数：线性插值 + easeInOut --- */
-function lerp(a, b, t) { return a + (b - a) * t; }
-function easeInOut(t) { return t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2, 2)/2; }
-function clamp01(t) { return Math.max(0, Math.min(1, t)); }
-function range(t, start, end) { return clamp01((t - start) / (end - start)); }
+// ===== 四条轨迹轮流播放 =====
+const traces = ['trace1', 'trace2', 'trace3', 'trace4'];
+let traceIdx = 0;
 
-/* --- 轨迹1 渲染函数 --- */
-function renderTrace1(group, elapsed, totalDur) {
-  const t = elapsed;
-  const dur = totalDur;
-
-  // 整体淡入淡出
-  const fadeIn = range(t, 0, 0.08);
-  const fadeOut = 1 - range(t, 0.85, 1.0);
-  const groupOpacity = Math.min(fadeIn, fadeOut);
-
-  group.style.opacity = groupOpacity.toFixed(3);
-
-  // 主跑道轨迹线：stroke-dashoffset 从 240 → 0（0.05~0.55），保持到 0.78，然后淡出
-  const mainDraw = easeInOut(range(t, 0.05, 0.55));
-  const mainFade = 1 - range(t, 0.78, 0.92);
-  const mainPath = group.querySelector('.t-main');
-  if (mainPath) {
-    mainPath.style.strokeDashoffset = (240 * (1 - mainDraw)).toFixed(1);
-    mainPath.style.opacity = (0.85 * mainFade).toFixed(3);
-  }
-
-  // 内沿细线1：延迟 0.4s
-  const inner1Draw = easeInOut(range(t, 0.09, 0.55));
-  const inner1Path = group.querySelector('.t-inner1');
-  if (inner1Path) inner1Path.style.strokeDashoffset = (200 * (1 - inner1Draw)).toFixed(1);
-
-  // 内沿细线2 & 3：延迟 0.6s
-  const inner23Draw = easeInOut(range(t, 0.11, 0.55));
-  const inner2 = group.querySelector('.t-inner2');
-  const inner3 = group.querySelector('.t-inner3');
-  if (inner2) inner2.style.strokeDashoffset = (140 * (1 - inner23Draw)).toFixed(1);
-  if (inner3) inner3.style.strokeDashoffset = (140 * (1 - inner23Draw)).toFixed(1);
-
-  // 流动虚线
-  const flowFade = range(t, 0.58, 0.80) * (1 - range(t, 0.80, 0.92));
-  const flowPath = group.querySelector('.t-flow');
-  if (flowPath) {
-    flowPath.style.opacity = (0.4 * flowFade).toFixed(3);
-    // 让 dashoffset 持续滚动产生流动感
-    const dashOffset = (t * 30) % 8;
-    flowPath.style.strokeDashoffset = dashOffset.toFixed(1);
-  }
-
-  // 光晕
-  const glowFade = range(t, 0.10, 0.60) * (1 - range(t, 0.60, 0.90));
-  const glow1 = group.querySelector('.t-glow1');
-  const glow2 = group.querySelector('.t-glow2');
-  if (glow1) glow1.style.opacity = (0.8 * glowFade).toFixed(3);
-  if (glow2) glow2.style.opacity = (0.5 * glowFade).toFixed(3);
-
-  // 暖色弧线
-  const warmFade = range(t, 0.15, 0.65) * (1 - range(t, 0.65, 0.90));
-  const warm = group.querySelector('.t-warm');
-  if (warm) warm.style.opacity = (0.7 * warmFade).toFixed(3);
-
-  // 起点圆点
-  const startAppear = easeInOut(range(t, 0.50, 0.62));
-  const startFade = 1 - range(t, 0.80, 0.92);
-  const startDot = group.querySelector('.t-dot-start');
-  const startRing = group.querySelector('.t-dot-start-ring');
-  if (startDot) {
-    startDot.style.opacity = (startAppear * startFade).toFixed(3);
-    const s = lerp(0.3, 1.3, startAppear);
-    startDot.style.transform = `scale(${s.toFixed(2)})`;
-  }
-  if (startRing) startRing.style.opacity = (0.65 * startAppear * startFade).toFixed(3);
-
-  // 终点圆点
-  const endAppear = easeInOut(range(t, 0.55, 0.68));
-  const endFade = 1 - range(t, 0.82, 0.92);
-  const endDot = group.querySelector('.t-dot-end');
-  const endRing = group.querySelector('.t-dot-end-ring');
-  if (endDot) {
-    endDot.style.opacity = (endAppear * endFade).toFixed(3);
-    const s = lerp(0.3, 1.0, endAppear);
-    endDot.style.transform = `scale(${s.toFixed(2)})`;
-  }
-  if (endRing) endRing.style.opacity = (0.55 * endAppear * endFade).toFixed(3);
-
-  // 数据面板 —— 始终可见，不做动画
-  const panel = group.querySelector('.track-data-panel');
-  if (panel) panel.style.opacity = '1';
+function getCycleDuration(idx) {
+  return (idx === 0) ? 13500 : 11500;
 }
 
-/* --- 轨迹2 渲染函数 --- */
-function renderTrace2(group, elapsed, totalDur) {
-  const t = elapsed;
-  const fadeIn = range(t, 0, 0.08);
-  const fadeOut = 1 - range(t, 0.85, 1.0);
-  group.style.opacity = Math.min(fadeIn, fadeOut).toFixed(3);
-
-  // 主圆
-  const mainDraw = easeInOut(range(t, 0.05, 0.55));
-  const mainFade = 1 - range(t, 0.78, 0.92);
-  const main = group.querySelector('.t2-main');
-  if (main) {
-    main.style.strokeDashoffset = (88 * (1 - mainDraw)).toFixed(1);
-    main.style.opacity = (0.85 * mainFade).toFixed(3);
-  }
-
-  // 光晕
-  const glow = group.querySelector('.t2-glow');
-  const glowFade = range(t, 0.10, 0.50) * (1 - range(t, 0.50, 0.90));
-  if (glow) glow.style.opacity = (0.6 * glowFade).toFixed(3);
-
-  // 流动虚线
-  const flow = group.querySelector('.t2-flow');
-  const flowFade = range(t, 0.58, 0.78) * (1 - range(t, 0.80, 0.92));
-  if (flow) {
-    flow.style.opacity = (0.4 * flowFade).toFixed(3);
-    flow.style.strokeDashoffset = ((t * 20) % 9).toFixed(1);
-  }
-
-  // 起点/终点圆点
-  const dotAppear = easeInOut(range(t, 0.50, 0.65));
-  const dotFade = 1 - range(t, 0.80, 0.92);
-  const d1 = group.querySelector('.t2-dot1');
-  const d1r = group.querySelector('.t2-dot1-ring');
-  if (d1) { d1.style.opacity = (dotAppear * dotFade).toFixed(3); d1.style.transform = `scale(${lerp(0.3,1.3,dotAppear).toFixed(2)})`; }
-  if (d1r) d1r.style.opacity = (0.6 * dotAppear * dotFade).toFixed(3);
-
-  const d2Appear = easeInOut(range(t, 0.55, 0.70));
-  const d2 = group.querySelector('.t2-dot2');
-  if (d2) d2.style.opacity = (d2Appear * dotFade).toFixed(3);
-}
-
-/* --- 轨迹3 渲染函数 --- */
-function renderTrace3(group, elapsed, totalDur) {
-  const t = elapsed;
-  const fadeIn = range(t, 0, 0.08);
-  const fadeOut = 1 - range(t, 0.85, 1.0);
-  group.style.opacity = Math.min(fadeIn, fadeOut).toFixed(3);
-
-  // 主轨迹
-  const mainDraw = easeInOut(range(t, 0.05, 0.55));
-  const mainFade = 1 - range(t, 0.78, 0.92);
-  const main = group.querySelector('.t3-main');
-  if (main) {
-    main.style.strokeDashoffset = (260 * (1 - mainDraw)).toFixed(1);
-    main.style.opacity = (0.85 * mainFade).toFixed(3);
-  }
-
-  // 光晕
-  const glow = group.querySelector('.t3-glow');
-  const glowFade = range(t, 0.10, 0.50) * (1 - range(t, 0.50, 0.90));
-  if (glow) glow.style.opacity = (0.6 * glowFade).toFixed(3);
-
-  // 流动虚线
-  const flow = group.querySelector('.t3-flow');
-  const flowFade = range(t, 0.58, 0.78) * (1 - range(t, 0.80, 0.92));
-  if (flow) {
-    flow.style.opacity = (0.4 * flowFade).toFixed(3);
-    flow.style.strokeDashoffset = ((t * 25) % 7).toFixed(1);
-  }
-
-  // 主圆点
-  const dotFade = 1 - range(t, 0.80, 0.92);
-  const d1Appear = easeInOut(range(t, 0.50, 0.62));
-  const d1 = group.querySelector('.t3-dot1');
-  const d1r = group.querySelector('.t3-dot1-ring');
-  if (d1) { d1.style.opacity = (d1Appear * dotFade).toFixed(3); d1.style.transform = `scale(${lerp(0.3,1.3,d1Appear).toFixed(2)})`; }
-  if (d1r) d1r.style.opacity = (0.6 * d1Appear * dotFade).toFixed(3);
-
-  const d2Appear = easeInOut(range(t, 0.55, 0.68));
-  const d2 = group.querySelector('.t3-dot2');
-  const d2r = group.querySelector('.t3-dot2-ring');
-  if (d2) d2.style.opacity = (d2Appear * dotFade).toFixed(3);
-  if (d2r) d2r.style.opacity = (0.5 * d2Appear * dotFade).toFixed(3);
-
-  // 散点闪烁
-  const sparks = [
-    { el: group.querySelector('.t3-spark1'), delay: 2.0 },
-    { el: group.querySelector('.t3-spark2'), delay: 3.0 },
-    { el: group.querySelector('.t3-spark3'), delay: 4.0 },
-  ];
-  sparks.forEach(s => {
-    if (!s.el) return;
-    const st = t - s.delay;
-    if (st < 0) { s.el.style.opacity = '0'; return; }
-    const sparkFade = Math.sin(clamp01(st * 0.8) * Math.PI);
-    s.el.style.opacity = (0.6 * sparkFade * dotFade).toFixed(3);
-  });
-}
-
-/* --- 轨迹4 渲染函数 --- */
-function renderTrace4(group, elapsed, totalDur) {
-  const t = elapsed;
-  const fadeIn = range(t, 0, 0.08);
-  const fadeOut = 1 - range(t, 0.85, 1.0);
-  group.style.opacity = Math.min(fadeIn, fadeOut).toFixed(3);
-
-  // 主轨迹
-  const mainDraw = easeInOut(range(t, 0.05, 0.55));
-  const mainFade = 1 - range(t, 0.78, 0.92);
-  const main = group.querySelector('.t4-main');
-  if (main) {
-    main.style.strokeDashoffset = (180 * (1 - mainDraw)).toFixed(1);
-    main.style.opacity = (0.8 * mainFade).toFixed(3);
-  }
-
-  // 光晕
-  const glow = group.querySelector('.t4-glow');
-  const glowFade = range(t, 0.10, 0.50) * (1 - range(t, 0.50, 0.90));
-  if (glow) glow.style.opacity = (0.5 * glowFade).toFixed(3);
-
-  // 流动虚线
-  const flow = group.querySelector('.t4-flow');
-  const flowFade = range(t, 0.58, 0.78) * (1 - range(t, 0.80, 0.92));
-  if (flow) {
-    flow.style.opacity = (0.4 * flowFade).toFixed(3);
-    flow.style.strokeDashoffset = ((t * 22) % 7).toFixed(1);
-  }
-
-  // 文字
-  const textEl = group.querySelector('.t4-text');
-  if (textEl) {
-    const textFade = range(t, 0.15, 0.30) * (1 - range(t, 0.75, 0.90));
-    textEl.style.opacity = textFade.toFixed(3);
-    const tsp = textEl.querySelector('textPath');
-    if (tsp) {
-      // 从 -30% 到 100%
-      const textProgress = clamp01(range(t, 0.15, 0.85));
-      tsp.setAttribute('startOffset', (-30 + 130 * easeInOut(textProgress)).toFixed(1) + '%');
-    }
-  }
-
-  // 两端圆点
-  const dotFade = 1 - range(t, 0.80, 0.92);
-  const d1Appear = easeInOut(range(t, 0.50, 0.65));
-  const d1 = group.querySelector('.t4-dot1');
-  const d1r = group.querySelector('.t4-dot1-ring');
-  if (d1) { d1.style.opacity = (d1Appear * dotFade).toFixed(3); d1.style.transform = `scale(${lerp(0.3,1.3,d1Appear).toFixed(2)})`; }
-  if (d1r) d1r.style.opacity = (0.6 * d1Appear * dotFade).toFixed(3);
-
-  const d2Appear = easeInOut(range(t, 0.52, 0.67));
-  const d2 = group.querySelector('.t4-dot2');
-  const d2r = group.querySelector('.t4-dot2-ring');
-  if (d2) d2.style.opacity = (d2Appear * dotFade).toFixed(3);
-  if (d2r) d2r.style.opacity = (0.6 * d2Appear * dotFade).toFixed(3);
-}
-
-/* --- 主循环：轮流播放四条轨迹 --- */
-const traceConfigs = [
-  { id: 'trace1', dur: 13500, render: renderTrace1 },
-  { id: 'trace2', dur: 11500, render: renderTrace2 },
-  { id: 'trace3', dur: 11500, render: renderTrace3 },
-  { id: 'trace4', dur: 11500, render: renderTrace4 },
-];
-
-let currentTraceIdx = 0;
-let cycleStartTime = 0;
-let activeGroup = null;
-
-function startTrace(idx, now) {
-  // 隐藏所有
-  traceConfigs.forEach(cfg => {
-    const el = document.getElementById(cfg.id);
+function showTrace(idx) {
+  traces.forEach(id => {
+    const el = document.getElementById(id);
     if (el) {
       el.classList.remove('active');
-      el.style.opacity = '0';
-      el.style.visibility = 'hidden';
+      el.style.transform = '';
+      el.style.transformOrigin = '';
+      const newEl = el.cloneNode(true);
+      el.parentNode.replaceChild(newEl, el);
     }
   });
 
-  const cfg = traceConfigs[idx];
-  const group = document.getElementById(cfg.id);
-  if (!group) return;
+  const current = document.getElementById(traces[idx]);
+  if (current) {
+    const { dx, dy, rotation, scale } = getRandomTransform();
+    current.style.transformOrigin = '50px 50px';
+    current.style.transform = `translate(${dx}px, ${dy}px) rotate(${rotation}deg) scale(${scale})`;
 
-  // 随机位移
-  const { dx, dy, rotation, scale } = getRandomTransform();
-  group.style.transformOrigin = '50px 50px';
-  group.style.transform = `translate(${dx}px, ${dy}px) rotate(${rotation}deg) scale(${scale})`;
-
-  // 重置所有子元素的内联样式
-  group.querySelectorAll('[style]').forEach(el => {
-    // 保留 transform 在 group 上，清除子元素可能残留的 opacity 等
-    if (el === group) return;
-  });
-
-  group.style.visibility = 'visible';
-  group.classList.add('active');
-  activeGroup = group;
-  cycleStartTime = now;
-  currentTraceIdx = idx;
-}
-
-function traceLoop(now) {
-  if (!activeGroup) {
-    startTrace(0, now);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        current.classList.add('active');
+      });
+    });
   }
 
-  const cfg = traceConfigs[currentTraceIdx];
-  const elapsed = (now - cycleStartTime) / cfg.dur; // 0~1+
-
-  if (elapsed >= 1.0) {
-    // 切换到下一条
-    const nextIdx = (currentTraceIdx + 1) % traceConfigs.length;
-    startTrace(nextIdx, now);
-  } else {
-    cfg.render(activeGroup, elapsed, cfg.dur / 1000);
-  }
-
-  requestAnimationFrame(traceLoop);
+  const dur = getCycleDuration(idx);
+  traceIdx = (idx + 1) % traces.length;
+  setTimeout(() => showTrace(traceIdx), dur);
 }
 
-// 启动
 window.addEventListener('load', () => {
-  // 等待一帧确保 DOM 就绪
-  requestAnimationFrame((now) => {
-    startTrace(0, now);
-    requestAnimationFrame(traceLoop);
-  });
+  setTimeout(() => showTrace(0), 1000);
 });
 </script>
 </body>
