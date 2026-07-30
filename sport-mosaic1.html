@@ -177,7 +177,7 @@
         .time-group { display: flex; gap: 4px; flex: 1; }
         .time-group input { flex: 1; min-width: 0; }
 
-        /* ===== 日期输入框紧凑样式 ===== */
+        /* ===== 日期输入框紧凑样式（修复年份显示不全问题） ===== */
         .date-group {
             display: flex;
             align-items: center;
@@ -185,9 +185,6 @@
             flex: 1;
         }
         .date-group input[type="number"] {
-            width: auto;
-            max-width: 3.6em;
-            min-width: 2.2em;
             padding: 4px 3px;
             border: 1px solid #d9d9d9;
             border-radius: 4px;
@@ -198,6 +195,19 @@
             color: #333;
             font-variant-numeric: tabular-nums;
             transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        /* 年份输入框：确保4位数字完整显示 */
+        .date-group #dateYearInput {
+            width: 3.8em; 
+            min-width: 3.8em;
+            flex-shrink: 0;
+        }
+        /* 月、日输入框：2位数字 */
+        .date-group #dateMonthInput,
+        .date-group #dateDayInput {
+            width: 2.4em;
+            min-width: 2.4em;
+            flex-shrink: 0;
         }
         .date-group input[type="number"]:focus {
             border-color: #1677ff;
