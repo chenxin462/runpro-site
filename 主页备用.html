@@ -5,261 +5,348 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>RunBN —— 跑步数据可视化与科学复盘工具</title>
 <meta name="description" content="RunBN 专注跑步运动数据深度分析，提供 GPS 轨迹解析、配速曲线、心率区间、跑量趋势等多维可视化与复盘服务。">
+<!-- 引入运动赛事级英文字体 Oswald -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+
 <style>
+:root{
+  --primary-green: #00e676;
+  --deep-green: #0a2e1a;
+  --darker-green: #062113;
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --text-main: #ffffff;
+  --text-dim: rgba(255, 255, 255, 0.65);
+}
+
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI','Microsoft YaHei',sans-serif;}
 body{
-  background:#0a2e1a;
-  color:#fff;
+  background: var(--deep-green);
+  color: var(--text-main);
   line-height:1.6;
   overflow-x:hidden;
   position:relative;
 }
 
-/* ===== 跑步背景图 ===== */
+/* ===== 跑步背景图与全局光晕 ===== */
 body::before{
   content:'';
   position:fixed;
   inset:0;
   background:
-    linear-gradient(135deg,rgba(10,46,26,0.85),rgba(10,46,26,0.78)),
+    radial-gradient(circle at 20% 20%, rgba(0,230,118,0.15), transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(0,230,118,0.1), transparent 40%),
+    linear-gradient(135deg,rgba(10,46,26,0.92),rgba(6,33,19,0.96)),
     url('https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=1920&q=80') center/cover no-repeat fixed;
   z-index:-1;
+  background-color: var(--deep-green);
 }
 
 /* ===== 导航 ===== */
 header{
   position:sticky;top:0;z-index:100;
-  background:rgba(10,46,26,0.92);
-  backdrop-filter:blur(10px);
+  background:rgba(6,33,19,0.6);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
   display:flex;justify-content:space-between;align-items:center;
   padding:1rem 5%;
   transition:.3s;
-  border-bottom:1px solid rgba(255,255,255,0.08);
+  border-bottom:1px solid var(--glass-border);
 }
-header.scrolled{padding:.5rem 5%;box-shadow:0 4px 20px rgba(0,0,0,.4);}
-.logo{font-size:1.8rem;font-weight:bold;color:#00e676;letter-spacing:2px;}
+header.scrolled{padding:.5rem 5%;box-shadow:0 4px 30px rgba(0,0,0,.4); background:rgba(6,33,19,0.8);}
+.logo{font-size:1.8rem;font-weight:bold;color:var(--primary-green);letter-spacing:2px; text-shadow: 0 0 10px rgba(0,230,118,0.5);}
 .logo span{color:#fff;}
-nav a{color:rgba(255,255,255,.85);text-decoration:none;margin-left:1.8rem;font-size:.95rem;transition:color .3s;}
-nav a:hover{color:#00e676;}
+nav a{color:var(--text-dim);text-decoration:none;margin-left:1.8rem;font-size:.95rem;transition:color .3s; position:relative;}
+nav a:hover{color:var(--primary-green);}
+nav a::after {
+  content:''; position:absolute; bottom:-5px; left:0; width:0; height:2px; background:var(--primary-green); transition: width .3s;
+}
+nav a:hover::after { width: 100%; }
 
 /* ===== 通用区块 ===== */
-section{padding:4rem 5%;position:relative;}
+section{padding:5rem 5%;position:relative;}
 section h2{
-  text-align:center;font-size:2rem;margin-bottom:.5rem;color:#fff;
-  text-shadow:0 2px 8px rgba(0,0,0,.3);
+  text-align:center;font-size:2.2rem;margin-bottom:.5rem;color:var(--text-main);
+  font-family: 'Oswald', sans-serif; font-weight: 700;
+  letter-spacing: 0.02em;
 }
-section .subtitle{text-align:center;color:rgba(255,255,255,.7);margin-bottom:2.5rem;font-size:1rem;}
+section .subtitle{text-align:center;color:var(--text-dim);margin-bottom:3rem;font-size:1rem;}
 
-/* 白色卡片 */
-.card{
-  background:rgba(255,255,255,.95);
-  border-radius:16px;
-  padding:2rem 1.5rem;
-  text-align:center;
-  transition:transform .3s,box-shadow .3s;
-  box-shadow:0 4px 20px rgba(0,0,0,.15);
+/* 通用毛玻璃卡片基础样式 */
+.glass-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  transition: all 0.3s ease;
 }
-.card:hover{
-  transform:translateY(-8px);
-  box-shadow:0 12px 40px rgba(0,230,118,.2);
+.glass-card:hover {
+  background: rgba(0, 230, 118, 0.05);
+  border-color: rgba(0, 230, 118, 0.4);
+  box-shadow: 0 8px 30px rgba(0, 230, 118, 0.1);
+  transform: translateY(-5px);
 }
-.card h3,.card h4{color:#0a2e1a;margin:.8rem 0 .5rem;}
-.card p{color:#444;font-size:.9rem;line-height:1.6;}
+
+/* === 白色实心卡片样式 (用于功能区与统计区展示) === */
+.card {
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 16px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  border: 1px solid rgba(0, 230, 118, 0.1);
+}
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px rgba(0,230,118,0.25);
+  border-color: rgba(0,230,118,0.4);
+}
+.card h3, .card h4 { color: #0a2e1a; margin:.8rem 0 .5rem; font-size:1.2rem; }
+.card p { color: #444; font-size:.9rem; line-height:1.6; }
+
+/* 白底卡片内的图标与数字样式适配 */
+.card .step-num {
+  background: linear-gradient(135deg, #00e676, #00a85c);
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 10px rgba(0,230,118,0.3);
+}
+.card .stat-num { color: #00a85c; text-shadow: none; }
+.card .stat-label { color: #666; }
+.card .tag {
+  background: rgba(0,230,118,0.15);
+  color: #00a85c;
+  border: 1px solid rgba(0,230,118,0.3);
+}
 
 /* 绿色小标签 */
 .tag{
   display:inline-block;
   background:rgba(0,230,118,.15);
-  color:#00a85c;
-  padding:.2rem .7rem;
+  color:var(--primary-green);
+  padding:.3rem .8rem;
   border-radius:20px;
-  font-size:.78rem;
+  font-size:.75rem;
   font-weight:600;
-  margin-top:.5rem;
+  margin-top:.8rem;
+  border: 1px solid rgba(0,230,118,0.3);
 }
 
 /* 步骤编号 */
 .step-num{
-  width:48px;height:48px;border-radius:50%;
-  background:linear-gradient(135deg,#00e676,#00a85c);
-  color:#fff;font-size:1.3rem;font-weight:bold;
+  width:52px;height:52px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(0,230,118,0.2),rgba(0,168,92,0.1));
+  border: 1px solid rgba(0,230,118,0.4);
+  color:var(--primary-green);font-size:1.4rem;font-weight:bold;
   display:flex;align-items:center;justify-content:center;
-  margin:0 auto .8rem;
+  margin:0 auto 1rem;
+  box-shadow: 0 0 15px rgba(0,230,118,0.2);
 }
 
 /* ===== Hero ===== */
 .hero{
-  padding:5rem 5% 4rem;
+  padding:6rem 5% 5rem;
   text-align:center;
   position:relative;
 }
 .hero-badge{
   display:inline-block;
-  background:rgba(0,230,118,.2);
-  color:#00e676;
-  padding:.4rem 1rem;border-radius:20px;
+  background:rgba(0,230,118,.1);
+  color:var(--primary-green);
+  padding:.5rem 1.2rem;border-radius:30px;
   font-size:.85rem;font-weight:600;
-  margin-bottom:1.2rem;
+  margin-bottom:1.5rem;
   border:1px solid rgba(0,230,118,.3);
+  backdrop-filter: blur(5px);
 }
 .hero h1{
-  font-size:3rem;margin-bottom:1rem;
-  text-shadow:0 2px 15px rgba(0,0,0,.5);
+  font-size:3.2rem; 
+  margin-bottom:1.5rem;
   line-height:1.3;
+  min-height: 2em; 
 }
-.hero h1 .highlight{color:#00e676;}
+
+/* === 模糊极光聚焦动效 === */
+.fusion-text {
+  font-family: 'Oswald', 'Microsoft YaHei', sans-serif;
+  font-size: 3.2rem; 
+  font-weight: 700;  
+  transform: skewX(-6deg); 
+  display: inline-block;
+  letter-spacing: 0.03em; 
+  line-height: 1.3;
+  background: linear-gradient(90deg, #ffffff 0%, #00e676 50%, #ffffff 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: auroraFlow 3s linear infinite;
+  filter: blur(12px);
+  opacity: 0;
+  transition: filter 1.5s ease, opacity 1.5s ease;
+  text-shadow: 0 4px 20px rgba(0,230,118,0.3); 
+}
+.fusion-text.active { filter: blur(0); opacity: 1; }
+@keyframes auroraFlow {
+  0% { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
 .hero p{
-  max-width:700px;margin:0 auto 1.5rem;
-  color:rgba(255,255,255,.85);font-size:1.15rem;
+  max-width:700px;margin:0 auto 2rem; 
+  color:var(--text-dim);font-size:1.1rem;
 }
 .btn{
-  display:inline-block;padding:.85rem 2.2rem;border-radius:50px;
+  display:inline-block;padding:.9rem 2.5rem;border-radius:50px;
   font-weight:bold;text-decoration:none;font-size:1rem;cursor:pointer;
   transition:all .3s;
 }
 .btn-primary{
   background:linear-gradient(135deg,#00e676,#00a85c);
-  color:#fff;box-shadow:0 4px 15px rgba(0,230,118,.4);
+  color:#0a2e1a;box-shadow:0 4px 20px rgba(0,230,118,.4);
 }
-.btn-primary:hover{transform:translateY(-3px);box-shadow:0 6px 25px rgba(0,230,118,.5);}
+.btn-primary:hover{
+  transform:translateY(-3px);box-shadow:0 6px 30px rgba(0,230,118,.6);
+}
 
 /* ===== 统计数据 ===== */
-.stats-grid{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;
-}
+.stats-grid{ display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem; }
 .stat-item{
-  background:rgba(255,255,255,.95);border-radius:14px;padding:1.8rem 1rem;text-align:center;
-  box-shadow:0 4px 15px rgba(0,0,0,.1);
+  padding:2rem 1rem;text-align:center;
 }
-.stat-num{font-size:2.5rem;font-weight:bold;color:#00a85c;}
-.stat-label{color:#555;margin-top:.3rem;font-size:.9rem;}
+.stat-num{
+  font-size:3rem;font-weight:bold;color:var(--primary-green); 
+  font-family: 'Oswald', sans-serif;
+  text-shadow: 0 0 15px rgba(0,230,118,0.4);
+}
+.stat-label{color:var(--text-dim);margin-top:.3rem;font-size:.9rem; letter-spacing: 0.05em;}
 
 /* ===== 四栏通用 ===== */
-.grid-4{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.5rem;}
+.grid-4{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.5rem;}
 
 /* ===== 案例卡片 ===== */
-.case-card{
-  background:rgba(255,255,255,.95);border-radius:14px;overflow:hidden;
-  box-shadow:0 4px 15px rgba(0,0,0,.1);transition:transform .3s;
-}
-.case-card:hover{transform:translateY(-6px);}
+.case-card{ overflow:hidden; }
+.case-card:hover{ transform:translateY(-6px); }
 .case-img{
-  height:160px;background:#0a2e1a;display:flex;align-items:center;justify-content:center;
-  color:rgba(255,255,255,.3);font-size:3rem;
+  height:160px; 
+  background: linear-gradient(135deg, #062113, #0a2e1a);
+  display:flex;align-items:center;justify-content:center;
+  color:rgba(0,230,118,0.4);font-size:3rem;
+  border-bottom: 1px solid var(--glass-border);
 }
-.case-body{padding:1.2rem;}
-.case-body h4{color:#0a2e1a;margin-bottom:.5rem;}
-.case-body p{color:#555;font-size:.85rem;}
-.case-tag{
-  display:inline-block;background:rgba(0,230,118,.15);color:#00a85c;
-  padding:.15rem .6rem;border-radius:12px;font-size:.75rem;font-weight:600;margin-top:.5rem;
-}
+.case-body{padding:1.5rem;}
+.case-body h4{color:var(--text-main);margin-bottom:.5rem; font-size:1.1rem;}
+.case-body p{color:var(--text-dim);font-size:.85rem;}
+.case-tag{ margin-top:.8rem; }
 
 /* ===== 流程 ===== */
-.flow-grid{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;position:relative;
+.flow-grid{ display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;position:relative; }
+.flow-item{
+  text-align:center;position:relative; padding: 2rem 1rem;
 }
-.flow-item{text-align:center;position:relative;}
 .flow-item::after{
-  content:'';position:absolute;top:24px;right:-50%;width:100%;height:2px;
-  background:linear-gradient(90deg,#00e676,transparent);z-index:0;
+  content:'';position:absolute;top:48px;right:-50%;width:100%;height:1px;
+  background:linear-gradient(90deg,var(--primary-green),transparent);z-index:0; opacity: 0.5;
 }
 .flow-item:last-child::after{display:none;}
-.flow-arrow{display:none;}
+.flow-item h4 { color: var(--text-main); margin-bottom: 0.5rem; }
+.flow-item p { color: var(--text-dim); font-size:.9rem; }
 
 /* ===== 场景 ===== */
-.scene-card{
-  background:rgba(255,255,255,.95);border-radius:14px;padding:1.5rem;text-align:center;
-  box-shadow:0 4px 15px rgba(0,0,0,.1);transition:transform .3s;
-}
+.scene-card{ padding:2rem 1.5rem;text-align:center; }
 .scene-card:hover{transform:translateY(-6px);}
 .scene-icon{
-  width:64px;height:64px;border-radius:50%;margin:0 auto .8rem;
-  background:linear-gradient(135deg,#00e676,#00a85c);
+  width:64px;height:64px;border-radius:50%;margin:0 auto 1rem;
+  background:linear-gradient(135deg,rgba(0,230,118,.2),rgba(0,168,92,.1));
+  border: 1px solid rgba(0,230,118,0.3);
   display:flex;align-items:center;justify-content:center;font-size:1.8rem;
 }
-.scene-card h4{color:#0a2e1a;margin-bottom:.4rem;}
-.scene-card p{color:#555;font-size:.85rem;}
+.scene-card h4{color:var(--text-main);margin-bottom:.4rem;}
+.scene-card p{color:var(--text-dim);font-size:.85rem;}
 
 /* ===== 购买须知 ===== */
-.notice-grid{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.5rem;
-}
-.notice-card{
-  background:rgba(255,255,255,.95);border-radius:14px;padding:1.5rem;
-  box-shadow:0 4px 15px rgba(0,0,0,.1);position:relative;overflow:hidden;
-}
+.notice-grid{ display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem; }
+.notice-card{ padding:1.8rem; position:relative; overflow:hidden; }
 .notice-card::before{
-  content:'';position:absolute;top:0;left:0;width:4px;height:100%;
-  background:linear-gradient(180deg,#00e676,#00a85c);
+  content:'';position:absolute;top:0;left:0;width:3px;height:100%;
+  background:var(--primary-green); box-shadow: 0 0 10px var(--primary-green);
 }
-.notice-card h4{color:#0a2e1a;margin-bottom:.4rem;padding-left:.5rem;}
-.notice-card p{color:#555;font-size:.85rem;padding-left:.5rem;}
+.notice-card h4{color:var(--text-main);margin-bottom:.6rem;padding-left:.8rem; font-size:1.1rem;}
+.notice-card p{color:var(--text-dim);font-size:.9rem;padding-left:.8rem;}
 
 /* ===== 保障栏 ===== */
-.guarantee-bar{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;
-}
-.guarantee-item{
-  background:rgba(255,255,255,.95);border-radius:14px;padding:1.5rem;text-align:center;
-  box-shadow:0 4px 15px rgba(0,0,0,.1);transition:transform .3s;
-}
+.guarantee-bar{ display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.5rem; }
+.guarantee-item{ padding:2rem 1rem;text-align:center; }
 .guarantee-item:hover{transform:translateY(-5px);}
 .guarantee-icon{
-  width:56px;height:56px;border-radius:50%;margin:0 auto .8rem;
-  background:linear-gradient(135deg,rgba(0,230,118,.15),rgba(0,168,92,.15));
+  width:60px;height:60px;border-radius:50%;margin:0 auto 1rem;
+  background:linear-gradient(135deg,rgba(0,230,118,.15),rgba(0,168,92,.05));
+  border: 1px solid rgba(0,230,118,0.2);
   display:flex;align-items:center;justify-content:center;font-size:1.5rem;
 }
-.guarantee-item h4{color:#0a2e1a;margin-bottom:.3rem;}
-.guarantee-item p{color:#555;font-size:.85rem;}
+.guarantee-item h4{color:var(--text-main);margin-bottom:.3rem;}
+.guarantee-item p{color:var(--text-dim);font-size:.85rem;}
 
 /* ===== 联系区 ===== */
 .contact{
   text-align:center;
-  background:linear-gradient(180deg,rgba(10,46,26,.6),rgba(10,46,26,.8));
-  padding:4rem 5%;
+  background:linear-gradient(180deg,transparent,rgba(0,230,118,0.05));
+  padding:5rem 5%;
 }
-.contact h2{color:#fff;margin-bottom:1rem;}
-.contact p{color:rgba(255,255,255,.8);margin-bottom:1.5rem;}
+.contact h2{color:var(--text-main);margin-bottom:1rem;}
+.contact p{color:var(--text-dim);margin-bottom:2rem;}
 .wechat-box{
   display:inline-block;
-  background:rgba(255,255,255,.95);border-radius:16px;padding:2rem 3rem;
-  box-shadow:0 4px 20px rgba(0,0,0,.2);
+  background:rgba(255,255,255,.05);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius:16px;padding:2.5rem 3.5rem;
+  box-shadow:0 8px 30px rgba(0,0,0,.3);
 }
-.wechat-label{color:#888;font-size:.9rem;margin-bottom:.3rem;}
-.wechat-number{font-size:2.2rem;font-weight:bold;color:#00a85c;letter-spacing:2px;}
+.wechat-label{color:var(--text-dim);font-size:.9rem;margin-bottom:.5rem;}
+.wechat-number{
+  font-size:2.5rem;font-weight:bold;color:var(--primary-green);
+  letter-spacing:2px; font-family: 'Oswald', sans-serif;
+  text-shadow: 0 0 15px rgba(0,230,118,0.4);
+}
 .wechat-btn{
-  display:inline-block;margin-top:1rem;
+  display:inline-block;margin-top:1.5rem;
   background:linear-gradient(135deg,#00e676,#00a85c);
-  color:#fff;padding:.7rem 2rem;border-radius:50px;font-weight:bold;
+  color:#0a2e1a;padding:.8rem 2.5rem;border-radius:50px;font-weight:bold;
   text-decoration:none;transition:all .3s;
 }
-.wechat-btn:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(0,230,118,.4);}
+.wechat-btn:hover{transform:translateY(-3px);box-shadow:0 8px 25px rgba(0,230,118,.5);}
 
 /* ===== FAQ ===== */
 .faq-list{max-width:800px;margin:0 auto;}
 .faq-item{
-  background:rgba(255,255,255,.95);border-radius:12px;margin-bottom:1rem;
-  overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.08);
+  margin-bottom:1rem; overflow:hidden;
 }
 .faq-q{
-  padding:1.2rem 1.5rem;cursor:pointer;display:flex;justify-content:space-between;
-  align-items:center;font-weight:bold;color:#0a2e1a;font-size:1rem;
+  padding:1.5rem 1.5rem;cursor:pointer;display:flex;justify-content:space-between;
+  align-items:center;font-weight:bold;color:var(--text-main);font-size:1rem;
 }
-.faq-q .arrow{transition:transform .3s;color:#00a85c;font-size:.9rem;}
+.faq-q .arrow{transition:transform .3s;color:var(--primary-green);font-size:.9rem;}
 .faq-item.open .faq-q .arrow{transform:rotate(180deg);}
+.faq-item.open { background: rgba(0, 230, 118, 0.03); border-color: rgba(0, 230, 118, 0.3); }
 .faq-a{
-  max-height:0;overflow:hidden;padding:0 1.5rem;color:#555;font-size:.9rem;transition:.35s;
+  max-height:0;overflow:hidden;padding:0 1.5rem;color:var(--text-dim);font-size:.9rem;transition:.35s;
 }
-.faq-item.open .faq-a{padding:0 1.5rem 1.2rem;max-height:200px;}
+.faq-item.open .faq-a{padding:0 1.5rem 1.5rem;max-height:200px;}
 
 /* ===== 页脚 ===== */
 footer{
-  background:rgba(5,20,12,.95);padding:2rem 5%;text-align:center;color:rgba(255,255,255,.5);font-size:.82rem;
+  background:rgba(5,20,12,.95);padding:2.5rem 5%;text-align:center;color:var(--text-dim);font-size:.82rem;
+  border-top: 1px solid var(--glass-border);
 }
-.footer-links{display:flex;flex-wrap:wrap;justify-content:center;gap:1rem;margin-bottom:1rem;}
-.footer-links a{color:rgba(255,255,255,.6);text-decoration:none;font-size:.85rem;transition:color .3s;}
-.footer-links a:hover{color:#00e676;}
+.footer-links{display:flex;flex-wrap:wrap;justify-content:center;gap:1.5rem;margin-bottom:1rem;}
+.footer-links a{color:var(--text-dim);text-decoration:none;font-size:.85rem;transition:color .3s;}
+.footer-links a:hover{color:var(--primary-green);}
 
 /* ===== 回到顶部 ===== */
 .back-top{
@@ -268,17 +355,18 @@ footer{
   background:linear-gradient(135deg,#00e676,#00a85c);
   display:flex;align-items:center;justify-content:center;
   cursor:pointer;opacity:0;visibility:hidden;transition:.3s;z-index:1000;
-  font-size:1.3rem;color:#fff;box-shadow:0 4px 15px rgba(0,230,118,.3);
+  font-size:1.3rem;color:#0a2e1a;box-shadow:0 4px 15px rgba(0,230,118,.4);
 }
 .back-top.show{opacity:1;visibility:visible;}
 .back-top:hover{transform:translateY(-4px);}
 
 /* ===== 响应式 ===== */
 @media(max-width:768px){
-  .hero h1{font-size:2rem;}
+  .hero h1{font-size:2rem; min-height: 2.5em;}
+  .fusion-text { font-size: 2rem; } 
   .hero p{font-size:1rem;}
   nav a{margin-left:1rem;font-size:.85rem;}
-  .wechat-number{font-size:1.6rem;}
+  .wechat-number{font-size:1.8rem;}
   .flow-item::after{display:none;}
 }
 </style>
@@ -301,38 +389,29 @@ footer{
 <!-- Hero -->
 <section class="hero" id="home">
   <div class="hero-badge">🏃 RunBN · 跑步数据可视化分析平台</div>
-  <h1>每一公里，<span class="highlight">都经得起推敲</span></h1>
+  <h1><span class="fusion-text" id="fusionText"></span></h1>
   <p>RunBN 专注于跑步运动数据的深度解析与可视化呈现。支持 Keep / 咕咚 / 悦跑圈 / 悦动圈 GPX/TCX 数据导入，提供轨迹渲染、配速曲线、心率区间与跑量趋势的多维复盘，让每一次奔跑都沉淀为可信赖的数据资产。</p>
-  <a href="#contact" class="btn btn-primary">微信咨询：278715464</a>
+  <!-- 修改为跳转拼图工具链接 -->
+  <a href="sport-mosaic.html" class="btn btn-primary">Keep运动截图拼图生成器</a>
 </section>
 
 <!-- 统计数据 -->
-<section id="stats" style="background:linear-gradient(180deg,rgba(10,46,26,.5),transparent);">
+<section id="stats" style="background:linear-gradient(180deg,rgba(6,33,19,0.5),transparent);">
   <div class="stats-grid">
-    <div class="stat-item">
-      <div class="stat-num">3000+</div>
-      <div class="stat-label">服务跑友</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-num">5000+</div>
-      <div class="stat-label">分析记录</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-num">99.2%</div>
-      <div class="stat-label">数据准确率</div>
-    </div>
-    <div class="stat-item">
-      <div class="stat-num">24h</div>
-      <div class="stat-label">极速响应</div>
-    </div>
+    <!-- 改为白色实心卡片 class="card stat-item" -->
+    <div class="card stat-item"><div class="stat-num">3000+</div><div class="stat-label">服务跑友</div></div>
+    <div class="card stat-item"><div class="stat-num">5000+</div><div class="stat-label">分析记录</div></div>
+    <div class="card stat-item"><div class="stat-num">99.2%</div><div class="stat-label">数据准确率</div></div>
+    <div class="card stat-item"><div class="stat-num">24h</div><div class="stat-label">极速响应</div></div>
   </div>
 </section>
 
 <!-- 功能优势 -->
 <section id="features">
   <h2>选择 RunBN 的理由</h2>
-  <p class="subtitle">以数据基石（Base Node）为核心理念，让每一次奔跑都有据可依</p>
+  <p class="subtitle">以数据基石为核心理念，让每一次奔跑都有据可依</p>
   <div class="grid-4">
+    <!-- 白色实心卡片 -->
     <div class="card">
       <div class="step-num">🗺️</div>
       <h3>轨迹解析</h3>
@@ -361,10 +440,11 @@ footer{
 </section>
 
 <!-- 核心卖点 -->
-<section id="selling" style="background:linear-gradient(180deg,transparent,rgba(10,46,26,.4));">
+<section id="selling" style="background:linear-gradient(180deg,transparent,rgba(0,230,118,0.03));">
   <h2>核心卖点</h2>
   <p class="subtitle">每一个细节都为你的数据安全和分析体验考虑</p>
   <div class="grid-4">
+    <!-- 白色实心卡片 -->
     <div class="card">
       <div class="step-num">🎯</div>
       <h4>精准轨迹</h4>
@@ -393,7 +473,7 @@ footer{
   <h2>数据分析案例</h2>
   <p class="subtitle">真实跑步数据，专业可视化呈现</p>
   <div class="grid-4">
-    <div class="case-card">
+    <div class="glass-card case-card">
       <div class="case-img">🏃‍♂️</div>
       <div class="case-body">
         <h4>复盘案例 · 5.0km 晨跑</h4>
@@ -401,7 +481,7 @@ footer{
         <div class="case-tag">Keep 数据可视化</div>
       </div>
     </div>
-    <div class="case-card">
+    <div class="glass-card case-card">
       <div class="case-img">🌙</div>
       <div class="case-body">
         <h4>复盘案例 · 7.0km 夜跑</h4>
@@ -409,7 +489,7 @@ footer{
         <div class="case-tag">咕咚数据复盘</div>
       </div>
     </div>
-    <div class="case-card">
+    <div class="glass-card case-card">
       <div class="case-img">🏅</div>
       <div class="case-body">
         <h4>复盘案例 · 10km 路跑</h4>
@@ -417,7 +497,7 @@ footer{
         <div class="case-tag">悦跑圈可视化</div>
       </div>
     </div>
-    <div class="case-card">
+    <div class="glass-card case-card">
       <div class="case-img">🎽</div>
       <div class="case-body">
         <h4>复盘案例 · 21km 半马</h4>
@@ -429,29 +509,29 @@ footer{
 </section>
 
 <!-- 使用流程 -->
-<section id="process" style="background:linear-gradient(180deg,rgba(10,46,26,.4),transparent);">
+<section id="process" style="background:linear-gradient(180deg,rgba(0,230,118,0.03),transparent);">
   <h2>四步完成数据分析</h2>
   <p class="subtitle">简单四步，轻松拿到你的跑步可视化报告</p>
   <div class="flow-grid">
-    <div class="flow-item">
+    <div class="glass-card flow-item">
       <div class="step-num">01</div>
       <h4>上传数据</h4>
-      <p style="color:#444;font-size:.9rem;">提供 GPX/TCX 格式跑步文件，支持多平台数据导入</p>
+      <p>提供 GPX/TCX 格式跑步文件，支持多平台数据导入</p>
     </div>
-    <div class="flow-item">
+    <div class="glass-card flow-item">
       <div class="step-num">02</div>
       <h4>解析渲染</h4>
-      <p style="color:#444;font-size:.9rem;">系统自动解析轨迹点，生成可视化图表与指标报告</p>
+      <p>系统自动解析轨迹点，生成可视化图表与指标报告</p>
     </div>
-    <div class="flow-item">
+    <div class="glass-card flow-item">
       <div class="step-num">03</div>
       <h4>校准优化</h4>
-      <p style="color:#444;font-size:.9rem;">人工辅助校准异常数据段，确保图表真实反映运动状态</p>
+      <p>人工辅助校准异常数据段，确保图表真实反映运动状态</p>
     </div>
-    <div class="flow-item">
+    <div class="glass-card flow-item">
       <div class="step-num">04</div>
       <h4>导出分享</h4>
-      <p style="color:#444;font-size:.9rem;">生成高清复盘报告，支持导出 PNG/SVG 或直接分享至社交平台</p>
+      <p>生成高清复盘报告，支持导出 PNG/SVG 或直接分享至社交平台</p>
     </div>
   </div>
 </section>
@@ -461,22 +541,22 @@ footer{
   <h2>适用场景</h2>
   <p class="subtitle">无论什么需求，我们都能帮你搞定</p>
   <div class="grid-4">
-    <div class="scene-card">
+    <div class="glass-card scene-card">
       <div class="scene-icon">✅</div>
       <h4>训练复盘</h4>
       <p>科学分析每次训练的强度与效果，优化后续训练计划</p>
     </div>
-    <div class="scene-card">
+    <div class="glass-card scene-card">
       <div class="scene-icon">🏁</div>
       <h4>赛事回顾</h4>
       <p>对已完成赛事进行全维度数据复盘，提炼成功经验</p>
     </div>
-    <div class="scene-card">
+    <div class="glass-card scene-card">
       <div class="scene-icon">📱</div>
       <h4>社交分享</h4>
       <p>生成高颜值数据图表，用于朋友圈、跑团社群的健康分享</p>
     </div>
-    <div class="scene-card">
+    <div class="glass-card scene-card">
       <div class="scene-icon">📂</div>
       <h4>档案归档</h4>
       <p>长期归档跑步数据，形成个人运动生涯的数字档案</p>
@@ -485,28 +565,28 @@ footer{
 </section>
 
 <!-- 使用须知 -->
-<section id="notices" style="background:linear-gradient(180deg,transparent,rgba(10,46,26,.3));">
+<section id="notices" style="background:linear-gradient(180deg,transparent,rgba(0,230,118,0.03));">
   <h2>使用须知</h2>
   <p class="subtitle">使用前请仔细阅读，让你放心使用</p>
   <div class="notice-grid">
-    <div class="notice-card">
+    <div class="glass-card notice-card">
       <h4>关于数据导入</h4>
       <p>支持 Keep、咕咚、悦跑圈、悦动圈全平台的 GPX/TCX 数据导入，日期、地点、距离全覆盖。</p>
     </div>
-    <div class="notice-card">
+    <div class="glass-card notice-card">
       <h4>关于处理时间</h4>
       <p>一般 24 小时内完成数据解析，急单可协商加急处理。图表生成通常 5-30 分钟。</p>
     </div>
-    <div class="notice-card">
+    <div class="glass-card notice-card">
       <h4>关于隐私</h4>
       <p>绝不泄露你的账号信息，仅用于本次数据分析。完成后可删除源数据，不留痕迹。</p>
     </div>
-    <div class="notice-card">
+    <div class="glass-card notice-card">
       <h4>关于售后</h4>
       <p>数据有问题，免费重新生成。微信一对一沟通，不满意可以重做。</p>
     </div>
-    <div class="notice-card" style="grid-column:1/-1;max-width:600px;margin:0 auto;">
-      <h4 style="color:#e65100;">⚠️ 温馨提示</h4>
+    <div class="glass-card notice-card" style="grid-column:1/-1;max-width:600px;margin:0 auto;">
+      <h4 style="color:#ff9800;">⚠️ 温馨提示</h4>
       <p>本平台仅提供跑步数据的可视化分析与个人复盘服务，请合理使用，严禁用于任何违规行为。</p>
     </div>
   </div>
@@ -517,19 +597,19 @@ footer{
   <h2>你可能关心的问题</h2>
   <p class="subtitle">新手必看，打消你的所有顾虑</p>
   <div class="faq-list">
-    <div class="faq-item">
+    <div class="glass-card faq-item">
       <div class="faq-q">支持哪些平台的数据？<span class="arrow">▼</span></div>
       <div class="faq-a">支持 Keep、咕咚、悦跑圈、悦动圈等主流平台，可导入 GPX/TCX 格式数据进行可视化分析，包括距离、配速、心率、卡路里等全维度指标。</div>
     </div>
-    <div class="faq-item">
+    <div class="glass-card faq-item">
       <div class="faq-q">数据准确吗？<span class="arrow">▼</span></div>
       <div class="faq-a">采用多源 GPS 数据融合算法，自动识别并校准异常漂移点，配速、心率、步频等核心指标误差率低于 0.1%，至今保持高准确率记录。</div>
     </div>
-    <div class="faq-item">
+    <div class="glass-card faq-item">
       <div class="faq-q">多久能完成分析？<span class="arrow">▼</span></div>
       <div class="faq-a">上传 GPX/TCX 文件后，系统自动解析并生成可视化图表，通常 5-30 分钟内完成。复杂数据或大量文件可协商处理时间。</div>
     </div>
-    <div class="faq-item">
+    <div class="glass-card faq-item">
       <div class="faq-q">隐私安全吗？<span class="arrow">▼</span></div>
       <div class="faq-a">全流程本地化数据处理，绝不留存用户账号信息。分析完成后可主动删除源数据文件，全程不索要任何平台密码。</div>
     </div>
@@ -537,26 +617,26 @@ footer{
 </section>
 
 <!-- 服务保障 -->
-<section id="guarantee" style="background:linear-gradient(180deg,rgba(10,46,26,.3),transparent);">
+<section id="guarantee" style="background:linear-gradient(180deg,rgba(0,230,118,0.03),transparent);">
   <h2>服务保障</h2>
   <p class="subtitle">四大承诺，让你放心使用</p>
   <div class="guarantee-bar">
-    <div class="guarantee-item">
+    <div class="glass-card guarantee-item">
       <div class="guarantee-icon">👨‍💻</div>
       <h4>专业团队</h4>
       <p>四年运动数据解析经验，累计服务 3000+ 跑友</p>
     </div>
-    <div class="guarantee-item">
+    <div class="glass-card guarantee-item">
       <div class="guarantee-icon">✅</div>
       <h4>品质保证</h4>
       <p>数据精准，配速曲线自然，可视化效果专业</p>
     </div>
-    <div class="guarantee-item">
+    <div class="glass-card guarantee-item">
       <div class="guarantee-icon">🔐</div>
       <h4>安全保障</h4>
       <p>隐私保护，绝不泄露账号信息，全流程可追踪</p>
     </div>
-    <div class="guarantee-item">
+    <div class="glass-card guarantee-item">
       <div class="guarantee-icon">💬</div>
       <h4>服务保障</h4>
       <p>微信一对一服务，24 小时在线，不满意免费重做</p>
@@ -592,21 +672,51 @@ footer{
 <div class="back-top" id="backTop">↑</div>
 
 <script>
-// 导航滚动
+// === 模糊极光聚焦动效 ===
+const greetings = [
+  "迈开腿，风自然会来。",
+  "若被时间绊住脚步，便让微风替你抵达。",
+  "城市的脉搏与心跳，将化作你最真实的注脚。",
+  "终点处的闪耀光芒，本就该属于你的胸膛。",
+  "说出一座向往的城市，余下的风景由我们铺展。"
+];
+
+const fusionEl = document.getElementById('fusionText');
+let gIdx = 0;
+let fusionTimer;
+
+function cycleFusion() {
+  // 1. 离场：移除 active，文字开始模糊变透明
+  fusionEl.classList.remove('active');
+
+  // 2. 等待 1.5 秒离场动画结束后，替换文字并触发入场
+  setTimeout(() => {
+    fusionEl.innerText = greetings[gIdx];
+    gIdx = (gIdx + 1) % greetings.length;
+
+    // 强制重绘，确保 transition 动画能重新触发
+    void fusionEl.offsetWidth;
+
+    // 3. 入场：添加 active，文字从模糊变清晰，同时极光在字体内部流动
+    fusionEl.classList.add('active');
+
+    // 4. 停留展示 3.5 秒后，进入下一轮循环
+    fusionTimer = setTimeout(cycleFusion, 3500);
+  }, 1500); // 这里的 1.5 秒对应 CSS 里的 transition 时间
+}
+
+// 启动动效
+cycleFusion();
+
+// === 原有交互逻辑 ===
 window.addEventListener('scroll',()=>{
   document.getElementById('header').classList.toggle('scrolled',window.scrollY>50);
   document.getElementById('backTop').classList.toggle('show',window.scrollY>500);
 });
-
-// 回到顶部
 document.getElementById('backTop').onclick=()=>window.scrollTo({top:0,behavior:'smooth'});
-
-// FAQ 折叠
 document.querySelectorAll('.faq-q').forEach(q=>{
-  q.onclick=()=>q.parentNode.classList.toggle('open');
+  q.onclick=()=>q.parentElement.classList.toggle('open');
 });
-
-// 滚动入场动画
 const observer=new IntersectionObserver((entries)=>{
   entries.forEach(e=>{
     if(e.isIntersecting){
@@ -615,14 +725,12 @@ const observer=new IntersectionObserver((entries)=>{
     }
   });
 },{threshold:0.1});
-
-document.querySelectorAll('.card,.case-card,.scene-card,.stat-item,.notice-card,.guarantee-item,.flow-item').forEach(el=>{
+document.querySelectorAll('.glass-card, .card').forEach(el=>{
   el.style.opacity='0';
   el.style.transform='translateY(30px)';
-  el.style.transition='opacity .6s ease, transform .6s ease';
+  el.style.transition='opacity 0.6s ease, transform 0.6s ease, background 0.3s, border-color 0.3s, box-shadow 0.3s';
   observer.observe(el);
 });
 </script>
 </body>
 </html>
-
