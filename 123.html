@@ -194,10 +194,17 @@ body::before{
 }
 
 @keyframes dataPanelFade {
+<<<<<<< HEAD
   0%        { opacity: 0; transform: translateY(10px); }
   10%       { opacity: 1; transform: translateY(0); }
   85%       { opacity: 1; transform: translateY(0); }
   95%, 100% { opacity: 0; transform: translateY(-5px); }
+=======
+  0%, 8%    { opacity: 0; transform: translateY(10px); }
+  20%       { opacity: 1; transform: translateY(0); }
+  78%       { opacity: 1; transform: translateY(0); }
+  90%, 100% { opacity: 0; transform: translateY(-5px); }
+>>>>>>> 7a79db5d2df8d4653f69737e2efe98d03af3dfca
 }
 
 header, section, footer, .back-top {
@@ -511,6 +518,7 @@ footer{
   position: absolute;
   pointer-events: none;
   opacity: 0;
+<<<<<<< HEAD
   animation: dataPanelFade 13s ease-in-out infinite;
   z-index: 1;
 }
@@ -529,6 +537,22 @@ footer{
 }
 .track-data-panel .data-unit { font-size: 2.5px; fill: rgba(255,255,255,0.6); font-family: 'Segoe UI', sans-serif; }
 .track-data-panel .data-divider { stroke: rgba(0,230,118,0.35); stroke-width: 0.3; }
+=======
+  animation: dataPanelFade 13s ease-in-out forwards;
+  z-index: 1;
+}
+.track-data-panel .data-title {
+  font-size: 3.5px; fill: #00e676; font-weight: bold; letter-spacing: 0.3px;
+  filter: drop-shadow(0 0 2px #00e676); font-family: 'Oswald', sans-serif;
+}
+.track-data-panel .data-label { font-size: 2.5px; fill: rgba(255,255,255,0.55); font-family: 'Segoe UI', sans-serif; }
+.track-data-panel .data-value {
+  font-size: 3px; fill: #ffffff; font-weight: bold; font-family: 'Oswald', sans-serif;
+  filter: drop-shadow(0 0 1px rgba(255,255,255,0.3));
+}
+.track-data-panel .data-unit { font-size: 2.2px; fill: rgba(255,255,255,0.5); font-family: 'Segoe UI', sans-serif; }
+.track-data-panel .data-divider { stroke: rgba(0,230,118,0.25); stroke-width: 0.2; }
+>>>>>>> 7a79db5d2df8d4653f69737e2efe98d03af3dfca
 </style>
 </head>
 <body>
@@ -536,7 +560,11 @@ footer{
 <div id="bg-scene">
   <div class="sun-glow"></div>
 
+<<<<<<< HEAD
   <svg id="trace-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+=======
+  <svg id="trace-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
+>>>>>>> 7a79db5d2df8d4653f69737e2efe98d03af3dfca
 
     <!-- ===== 轨迹1：400米标准操场跑道 (等比例缩小) ===== -->
     <g class="trace-group" id="trace1" style="--len:240;">
@@ -608,6 +636,7 @@ footer{
             stroke-dasharray="140" stroke-dashoffset="140"
             style="animation: trackDrawCycle 13s ease-in-out 0.6s forwards;"/>
 
+<<<<<<< HEAD
       <g class="track-data-panel" style="opacity:1 !important;">
         <text x="76" y="22" class="data-title" text-anchor="start">🏟️ 操场10KM</text>
         <line x1="76" y1="25" x2="98" y2="25" class="data-divider"/>
@@ -628,6 +657,28 @@ footer{
         <text x="98" y="50.5" class="data-value" text-anchor="end">10</text>
         <text x="98.8" y="50.5" class="data-unit">m</text>
         <text x="76" y="55" class="data-label">步频</text>
+=======
+      <g class="track-data-panel">
+        <text x="78" y="22" class="data-title" text-anchor="start">🏟️ 操场10KM</text>
+        <line x1="78" y1="25" x2="98" y2="25" class="data-divider"/>
+        <text x="78" y="30" class="data-label">距离</text>
+        <text x="98" y="30" class="data-value" text-anchor="end">10.0</text>
+        <text x="98.5" y="30" class="data-unit">km</text>
+        <text x="78" y="34.5" class="data-label">配速</text>
+        <text x="98" y="34.5" class="data-value" text-anchor="end">5'30"</text>
+        <text x="98.5" y="34.5" class="data-unit">/km</text>
+        <text x="78" y="39" class="data-label">用时</text>
+        <text x="98" y="39" class="data-value" text-anchor="end">55:00</text>
+        <text x="98.5" y="39" class="data-unit">min</text>
+        <line x1="78" y1="41.5" x2="98" y2="41.5" class="data-divider"/>
+        <text x="78" y="46" class="data-label">心率</text>
+        <text x="98" y="46" class="data-value" text-anchor="end" fill="#ff8a80">158</text>
+        <text x="98.5" y="46" class="data-unit">bpm</text>
+        <text x="78" y="50.5" class="data-label">爬升</text>
+        <text x="98" y="50.5" class="data-value" text-anchor="end">10</text>
+        <text x="98.5" y="50.5" class="data-unit">m</text>
+        <text x="78" y="55" class="data-label">步频</text>
+>>>>>>> 7a79db5d2df8d4653f69737e2efe98d03af3dfca
         <text x="98" y="55" class="data-value" text-anchor="end" fill="#80deea">168</text>
         <text x="98.5" y="55" class="data-unit">spm</text>
       </g>
@@ -1181,6 +1232,7 @@ function getRandomTransform() {
   return { dx: parseFloat(dx), dy: parseFloat(dy), rotation, scale };
 }
 
+<<<<<<< HEAD
 // ===== 重启元素内所有动画的通用函数 =====
 function restartAnimations(el) {
   if (!el) return;
@@ -1194,6 +1246,8 @@ function restartAnimations(el) {
   void el.offsetWidth;
 }
 
+=======
+>>>>>>> 7a79db5d2df8d4653f69737e2efe98d03af3dfca
 // ===== 四条轨迹轮流播放 =====
 const traces = ['trace1', 'trace2', 'trace3', 'trace4'];
 let traceIdx = 0;
@@ -1203,11 +1257,15 @@ function getCycleDuration(idx) {
 }
 
 function showTrace(idx) {
+<<<<<<< HEAD
   // 隐藏所有轨迹
+=======
+>>>>>>> 7a79db5d2df8d4653f69737e2efe98d03af3dfca
   traces.forEach(id => {
     const el = document.getElementById(id);
     if (el) {
       el.classList.remove('active');
+<<<<<<< HEAD
       el.style.opacity = '0';
       // 重置数据面板样式，防止残留状态
       const p = el.querySelector('.track-data-panel');
@@ -1215,20 +1273,30 @@ function showTrace(idx) {
         p.style.opacity = '';
         p.style.animation = 'none';
       }
+=======
+      el.style.transform = '';
+      el.style.transformOrigin = '';
+      const newEl = el.cloneNode(true);
+      el.parentNode.replaceChild(newEl, el);
+>>>>>>> 7a79db5d2df8d4653f69737e2efe98d03af3dfca
     }
   });
 
   const current = document.getElementById(traces[idx]);
   if (current) {
+<<<<<<< HEAD
     // 先重置 transform
     current.style.transform = '';
     current.style.transformOrigin = '';
 
     // 应用随机位移
+=======
+>>>>>>> 7a79db5d2df8d4653f69737e2efe98d03af3dfca
     const { dx, dy, rotation, scale } = getRandomTransform();
     current.style.transformOrigin = '50px 50px';
     current.style.transform = `translate(${dx}px, ${dy}px) rotate(${rotation}deg) scale(${scale})`;
 
+<<<<<<< HEAD
     // 强制重置所有内联动画
     restartAnimations(current);
 
@@ -1246,6 +1314,10 @@ function showTrace(idx) {
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         current.style.opacity = '';
+=======
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+>>>>>>> 7a79db5d2df8d4653f69737e2efe98d03af3dfca
         current.classList.add('active');
       });
     });
