@@ -81,10 +81,7 @@
     display: flex;
     gap: 18px;
   }
-  .status-bar span b {
-    color: var(--text);
-    font-weight: 500;
-  }
+  .status-bar span b { color: var(--text); font-weight: 500; }
   .status-msg { color: var(--secondary); }
   .main-layout {
     display: grid;
@@ -100,10 +97,7 @@
   .panel::-webkit-scrollbar-track { background: transparent; }
   .panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
   .panel::-webkit-scrollbar-thumb:hover { background: #3A4048; }
-  .materials-panel {
-    border-right: 1px solid var(--border);
-    padding: 16px;
-  }
+  .materials-panel { border-right: 1px solid var(--border); padding: 16px; }
   .section-title {
     font-family: 'Oswald', sans-serif;
     font-size: 13px;
@@ -155,14 +149,7 @@
     object-fit: contain;
     pointer-events: none;
   }
-  .material-item .mat-loading {
-    color: #999;
-    font-size: 14px;
-  }
-  .material-item .mat-error {
-    color: #ccc;
-    font-size: 9px;
-  }
+  .material-item .mat-loading { color: #999; font-size: 14px; }
   .material-item .label {
     font-size: 9px;
     color: #888;
@@ -180,9 +167,6 @@
     position: relative;
     background: #050709;
     overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
   .canvas-panel::before {
     content: '';
@@ -193,6 +177,7 @@
       linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
     background-size: 24px 24px;
     pointer-events: none;
+    z-index: 0;
   }
   .canvas-panel::after {
     content: '';
@@ -200,13 +185,16 @@
     inset: 0;
     background: radial-gradient(circle at 50% 50%, transparent 40%, rgba(0,0,0,0.5) 100%);
     pointer-events: none;
+    z-index: 0;
   }
   .canvas-stage {
-    position: relative;
-    transform-origin: center;
-    transition: transform 0.2s ease-out;
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: 0 0;
     box-shadow: 0 12px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.05);
     z-index: 1;
+    will-change: transform;
   }
   #main-canvas { display: block; background: #FFFFFF; }
   .canvas-empty {
@@ -266,10 +254,7 @@
     gap: 6px;
     transition: all 0.15s;
   }
-  .overlay-btn:hover {
-    background: var(--card-hover);
-    border-color: var(--primary);
-  }
+  .overlay-btn:hover { background: var(--card-hover); border-color: var(--primary); }
   .overlay-btn.active {
     background: var(--primary);
     color: white;
@@ -293,10 +278,7 @@
     box-shadow: 0 4px 16px rgba(255, 87, 34, 0.5);
   }
   .align-hint.visible { opacity: 1; }
-  .control-panel {
-    border-left: 1px solid var(--border);
-    padding: 16px;
-  }
+  .control-panel { border-left: 1px solid var(--border); padding: 16px; }
   .control-section { margin-bottom: 20px; }
   .btn-row {
     display: grid;
@@ -320,46 +302,15 @@
     gap: 6px;
     font-weight: 500;
   }
-  .btn:hover {
-    background: #242B33;
-    border-color: var(--primary);
-    color: var(--primary);
-  }
-  .btn-primary {
-    background: var(--primary);
-    color: white;
-    border-color: var(--primary);
-  }
-  .btn-primary:hover {
-    background: var(--primary-hover);
-    border-color: var(--primary-hover);
-    color: white;
-  }
-  .btn-success {
-    background: var(--success);
-    color: white;
-    border-color: var(--success);
-  }
-  .btn-success:hover {
-    background: #00E676;
-    border-color: #00E676;
-    color: white;
-  }
-  .btn-danger {
-    background: transparent;
-    color: var(--danger);
-    border-color: rgba(244, 67, 54, 0.4);
-  }
-  .btn-danger:hover {
-    background: rgba(244, 67, 54, 0.1);
-    border-color: var(--danger);
-    color: var(--danger);
-  }
+  .btn:hover { background: #242B33; border-color: var(--primary); color: var(--primary); }
+  .btn-primary { background: var(--primary); color: white; border-color: var(--primary); }
+  .btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); color: white; }
+  .btn-success { background: var(--success); color: white; border-color: var(--success); }
+  .btn-success:hover { background: #00E676; border-color: #00E676; color: white; }
+  .btn-danger { background: transparent; color: var(--danger); border-color: rgba(244, 67, 54, 0.4); }
+  .btn-danger:hover { background: rgba(244, 67, 54, 0.1); border-color: var(--danger); color: var(--danger); }
   .btn-block { grid-column: 1 / -1; }
-  .scale-control {
-    display: flex; gap: 6px; align-items: center;
-    margin-bottom: 8px;
-  }
+  .scale-control { display: flex; gap: 6px; align-items: center; margin-bottom: 8px; }
   .scale-control input {
     flex: 1;
     background: var(--bg);
@@ -378,11 +329,7 @@
     justify-content: center;
     font-size: 16px; font-weight: 700;
   }
-  .scale-unit {
-    color: var(--text-muted);
-    font-size: 12px;
-    font-family: 'Oswald', sans-serif;
-  }
+  .scale-unit { color: var(--text-muted); font-size: 12px; font-family: 'Oswald', sans-serif; }
   .usage-note {
     background: #FFF9C4;
     color: #5D4037;
@@ -394,12 +341,7 @@
     margin-top: 10px;
     border-left: 3px solid #FBC02D;
   }
-  .usage-note .title {
-    color: #E65100;
-    font-weight: 700;
-    margin-bottom: 4px;
-    display: block;
-  }
+  .usage-note .title { color: #E65100; font-weight: 700; margin-bottom: 4px; display: block; }
   .checkbox-row {
     display: flex;
     align-items: center;
@@ -413,17 +355,8 @@
     transition: all 0.15s;
   }
   .checkbox-row:hover { border-color: var(--primary); }
-  .checkbox-row input {
-    accent-color: var(--primary);
-    cursor: pointer;
-    width: 14px; height: 14px;
-  }
-  .checkbox-row label {
-    cursor: pointer;
-    flex: 1;
-    font-size: 13px;
-    user-select: none;
-  }
+  .checkbox-row input { accent-color: var(--primary); cursor: pointer; width: 14px; height: 14px; }
+  .checkbox-row label { cursor: pointer; flex: 1; font-size: 13px; user-select: none; }
   .checkbox-row .tag {
     font-size: 10px;
     padding: 1px 6px;
@@ -432,21 +365,9 @@
     color: var(--text-muted);
     font-family: 'Oswald', sans-serif;
   }
-  .checkbox-row .tag.on {
-    background: var(--success);
-    color: white;
-  }
-  .input-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 6px;
-  }
-  .input-row label {
-    font-size: 12px;
-    color: var(--text-muted);
-    min-width: 36px;
-  }
+  .checkbox-row .tag.on { background: var(--success); color: white; }
+  .input-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+  .input-row label { font-size: 12px; color: var(--text-muted); min-width: 36px; }
   .input-row input {
     flex: 1;
     background: var(--bg);
@@ -459,10 +380,7 @@
     min-width: 0;
   }
   .input-row input:focus { outline: none; border-color: var(--primary); }
-  .input-row input[type="time"] {
-    font-family: 'Oswald', sans-serif;
-    font-weight: 600;
-  }
+  .input-row input[type="time"] { font-family: 'Oswald', sans-serif; font-weight: 600; }
   .avatar-preview {
     width: 56px; height: 56px;
     border-radius: 50%;
@@ -493,11 +411,7 @@
     border: 1px solid var(--border);
   }
   .hidden { display: none !important; }
-  .shortcuts {
-    font-size: 11px;
-    color: var(--text-muted);
-    line-height: 1.9;
-  }
+  .shortcuts { font-size: 11px; color: var(--text-muted); line-height: 1.9; }
   .shortcuts kbd {
     background: var(--card-hover);
     border: 1px solid var(--border);
@@ -557,38 +471,13 @@
     transition: transform 0.2s;
   }
   .modal-mask.visible .modal { transform: scale(1); }
-  .modal h3 {
-    margin: 0 0 12px;
-    font-size: 18px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
+  .modal h3 { margin: 0 0 12px; font-size: 18px; display: flex; align-items: center; gap: 8px; }
   .modal h3 i { color: var(--secondary); }
-  .modal p {
-    color: var(--text-muted);
-    margin: 0 0 20px;
-    line-height: 1.6;
-    font-size: 13px;
-  }
-  .modal-actions {
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
-  }
-  .tip-line {
-    font-size: 10px;
-    color: var(--text-muted);
-    margin-top: 4px;
-    text-align: center;
-    line-height: 1.5;
-  }
+  .modal p { color: var(--text-muted); margin: 0 0 20px; line-height: 1.6; font-size: 13px; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+  .tip-line { font-size: 10px; color: var(--text-muted); margin-top: 4px; text-align: center; line-height: 1.5; }
   @media (max-width: 1200px) {
-    .main-layout {
-      grid-template-columns: 1fr;
-      grid-template-rows: 280px 1fr 320px;
-      height: auto;
-    }
+    .main-layout { grid-template-columns: 1fr; grid-template-rows: 280px 1fr 320px; height: auto; }
     body { overflow: auto; height: auto; min-height: 100vh; }
   }
 </style>
@@ -627,7 +516,7 @@
       <div class="align-hint" id="align-hint">↔ 已对齐</div>
     </div>
     <div class="canvas-overlay bottom-left" id="canvas-info">
-      <span id="canvas-info-text">未加载底图</span>
+      <span id="canvas-info-text">未加载底图 | 滚轮缩放 | 拖动空白处平移</span>
     </div>
     <div class="canvas-overlay bottom-right">
       <button class="overlay-btn zoom-btn" id="zoom-in" title="放大">+</button>
@@ -643,15 +532,9 @@
         <button class="btn btn-primary btn-block" id="upload-btn">
           <i class="fa-solid fa-upload"></i> 上传底图
         </button>
-        <button class="btn" id="undo-btn">
-          <i class="fa-solid fa-rotate-left"></i> 撤销
-        </button>
-        <button class="btn btn-danger" id="reset-btn">
-          <i class="fa-solid fa-trash-can"></i> 重置
-        </button>
-        <button class="btn btn-success btn-block" id="export-btn">
-          <i class="fa-solid fa-download"></i> 导出 JPG
-        </button>
+        <button class="btn" id="undo-btn"><i class="fa-solid fa-rotate-left"></i> 撤销</button>
+        <button class="btn btn-danger" id="reset-btn"><i class="fa-solid fa-trash-can"></i> 重置</button>
+        <button class="btn btn-success btn-block" id="export-btn"><i class="fa-solid fa-download"></i> 导出 JPG</button>
       </div>
       <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp" class="hidden">
       <input type="file" id="avatar-input" accept="image/jpeg,image/png" class="hidden">
@@ -668,9 +551,7 @@
       <button class="btn btn-block" id="set-default-scale" style="background: var(--secondary); color: #000; border-color: var(--secondary); font-weight: 600;">
         <i class="fa-solid fa-check"></i> 设为后续素材比例
       </button>
-      <div class="tip-line">
-        点击此按钮，将当前选中素材的缩放比例<br>设为后续新素材的默认比例
-      </div>
+      <div class="tip-line">点击此按钮，将当前选中素材的缩放比例<br>设为后续新素材的默认比例</div>
       <div class="usage-note">
         <span class="title">⚠️ 使用说明</span>
         ① 先拖一个素材到画布上，拖拽右下角绿色手柄调整大小<br>
@@ -693,16 +574,11 @@
         <div style="display: flex; align-items: center; gap: 10px;">
           <div class="avatar-preview" id="avatar-preview"></div>
           <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
-            <button class="btn" id="upload-avatar-btn" style="font-size: 11px; padding: 5px;">
-              <i class="fa-solid fa-upload"></i> 上传头像
-            </button>
-            <button class="btn btn-danger" id="delete-avatar-btn" style="font-size: 11px; padding: 5px;">
-              <i class="fa-solid fa-xmark"></i> 删除头像
-            </button>
+            <button class="btn" id="upload-avatar-btn" style="font-size: 11px; padding: 5px;"><i class="fa-solid fa-upload"></i> 上传头像</button>
+            <button class="btn btn-danger" id="delete-avatar-btn" style="font-size: 11px; padding: 5px;"><i class="fa-solid fa-xmark"></i> 删除头像</button>
           </div>
         </div>
       </div>
-
       <div class="checkbox-row">
         <input type="checkbox" id="show-username">
         <label for="show-username">显示用户名</label>
@@ -714,7 +590,6 @@
           <input type="text" id="username-input" value="用户名61515321" maxlength="30">
         </div>
       </div>
-
       <div class="checkbox-row">
         <input type="checkbox" id="show-datetime" checked>
         <label for="show-datetime">显示日期时间</label>
@@ -744,7 +619,9 @@
         <kbd>Del</kbd>/<kbd>Backspace</kbd> 删除选中<br>
         <kbd>+</kbd>/<kbd>−</kbd> 缩放10%<br>
         <kbd>Esc</kbd> 取消选中/框选<br>
-        <kbd>Shift</kbd>+拖拽 禁用吸附
+        <kbd>Shift</kbd>+拖拽 禁用吸附<br>
+        <kbd>滚轮</kbd> 以鼠标为中心缩放<br>
+        <kbd>拖动空白</kbd> 平移画布
       </div>
     </div>
   </aside>
@@ -767,83 +644,53 @@
 </div>
 
 <script>
-// ============== 素材库定义（从 ./materials/ 加载真实文件） ==============
+// ============== 素材库定义 ==============
 const MATERIAL_GROUPS = [
   {
     title: '基础数字组（b系列）',
     items: [
-      { key: 'b0', label: 'b0' }, { key: 'b1', label: 'b1' },
-      { key: 'b2', label: 'b2' }, { key: 'b3', label: 'b3' },
-      { key: 'b4', label: 'b4' }, { key: 'b5', label: 'b5' },
-      { key: 'b6', label: 'b6' }, { key: 'b7', label: 'b7' },
+      { key: 'b0', label: 'b0' }, { key: 'b1', label: 'b1' }, { key: 'b2', label: 'b2' }, { key: 'b3', label: 'b3' },
+      { key: 'b4', label: 'b4' }, { key: 'b5', label: 'b5' }, { key: 'b6', label: 'b6' }, { key: 'b7', label: 'b7' },
       { key: 'b8', label: 'b8' }, { key: 'b9', label: 'b9' },
-      { key: 'bgl', label: 'bgl' },
-      { key: 'bm', label: 'bm' },
-      { key: 'b2m', label: 'b2m' },
-      { key: 'bqk', label: 'bqk' },
-      { key: 'bmi', label: 'bmi' }
+      { key: 'bgl', label: 'bgl' }, { key: 'bm', label: 'bm' }, { key: 'b2m', label: 'b2m' },
+      { key: 'bqk', label: 'bqk' }, { key: 'bmi', label: 'bmi' }
     ]
   },
   {
     title: '通用数字组',
     items: [
-      { key: '0', label: '0' }, { key: '1', label: '1' },
-      { key: '2', label: '2' }, { key: '3', label: '3' },
-      { key: '4', label: '4' }, { key: '5', label: '5' },
-      { key: '6', label: '6' }, { key: '7', label: '7' },
+      { key: '0', label: '0' }, { key: '1', label: '1' }, { key: '2', label: '2' }, { key: '3', label: '3' },
+      { key: '4', label: '4' }, { key: '5', label: '5' }, { key: '6', label: '6' }, { key: '7', label: '7' },
       { key: '8', label: '8' }, { key: '9', label: '9' },
-      { key: 'ceng', label: 'ceng' },
-      { key: 'ge', label: 'ge' },
-      { key: 'hm', label: 'hm' },
-      { key: 'mi', label: 'mi' },
-      { key: 'ps1', label: 'ps1' },
-      { key: 'ps2', label: 'ps2' },
-      { key: 'qk', label: 'qk' },
-      { key: 'qks', label: 'qks' },
-      { key: 'tang', label: 'tang' },
-      { key: 'wa', label: 'wa' },
-      { key: 'm', label: 'm' },
-      { key: '2m', label: '2m' }
+      { key: 'ceng', label: 'ceng' }, { key: 'ge', label: 'ge' }, { key: 'hm', label: 'hm' },
+      { key: 'mi', label: 'mi' }, { key: 'ps1', label: 'ps1' }, { key: 'ps2', label: 'ps2' },
+      { key: 'qk', label: 'qk' }, { key: 'qks', label: 'qks' }, { key: 'tang', label: 'tang' },
+      { key: 'wa', label: 'wa' }, { key: 'm', label: 'm' }, { key: '2m', label: '2m' }
     ]
   }
 ];
 
-// 素材图片缓存（Image 对象）
 const materialImages = {};
 
-// ============== 加载素材图片 ==============
 function loadMaterialImage(key) {
   return new Promise((resolve) => {
-    if (materialImages[key]) {
-      resolve(materialImages[key]);
-      return;
-    }
+    if (materialImages[key]) { resolve(materialImages[key]); return; }
     const img = new Image();
-    img.onload = () => {
-      materialImages[key] = img;
-      resolve(img);
-    };
-    img.onerror = () => {
-      console.warn('素材加载失败:', key);
-      resolve(null);
-    };
+    img.onload = () => { materialImages[key] = img; resolve(img); };
+    img.onerror = () => { resolve(null); };
     img.src = `./materials/${key}.jpg`;
   });
 }
 
 function preloadAllMaterials() {
-  let loaded = 0;
-  let total = 0;
+  let loaded = 0, total = 0;
   MATERIAL_GROUPS.forEach(g => total += g.items.length);
-
   MATERIAL_GROUPS.forEach(group => {
     group.items.forEach(item => {
       loadMaterialImage(item.key).then(() => {
         loaded++;
         updateMaterialThumb(item.key);
-        if (loaded === total) {
-          updateStatus('素材库加载完成');
-        }
+        if (loaded === total) updateStatus('素材库加载完成');
       });
     });
   });
@@ -860,19 +707,15 @@ function updateMaterialThumb(key) {
   }
 }
 
-// ============== 渲染素材面板 ==============
 function renderMaterialsPanel() {
   const panel = document.getElementById('materials-panel');
   let html = '';
   MATERIAL_GROUPS.forEach((group, gIdx) => {
-    html += `<h3 class="section-title">${group.title}</h3>`;
-    html += `<div class="materials-grid">`;
+    html += `<h3 class="section-title">${group.title}</h3><div class="materials-grid">`;
     group.items.forEach(item => {
       html += `
         <div class="material-item" data-key="${item.key}" title="${item.label}">
-          <div class="mat-loading" id="mat-loading-${item.key}">
-            <i class="fa-solid fa-spinner fa-spin"></i>
-          </div>
+          <div class="mat-loading" id="mat-loading-${item.key}"><i class="fa-solid fa-spinner fa-spin"></i></div>
           <img id="mat-img-${item.key}" style="display:none;" alt="${item.label}">
           <div class="label">${item.label}</div>
         </div>`;
@@ -881,17 +724,10 @@ function renderMaterialsPanel() {
     if (gIdx < MATERIAL_GROUPS.length - 1) html += `<div class="divider"></div>`;
   });
   panel.innerHTML = html;
-
   panel.querySelectorAll('.material-item').forEach(el => {
     el.addEventListener('click', () => {
-      if (!state.baseImage) {
-        showToast('请先上传底图', 'error');
-        return;
-      }
-      // ★ 关键修复：点击素材放置时，自动退出抹平模式
-      if (state.eraseMode) {
-        exitEraseMode();
-      }
+      if (!state.baseImage) { showToast('请先上传底图', 'error'); return; }
+      if (state.eraseMode) exitEraseMode();
       placeMaterial(el.dataset.key);
     });
   });
@@ -906,6 +742,8 @@ const state = {
   canvasWidth: 800,
   canvasHeight: 600,
   canvasZoom: 1,
+  canvasOffsetX: 0,
+  canvasOffsetY: 0,
   materials: [],
   customInfo: {
     avatar: { visible: false, image: null, x: 130, y: 130, scale: 1, id: 'avatar', type: 'avatar' },
@@ -923,38 +761,82 @@ const state = {
   defaultScale: 100,
   history: [],
   alignGuides: [],
-  shiftKey: false
+  shiftKey: false,
+  // 平移相关
+  panStartScreen: { x: 0, y: 0 },
+  panStartOffset: { x: 0, y: 0 },
+  hasPanned: false
 };
 
 // ============== 初始化 ==============
 function init() {
   state.canvas = document.getElementById('main-canvas');
   state.ctx = state.canvas.getContext('2d');
-  renderMaterialsPanel();       // 先渲染面板结构（显示 loading）
-  preloadAllMaterials();        // 异步加载所有素材图片
+  renderMaterialsPanel();
+  preloadAllMaterials();
   setupEvents();
   state.ctx.fillStyle = '#FFFFFF';
   state.ctx.fillRect(0, 0, state.canvasWidth, state.canvasHeight);
+  updateCanvasTransform();
   updateStatus('就绪');
 }
 
-// ============== 工具函数 ==============
+// ============== 画布变换（平移+缩放） ==============
+function updateCanvasTransform() {
+  const stage = document.getElementById('canvas-stage');
+  stage.style.transform = `translate(${state.canvasOffsetX}px, ${state.canvasOffsetY}px) scale(${state.canvasZoom})`;
+  document.getElementById('status-zoom').textContent = Math.round(state.canvasZoom * 100) + '%';
+}
+
+function setCanvasZoom(zoom, centerX, centerY) {
+  const newZoom = Math.max(0.15, Math.min(8, zoom));
+  if (centerX !== undefined && centerY !== undefined) {
+    // 以指定点为中心缩放
+    const container = document.getElementById('canvas-panel');
+    const rect = container.getBoundingClientRect();
+    const cx = (centerX - rect.left - state.canvasOffsetX) / state.canvasZoom;
+    const cy = (centerY - rect.top - state.canvasOffsetY) / state.canvasZoom;
+    state.canvasOffsetX = centerX - rect.left - cx * newZoom;
+    state.canvasOffsetY = centerY - rect.top - cy * newZoom;
+  }
+  state.canvasZoom = newZoom;
+  updateCanvasTransform();
+}
+
+function fitCanvasToWindow() {
+  if (!state.baseImage) return;
+  const container = document.getElementById('canvas-panel');
+  const padding = 60;
+  const maxW = container.clientWidth - padding;
+  const maxH = container.clientHeight - padding;
+  const zoom = Math.min(maxW / state.canvasWidth, maxH / state.canvasHeight);
+  state.canvasZoom = zoom;
+  state.canvasOffsetX = (container.clientWidth - state.canvasWidth * zoom) / 2;
+  state.canvasOffsetY = (container.clientHeight - state.canvasHeight * zoom) / 2;
+  updateCanvasTransform();
+}
+
+// 获取当前视口中心对应的画布坐标
+function getViewportCenterCanvasCoords() {
+  const container = document.getElementById('canvas-panel');
+  const rect = container.getBoundingClientRect();
+  const centerX = rect.width / 2;
+  const centerY = rect.height / 2;
+  const x = (centerX - state.canvasOffsetX) / state.canvasZoom;
+  const y = (centerY - state.canvasOffsetY) / state.canvasZoom;
+  return { x, y };
+}
+
+// ============== 坐标转换 ==============
 function getCanvasCoords(e) {
   const rect = state.canvas.getBoundingClientRect();
   const scaleX = state.canvas.width / rect.width;
   const scaleY = state.canvas.height / rect.height;
   let clientX, clientY;
-  if (e.touches && e.touches.length > 0) {
-    clientX = e.touches[0].clientX; clientY = e.touches[0].clientY;
-  } else if (e.changedTouches && e.changedTouches.length > 0) {
-    clientX = e.changedTouches[0].clientX; clientY = e.changedTouches[0].clientY;
-  } else {
-    clientX = e.clientX; clientY = e.clientY;
-  }
-  return {
-    x: (clientX - rect.left) * scaleX,
-    y: (clientY - rect.top) * scaleY
-  };
+  if (e.touches && e.touches.length > 0) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
+  else if (e.changedTouches && e.changedTouches.length > 0) { clientX = e.changedTouches[0].clientX; clientY = e.changedTouches[0].clientY; }
+  else { clientX = e.clientX; clientY = e.clientY; }
+  return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
 }
 
 function getElementBounds(el) {
@@ -964,8 +846,7 @@ function getElementBounds(el) {
     w = el.originalWidth * el.scale;
     h = el.originalHeight * el.scale;
   } else if (el.type === 'avatar') {
-    w = 96 * el.scale;
-    h = 96 * el.scale;
+    w = 96 * el.scale; h = 96 * el.scale;
   } else if (el.type === 'username') {
     ctx.font = `500 ${43 * el.scale}px 'Noto Sans SC', sans-serif`;
     w = ctx.measureText(el.text || '用户名').width;
@@ -991,8 +872,7 @@ function getResizeHandle(el) {
 function hitTest(x, y) {
   if (state.selected) {
     const handle = getResizeHandle(state.selected);
-    const dx = x - handle.x;
-    const dy = y - handle.y;
+    const dx = x - handle.x, dy = y - handle.y;
     if (Math.sqrt(dx*dx + dy*dy) < 14) return { type: 'resize', el: state.selected };
   }
   const elements = [
@@ -1003,9 +883,7 @@ function hitTest(x, y) {
   ];
   for (const el of elements) {
     const b = getElementBounds(el);
-    if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) {
-      return { type: 'element', el };
-    }
+    if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) return { type: 'element', el };
   }
   return null;
 }
@@ -1016,15 +894,12 @@ function render() {
   ctx.clearRect(0, 0, state.canvasWidth, state.canvasHeight);
   ctx.fillStyle = '#FFFFFF';
   ctx.fillRect(0, 0, state.canvasWidth, state.canvasHeight);
-  if (state.baseImageData) {
-    ctx.putImageData(state.baseImageData, 0, 0);
-  }
+  if (state.baseImageData) ctx.putImageData(state.baseImageData, 0, 0);
   if (state.eraseRect) {
     ctx.fillStyle = 'rgba(33, 150, 243, 0.3)';
     ctx.fillRect(state.eraseRect.x, state.eraseRect.y, state.eraseRect.w, state.eraseRect.h);
     ctx.strokeStyle = '#2196F3';
-    ctx.setLineDash([6, 3]);
-    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 3]); ctx.lineWidth = 1.5;
     ctx.strokeRect(state.eraseRect.x, state.eraseRect.y, state.eraseRect.w, state.eraseRect.h);
     ctx.setLineDash([]);
   }
@@ -1032,13 +907,14 @@ function render() {
   if (state.customInfo.avatar.visible) drawElement(state.customInfo.avatar);
   if (state.customInfo.username.visible) drawElement(state.customInfo.username);
   if (state.customInfo.datetime.visible) drawElement(state.customInfo.datetime);
+  // 对齐辅助线
   state.alignGuides.forEach(g => {
     ctx.strokeStyle = g.highlight ? '#1976D2' : '#2196F3';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([4, 4]);
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 4]);
     ctx.beginPath();
-    ctx.moveTo(g.x, 0);
-    ctx.lineTo(g.x, state.canvasHeight);
+    if (g.type === 'v') { ctx.moveTo(g.x, 0); ctx.lineTo(g.x, state.canvasHeight); }
+    else { ctx.moveTo(0, g.y); ctx.lineTo(state.canvasWidth, g.y); }
     ctx.stroke();
     ctx.setLineDash([]);
   });
@@ -1049,24 +925,20 @@ function drawElement(el) {
   const ctx = state.ctx;
   if (el.type === 'material') {
     const b = getElementBounds(el);
-    if (el.image) {
-      ctx.drawImage(el.image, b.x, b.y, b.w, b.h);
-    }
+    if (el.image) ctx.drawImage(el.image, b.x, b.y, b.w, b.h);
   } else if (el.type === 'avatar') {
     drawAvatar(el);
   } else if (el.type === 'username') {
     ctx.font = `500 ${43 * el.scale}px 'Noto Sans SC', sans-serif`;
     ctx.fillStyle = '#000000';
-    ctx.textBaseline = 'middle';
-    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
     const b = getElementBounds(el);
     ctx.fillText(el.text, b.x, el.y);
   } else if (el.type === 'datetime') {
     const text = formatDateTime(el);
     ctx.font = `${39 * el.scale}px 'Noto Sans SC', sans-serif`;
     ctx.fillStyle = '#888888';
-    ctx.textBaseline = 'middle';
-    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
     const b = getElementBounds(el);
     ctx.fillText(text, b.x, el.y);
   }
@@ -1075,8 +947,7 @@ function drawElement(el) {
 function drawAvatar(avatar) {
   const ctx = state.ctx;
   const size = 96 * avatar.scale;
-  const x = avatar.x - size/2;
-  const y = avatar.y - size/2;
+  const x = avatar.x - size/2, y = avatar.y - size/2;
   ctx.save();
   ctx.beginPath();
   ctx.arc(avatar.x, avatar.y, size/2, 0, Math.PI * 2);
@@ -1085,33 +956,23 @@ function drawAvatar(avatar) {
   if (avatar.image) {
     const img = avatar.image;
     const minDim = Math.min(img.width, img.height);
-    const sx = (img.width - minDim) / 2;
-    const sy = (img.height - minDim) / 2;
+    const sx = (img.width - minDim) / 2, sy = (img.height - minDim) / 2;
     ctx.drawImage(img, sx, sy, minDim, minDim, x, y, size, size);
   } else {
-    ctx.fillStyle = '#CCCCCC';
-    ctx.fillRect(x, y, size, size);
+    ctx.fillStyle = '#CCCCCC'; ctx.fillRect(x, y, size, size);
     ctx.fillStyle = '#FFFFFF';
-    ctx.beginPath();
-    ctx.arc(avatar.x, avatar.y - size*0.15, size*0.16, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.arc(avatar.x, avatar.y + size*0.3, size*0.28, Math.PI, 0);
-    ctx.fill();
+    ctx.beginPath(); ctx.arc(avatar.x, avatar.y - size*0.15, size*0.16, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(avatar.x, avatar.y + size*0.3, size*0.28, Math.PI, 0); ctx.fill();
   }
   ctx.restore();
-  ctx.strokeStyle = '#00C853';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.arc(avatar.x, avatar.y, size/2, 0, Math.PI * 2);
-  ctx.stroke();
+  ctx.strokeStyle = '#00C853'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(avatar.x, avatar.y, size/2, 0, Math.PI * 2); ctx.stroke();
 }
 
 function drawSelection(el) {
   const ctx = state.ctx;
   const b = getElementBounds(el);
-  ctx.strokeStyle = '#2196F3';
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = '#2196F3'; ctx.lineWidth = 2;
   ctx.setLineDash([6, 3]);
   ctx.strokeRect(b.x - 1, b.y - 1, b.w + 2, b.h + 2);
   ctx.setLineDash([]);
@@ -1122,33 +983,94 @@ function drawSelection(el) {
   ];
   corners.forEach(c => { ctx.fillRect(c.x - 3, c.y - 3, 6, 6); });
   ctx.fillStyle = '#00C853';
-  ctx.beginPath();
-  ctx.arc(b.x + b.w, b.y + b.h, 7, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = '#FFFFFF';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
+  ctx.beginPath(); ctx.arc(b.x + b.w, b.y + b.h, 7, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 1.5; ctx.stroke();
+}
+
+// ============== 对齐吸附系统（完整6方向 + 紧贴） ==============
+function checkAlignment(draggedEl) {
+  const others = [
+    ...state.materials.filter(m => m !== draggedEl),
+    ...(state.customInfo.avatar.visible && state.customInfo.avatar !== draggedEl ? [state.customInfo.avatar] : []),
+    ...(state.customInfo.username.visible && state.customInfo.username !== draggedEl ? [state.customInfo.username] : []),
+    ...(state.customInfo.datetime.visible && state.customInfo.datetime !== draggedEl ? [state.customInfo.datetime] : [])
+  ];
+  if (others.length === 0) {
+    state.alignGuides = [];
+    document.getElementById('align-hint').classList.remove('visible');
+    return;
+  }
+  const threshold = 10;
+  const db = getElementBounds(draggedEl);
+  let bestX = null, bestXDist = threshold + 1;
+  let bestY = null, bestYDist = threshold + 1;
+
+  for (const other of others) {
+    const ob = getElementBounds(other);
+    // X方向：左对左、右对右、中心对中心、左对右（紧贴）、右对左（紧贴）
+    const xChecks = [
+      { dragVal: db.x,             otherVal: ob.x,             guideX: ob.x },
+      { dragVal: db.x + db.w,      otherVal: ob.x + ob.w,      guideX: ob.x + ob.w },
+      { dragVal: db.x + db.w/2,    otherVal: ob.x + ob.w/2,    guideX: ob.x + ob.w/2 },
+      { dragVal: db.x,             otherVal: ob.x + ob.w,      guideX: ob.x + ob.w },
+      { dragVal: db.x + db.w,      otherVal: ob.x,             guideX: ob.x },
+    ];
+    for (const c of xChecks) {
+      const dist = Math.abs(c.dragVal - c.otherVal);
+      if (dist < bestXDist) { bestXDist = dist; bestX = { guideX: c.guideX, delta: c.otherVal - c.dragVal }; }
+    }
+    // Y方向：上对上、下对下、中心对中心、上对下（紧贴）、下对上（紧贴）
+    const yChecks = [
+      { dragVal: db.y,             otherVal: ob.y,             guideY: ob.y },
+      { dragVal: db.y + db.h,      otherVal: ob.y + ob.h,      guideY: ob.y + ob.h },
+      { dragVal: db.y + db.h/2,    otherVal: ob.y + ob.h/2,    guideY: ob.y + ob.h/2 },
+      { dragVal: db.y,             otherVal: ob.y + ob.h,      guideY: ob.y + ob.h },
+      { dragVal: db.y + db.h,      otherVal: ob.y,             guideY: ob.y },
+    ];
+    for (const c of yChecks) {
+      const dist = Math.abs(c.dragVal - c.otherVal);
+      if (dist < bestYDist) { bestYDist = dist; bestY = { guideY: c.guideY, delta: c.otherVal - c.dragVal }; }
+    }
+  }
+
+  const guides = [];
+  if (bestX && bestXDist <= threshold) {
+    draggedEl.x += bestX.delta;
+    guides.push({ type: 'v', x: bestX.guideX, highlight: true });
+  }
+  if (bestY && bestYDist <= threshold) {
+    draggedEl.y += bestY.delta;
+    guides.push({ type: 'h', y: bestY.guideY, highlight: true });
+  }
+  state.alignGuides = guides;
+  document.getElementById('align-hint').classList.toggle('visible', guides.length > 0);
 }
 
 // ============== 事件处理 ==============
 function setupEvents() {
   const canvas = state.canvas;
+  const panel = document.getElementById('canvas-panel');
+
   canvas.addEventListener('mousedown', onPointerDown);
   canvas.addEventListener('mousemove', onPointerMove);
   canvas.addEventListener('mouseup', onPointerUp);
   canvas.addEventListener('mouseleave', onPointerUp);
   canvas.addEventListener('contextmenu', e => {
     e.preventDefault();
-    if (state.eraseRect) {
-      state.eraseRect = null;
-      state.dragMode = null;
-      state.isMouseDown = false;
-      render();
-    }
+    if (state.eraseRect) { state.eraseRect = null; state.dragMode = null; state.isMouseDown = false; render(); }
   });
   canvas.addEventListener('touchstart', onPointerDown, { passive: false });
   canvas.addEventListener('touchmove', onPointerMove, { passive: false });
   canvas.addEventListener('touchend', onPointerUp);
+
+  // ★ 滚轮缩放：以鼠标位置为锚点
+  panel.addEventListener('wheel', (e) => {
+    if (!state.baseImage) return;
+    e.preventDefault();
+    const delta = e.deltaY < 0 ? 1.12 : 1/1.12;
+    setCanvasZoom(state.canvasZoom * delta, e.clientX, e.clientY);
+  }, { passive: false });
+
   document.addEventListener('keydown', onKeyDown);
   document.addEventListener('keyup', e => { state.shiftKey = e.shiftKey; });
 
@@ -1162,8 +1084,14 @@ function setupEvents() {
   document.getElementById('scale-dec').onclick = () => adjustScaleInput(-10);
   document.getElementById('scale-input').onchange = onScaleInputChange;
   document.getElementById('set-default-scale').onclick = setAsDefaultScale;
-  document.getElementById('zoom-in').onclick = () => setCanvasZoom(state.canvasZoom * 1.2);
-  document.getElementById('zoom-out').onclick = () => setCanvasZoom(state.canvasZoom / 1.2);
+  document.getElementById('zoom-in').onclick = () => {
+    const rect = document.getElementById('canvas-panel').getBoundingClientRect();
+    setCanvasZoom(state.canvasZoom * 1.2, rect.left + rect.width/2, rect.top + rect.height/2);
+  };
+  document.getElementById('zoom-out').onclick = () => {
+    const rect = document.getElementById('canvas-panel').getBoundingClientRect();
+    setCanvasZoom(state.canvasZoom / 1.2, rect.left + rect.width/2, rect.top + rect.height/2);
+  };
   document.getElementById('zoom-fit').onclick = fitCanvasToWindow;
   window.addEventListener('resize', () => { if (state.baseImage) fitCanvasToWindow(); });
 
@@ -1216,6 +1144,8 @@ function onPointerDown(e) {
   const pos = getCanvasCoords(e);
   state.isMouseDown = true;
   state.dragStart = pos;
+  state.hasPanned = false;
+
   if (state.eraseMode) {
     state.dragMode = 'erase';
     state.eraseRect = { x: pos.x, y: pos.y, w: 0, h: 0 };
@@ -1226,26 +1156,26 @@ function onPointerDown(e) {
     state.selected = hit.el;
     state.dragMode = 'resize';
     state.elementStart = { x: hit.el.x, y: hit.el.y, scale: hit.el.scale };
-    const dx = pos.x - hit.el.x;
-    const dy = pos.y - hit.el.y;
+    const dx = pos.x - hit.el.x, dy = pos.y - hit.el.y;
     state.resizeInitialDist = Math.max(1, Math.sqrt(dx*dx + dy*dy));
   } else if (hit && hit.type === 'element') {
     if (state.selected !== hit.el) {
       state.selected = hit.el;
       if (hit.el.type === 'material') {
         const idx = state.materials.indexOf(hit.el);
-        if (idx >= 0) {
-          state.materials.splice(idx, 1);
-          state.materials.push(hit.el);
-        }
+        if (idx >= 0) { state.materials.splice(idx, 1); state.materials.push(hit.el); }
       }
     }
     state.dragMode = 'move';
     state.elementStart = { x: hit.el.x, y: hit.el.y };
     updateScaleInputFromSelection();
   } else {
-    state.selected = null;
-    state.dragMode = null;
+    // ★ 空白区域：准备平移画布
+    state.dragMode = 'pan';
+    let cx = e.clientX, cy = e.clientY;
+    if (e.touches && e.touches[0]) { cx = e.touches[0].clientX; cy = e.touches[0].clientY; }
+    state.panStartScreen = { x: cx, y: cy };
+    state.panStartOffset = { x: state.canvasOffsetX, y: state.canvasOffsetY };
   }
   render();
 }
@@ -1254,23 +1184,23 @@ function onPointerMove(e) {
   if (e.preventDefault) e.preventDefault();
   const pos = getCanvasCoords(e);
   document.getElementById('status-coord').textContent = `${Math.round(pos.x)}, ${Math.round(pos.y)}`;
+
   if (!state.isMouseDown) {
-    if (state.eraseMode) {
-      state.canvas.style.cursor = 'crosshair';
-    } else {
+    // 更新光标样式
+    if (state.eraseMode) { state.canvas.style.cursor = 'crosshair'; }
+    else {
       const hit = hitTest(pos.x, pos.y);
       if (hit && hit.type === 'resize') state.canvas.style.cursor = 'nwse-resize';
       else if (hit && hit.type === 'element') state.canvas.style.cursor = 'move';
-      else state.canvas.style.cursor = 'default';
+      else state.canvas.style.cursor = 'grab';
     }
     return;
   }
+
   if (state.dragMode === 'erase') {
     state.eraseRect = {
-      x: Math.min(state.dragStart.x, pos.x),
-      y: Math.min(state.dragStart.y, pos.y),
-      w: Math.abs(pos.x - state.dragStart.x),
-      h: Math.abs(pos.y - state.dragStart.y)
+      x: Math.min(state.dragStart.x, pos.x), y: Math.min(state.dragStart.y, pos.y),
+      w: Math.abs(pos.x - state.dragStart.x), h: Math.abs(pos.y - state.dragStart.y)
     };
     render();
   } else if (state.dragMode === 'move' && state.selected) {
@@ -1282,14 +1212,28 @@ function onPointerMove(e) {
     render();
   } else if (state.dragMode === 'resize' && state.selected) {
     const el = state.selected;
-    const dx = pos.x - el.x;
-    const dy = pos.y - el.y;
+    const dx = pos.x - el.x, dy = pos.y - el.y;
     const dist = Math.sqrt(dx*dx + dy*dy);
     let newScale = state.elementStart.scale * (dist / Math.max(1, state.resizeInitialDist));
     newScale = Math.max(0.2, Math.min(3, newScale));
     el.scale = newScale;
     updateScaleInputFromSelection();
     render();
+  } else if (state.dragMode === 'pan') {
+    // ★ 平移画布
+    let cx = e.clientX, cy = e.clientY;
+    if (e.touches && e.touches[0]) { cx = e.touches[0].clientX; cy = e.touches[0].clientY; }
+    const dx = cx - state.panStartScreen.x;
+    const dy = cy - state.panStartScreen.y;
+    if (Math.abs(dx) + Math.abs(dy) > 3) {
+      state.hasPanned = true;
+      state.canvas.style.cursor = 'grabbing';
+    }
+    if (state.hasPanned) {
+      state.canvasOffsetX = state.panStartOffset.x + dx;
+      state.canvasOffsetY = state.panStartOffset.y + dy;
+      updateCanvasTransform();
+    }
   }
 }
 
@@ -1305,6 +1249,14 @@ function onPointerUp(e) {
     state.eraseRect = null;
     state.dragMode = null;
     render();
+  } else if (state.dragMode === 'pan') {
+    // 没有真正平移 = 点击空白 = 取消选中
+    if (!state.hasPanned) {
+      state.selected = null;
+      render();
+    }
+    state.canvas.style.cursor = 'grab';
+    state.dragMode = null;
   } else if (state.dragMode === 'move' || state.dragMode === 'resize') {
     if (state.selected) {
       if (state.dragMode === 'move') {
@@ -1327,15 +1279,8 @@ function onKeyDown(e) {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
   state.shiftKey = e.shiftKey;
   if (e.key === 'Escape') {
-    if (state.eraseRect) {
-      state.eraseRect = null;
-      state.isMouseDown = false;
-      state.dragMode = null;
-      render();
-    } else if (state.selected) {
-      state.selected = null;
-      render();
-    }
+    if (state.eraseRect) { state.eraseRect = null; state.isMouseDown = false; state.dragMode = null; render(); }
+    else if (state.selected) { state.selected = null; render(); }
     return;
   }
   if (!state.selected) return;
@@ -1346,27 +1291,13 @@ function onKeyDown(e) {
     case 'ArrowRight': el.x += step; e.preventDefault(); break;
     case 'ArrowUp': el.y -= step; e.preventDefault(); break;
     case 'ArrowDown': el.y += step; e.preventDefault(); break;
-    case 'Delete':
-    case 'Backspace':
-      if (el.type === 'datetime') {
-        showToast('日期时间不可删除，可取消勾选隐藏', 'error');
-        return;
-      }
-      deleteElement(el);
-      e.preventDefault();
-      return;
-    case '+':
-    case '=':
-      el.scale = Math.min(3, el.scale + 0.1);
-      updateScaleInputFromSelection();
-      e.preventDefault();
-      break;
-    case '-':
-    case '_':
-      el.scale = Math.max(0.2, el.scale - 0.1);
-      updateScaleInputFromSelection();
-      e.preventDefault();
-      break;
+    case 'Delete': case 'Backspace':
+      if (el.type === 'datetime') { showToast('日期时间不可删除，可取消勾选隐藏', 'error'); return; }
+      deleteElement(el); e.preventDefault(); return;
+    case '+': case '=':
+      el.scale = Math.min(3, el.scale + 0.1); updateScaleInputFromSelection(); e.preventDefault(); break;
+    case '-': case '_':
+      el.scale = Math.max(0.2, el.scale - 0.1); updateScaleInputFromSelection(); e.preventDefault(); break;
     default: return;
   }
   pushHistory();
@@ -1383,14 +1314,7 @@ function applyErase(rect) {
   render();
 }
 
-function toggleEraseMode() {
-  if (state.eraseMode) {
-    exitEraseMode();
-  } else {
-    enterEraseMode();
-  }
-}
-
+function toggleEraseMode() { state.eraseMode ? exitEraseMode() : enterEraseMode(); }
 function enterEraseMode() {
   state.eraseMode = true;
   document.getElementById('erase-btn').classList.add('active');
@@ -1399,8 +1323,6 @@ function enterEraseMode() {
   updateStatus('抹平模式：按住拖拽框选区域');
   render();
 }
-
-// ★ 关键修复：独立的退出抹平模式函数
 function exitEraseMode() {
   state.eraseMode = false;
   state.eraseRect = null;
@@ -1422,12 +1344,8 @@ function onUploadBaseImage(e) {
     img.onload = () => {
       const hasContent = state.materials.length > 0 || state.history.length > 0;
       if (state.baseImage && hasContent) {
-        showModal('更换底图', '更换底图将清空画布上所有已放置的素材和抹平操作，是否继续？', () => {
-          loadBaseImage(img);
-        });
-      } else {
-        loadBaseImage(img);
-      }
+        showModal('更换底图', '更换底图将清空画布上所有已放置的素材和抹平操作，是否继续？', () => loadBaseImage(img));
+      } else { loadBaseImage(img); }
     };
     img.src = ev.target.result;
   };
@@ -1446,16 +1364,12 @@ function loadBaseImage(img) {
   state.materials = [];
   state.selected = null;
   state.history = [];
-  // 如果抹平模式还开着，关闭它
   if (state.eraseMode) exitEraseMode();
-  state.customInfo.avatar.x = 130;
-  state.customInfo.avatar.y = 130;
-  state.customInfo.username.x = 250;
-  state.customInfo.username.y = 110;
-  state.customInfo.datetime.x = 250;
-  state.customInfo.datetime.y = 160;
+  state.customInfo.avatar.x = 130; state.customInfo.avatar.y = 130;
+  state.customInfo.username.x = 250; state.customInfo.username.y = 110;
+  state.customInfo.datetime.x = 250; state.customInfo.datetime.y = 160;
   document.getElementById('canvas-empty').style.display = 'none';
-  document.getElementById('canvas-info-text').textContent = `${img.width} × ${img.height}`;
+  document.getElementById('canvas-info-text').textContent = `${img.width} × ${img.height} | 滚轮缩放 | 拖动空白处平移`;
   fitCanvasToWindow();
   render();
   updateStatus(`底图已加载：${img.width}×${img.height}`);
@@ -1493,18 +1407,16 @@ function deleteAvatar() {
   showToast('头像已删除', 'success');
 }
 
-// ============== 素材放置 ==============
+// ============== 素材放置（在视口中心） ==============
 async function placeMaterial(key) {
-  // 确保图片已加载
   if (!materialImages[key]) {
     showToast('素材加载中，请稍候...', 'info');
     await loadMaterialImage(key);
-    if (!materialImages[key]) {
-      showToast('素材加载失败，请检查 ./materials/ 目录', 'error');
-      return;
-    }
+    if (!materialImages[key]) { showToast('素材加载失败，请检查 ./materials/ 目录', 'error'); return; }
   }
   const img = materialImages[key];
+  // ★ 新素材放在当前视口中心
+  const center = getViewportCenterCanvasCoords();
   const newMat = {
     id: 'mat_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
     type: 'material',
@@ -1512,8 +1424,8 @@ async function placeMaterial(key) {
     image: img,
     originalWidth: img.naturalWidth,
     originalHeight: img.naturalHeight,
-    x: state.canvasWidth / 2,
-    y: state.canvasHeight / 2,
+    x: center.x,
+    y: center.y,
     scale: state.defaultScale / 100
   };
   state.materials.push(newMat);
@@ -1551,85 +1463,24 @@ function adjustScaleInput(delta) {
   input.value = v;
   state.defaultScale = v;
 }
-
 function onScaleInputChange(e) {
   let v = parseInt(e.target.value) || 100;
   v = Math.max(20, Math.min(300, v));
   e.target.value = v;
   state.defaultScale = v;
 }
-
 function updateScaleInputFromSelection() {
   if (state.selected) {
     const v = Math.round(state.selected.scale * 100);
     document.getElementById('scale-input').value = v;
   }
 }
-
 function setAsDefaultScale() {
-  if (!state.selected) {
-    showToast('请先选中一个素材作为参考', 'error');
-    return;
-  }
+  if (!state.selected) { showToast('请先选中一个素材作为参考', 'error'); return; }
   const v = Math.round(state.selected.scale * 100);
   state.defaultScale = v;
   document.getElementById('scale-input').value = v;
   showToast(`已设为后续素材默认比例：${v}%`, 'success');
-}
-
-// ============== 画布缩放 ==============
-function setCanvasZoom(zoom) {
-  state.canvasZoom = Math.max(0.15, Math.min(8, zoom));
-  document.getElementById('canvas-stage').style.transform = `scale(${state.canvasZoom})`;
-  document.getElementById('status-zoom').textContent = Math.round(state.canvasZoom * 100) + '%';
-}
-
-function fitCanvasToWindow() {
-  if (!state.baseImage) return;
-  const panel = document.getElementById('canvas-panel');
-  const padding = 80;
-  const maxW = panel.clientWidth - padding;
-  const maxH = panel.clientHeight - padding;
-  const zoom = Math.min(maxW / state.canvasWidth, maxH / state.canvasHeight);
-  setCanvasZoom(zoom);
-}
-
-// ============== 对齐 ==============
-function checkAlignment(draggedEl) {
-  const guides = [];
-  const draggedBounds = getElementBounds(draggedEl);
-  const dragLeft = draggedBounds.x;
-  const dragRight = draggedBounds.x + draggedBounds.w;
-  const dragCenterX = draggedEl.x;
-  const others = [
-    ...state.materials.filter(m => m !== draggedEl),
-    ...(state.customInfo.avatar.visible && state.customInfo.avatar !== draggedEl ? [state.customInfo.avatar] : []),
-    ...(state.customInfo.username.visible && state.customInfo.username !== draggedEl ? [state.customInfo.username] : []),
-    ...(state.customInfo.datetime.visible && state.customInfo.datetime !== draggedEl ? [state.customInfo.datetime] : [])
-  ];
-  let snapped = false;
-  const threshold = 10;
-  for (const other of others) {
-    const ob = getElementBounds(other);
-    const oLeft = ob.x;
-    const oRight = ob.x + ob.w;
-    const oCenterX = other.x;
-    if (Math.abs(dragLeft - oLeft) < threshold) {
-      guides.push({ x: oLeft, highlight: true });
-      draggedEl.x += (oLeft - dragLeft);
-      snapped = true;
-    } else if (Math.abs(dragRight - oRight) < threshold) {
-      guides.push({ x: oRight, highlight: true });
-      draggedEl.x = oRight - draggedBounds.w / 2;
-      snapped = true;
-    } else if (Math.abs(dragCenterX - oCenterX) < threshold) {
-      guides.push({ x: oCenterX, highlight: true });
-      draggedEl.x = oCenterX;
-      snapped = true;
-    }
-  }
-  state.alignGuides = guides;
-  document.getElementById('align-hint').classList.toggle('visible', snapped);
 }
 
 // ============== 历史 ==============
@@ -1642,21 +1493,14 @@ function pushHistory() {
       username: { visible: ci.username.visible, text: ci.username.text, x: ci.username.x, y: ci.username.y, scale: ci.username.scale, id: 'username', type: 'username' },
       datetime: { visible: ci.datetime.visible, year: ci.datetime.year, month: ci.datetime.month, day: ci.datetime.day, startTime: ci.datetime.startTime, endTime: ci.datetime.endTime, x: ci.datetime.x, y: ci.datetime.y, scale: ci.datetime.scale, id: 'datetime', type: 'datetime' }
     },
-    baseImageData: state.baseImageData ? new ImageData(
-      new Uint8ClampedArray(state.baseImageData.data),
-      state.baseImageData.width,
-      state.baseImageData.height
-    ) : null
+    baseImageData: state.baseImageData ? new ImageData(new Uint8ClampedArray(state.baseImageData.data), state.baseImageData.width, state.baseImageData.height) : null
   };
   state.history.push(snap);
   if (state.history.length > 50) state.history.shift();
 }
 
 function undo() {
-  if (state.history.length === 0) {
-    showToast('没有可撤销的操作', 'error');
-    return;
-  }
+  if (state.history.length === 0) { showToast('没有可撤销的操作', 'error'); return; }
   const snap = state.history.pop();
   state.materials = snap.materials;
   state.customInfo = snap.customInfo;
@@ -1664,7 +1508,6 @@ function undo() {
   state.selected = null;
   state.alignGuides = [];
   document.getElementById('align-hint').classList.remove('visible');
-  // 同步 UI
   document.getElementById('show-avatar').checked = state.customInfo.avatar.visible;
   document.getElementById('show-username').checked = state.customInfo.username.visible;
   document.getElementById('show-datetime').checked = state.customInfo.datetime.visible;
@@ -1682,7 +1525,6 @@ function undo() {
   document.getElementById('day-input').value = state.customInfo.datetime.day;
   document.getElementById('start-time').value = state.customInfo.datetime.startTime;
   document.getElementById('end-time').value = state.customInfo.datetime.endTime;
-  // 头像预览同步
   const preview = document.getElementById('avatar-preview');
   if (state.customInfo.avatar.image) {
     const tmpCanvas = document.createElement('canvas');
@@ -1700,10 +1542,7 @@ function undo() {
 }
 
 function confirmReset() {
-  if (!state.baseImage) {
-    showToast('请先上传底图', 'error');
-    return;
-  }
+  if (!state.baseImage) { showToast('请先上传底图', 'error'); return; }
   showModal('重置画布', '确定要清空画布吗？此操作不可恢复', () => {
     state.materials = [];
     state.selected = null;
@@ -1711,7 +1550,7 @@ function confirmReset() {
     if (state.eraseMode) exitEraseMode();
     if (state.baseImage) {
       state.ctx.drawImage(state.baseImage, 0, 0);
-      state.baseImageData = state.ctx.getImageData(0, 0, state.canvasWidth, state.canvasHeight);
+      state.baseImageData = state.ctx.getImageData(0,0,state.canvasWidth,state.canvasHeight);
     }
     state.history = [];
     render();
@@ -1721,19 +1560,14 @@ function confirmReset() {
 
 // ============== 导出 ==============
 function exportJPG() {
-  if (!state.baseImage) {
-    showToast('请先上传底图', 'error');
-    return;
-  }
+  if (!state.baseImage) { showToast('请先上传底图', 'error'); return; }
   const exportCanvas = document.createElement('canvas');
   exportCanvas.width = state.canvasWidth;
   exportCanvas.height = state.canvasHeight;
   const ectx = exportCanvas.getContext('2d');
   ectx.fillStyle = '#FFFFFF';
   ectx.fillRect(0, 0, state.canvasWidth, state.canvasHeight);
-  if (state.baseImageData) {
-    ectx.putImageData(state.baseImageData, 0, 0);
-  }
+  if (state.baseImageData) ectx.putImageData(state.baseImageData, 0, 0);
   const originalCtx = state.ctx;
   state.ctx = ectx;
   const oldSelected = state.selected;
@@ -1760,10 +1594,7 @@ function exportJPG() {
 }
 
 // ============== UI 辅助 ==============
-function updateStatus(msg) {
-  document.getElementById('status-msg').textContent = msg;
-}
-
+function updateStatus(msg) { document.getElementById('status-msg').textContent = msg; }
 let toastTimer = null;
 function showToast(msg, type = 'info') {
   const toast = document.getElementById('toast');
@@ -1771,12 +1602,10 @@ function showToast(msg, type = 'info') {
   toast.className = 'toast ' + type + ' visible';
   const icon = toast.querySelector('i');
   icon.className = type === 'success' ? 'fa-solid fa-circle-check' :
-                   type === 'error' ? 'fa-solid fa-circle-exclamation' :
-                   'fa-solid fa-circle-info';
+                   type === 'error' ? 'fa-solid fa-circle-exclamation' : 'fa-solid fa-circle-info';
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toast.classList.remove('visible'), 2200);
 }
-
 function showModal(title, msg, onOk) {
   document.getElementById('modal-title').textContent = title;
   document.getElementById('modal-msg').textContent = msg;
