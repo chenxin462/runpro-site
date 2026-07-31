@@ -3,1750 +3,1751 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>运动截图拼图工具 v1.9</title>
+<title>运动截图拼图工具 v2.0</title>
 <script src="https://cdn.tailwindcss.com"></script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
-:root {
-  --bg: #F5F3EE;
-  --bg-elevated: #FFFFFF;
-  --bg-deep: #1A1814;
-  --fg: #1A1814;
-  --fg-muted: #6B6357;
-  --border: #E5DFD3;
-  --border-strong: #C9C0AE;
-  --accent: #FF5B1F;
-  --accent-deep: #D94612;
-  --accent-soft: #FFF1E8;
-  --green: #00C853;
-  --green-deep: #00A040;
-  --blue: #1976D2;
-  --blue-light: #2196F3;
-  --yellow: #FFF9C4;
-  --yellow-deep: #F9A825;
-  --red: #D32F2F;
-}
-* { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
-body {
-  font-family: 'Manrope', system-ui, sans-serif;
-  background: var(--bg);
-  color: var(--fg);
-  font-size: 13px;
-  -webkit-font-smoothing: antialiased;
-}
-.font-display { font-family: 'Space Grotesk', sans-serif; }
-.font-mono { font-family: 'JetBrains Mono', monospace; }
-
-/* Header */
-header {
-  height: 56px;
-  background: var(--bg-deep);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-  flex-shrink: 0;
-  position: relative;
-  z-index: 20;
-}
-header::after {
-  content: '';
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--accent), transparent);
-  opacity: 0.6;
-}
-.brand { display: flex; align-items: center; gap: 12px; }
-.brand-logo {
-  width: 36px; height: 36px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, var(--accent), #FF8A3D);
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'Space Grotesk', sans-serif;
-  font-weight: 700; font-size: 13px;
-  box-shadow: 0 4px 14px rgba(255,91,31,0.5), inset 0 1px 0 rgba(255,255,255,0.3);
-  position: relative;
-  overflow: hidden;
-  letter-spacing: -0.02em;
-}
-.brand-logo::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,0.4) 50%, transparent 70%);
-  animation: shimmer 4s infinite;
-}
-@keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(200%); }
-}
-.brand h1 { margin: 0; font-size: 15px; font-weight: 700; letter-spacing: -0.01em; }
-.brand .subtitle { font-size: 10px; color: rgba(255,255,255,0.45); letter-spacing: 0.08em; font-family: 'JetBrains Mono', monospace; }
-.header-meta { display: flex; gap: 20px; font-size: 11px; color: rgba(255,255,255,0.6); }
-.header-meta-item { display: flex; align-items: center; gap: 6px; }
-.header-meta-item strong { color: white; font-family: 'JetBrains Mono', monospace; font-weight: 600; min-width: 14px; text-align: right; }
-
-/* Layout */
-.layout {
-  display: grid;
-  grid-template-columns: 280px 1fr 320px;
-  height: calc(100vh - 56px - 28px);
-}
-.panel {
-  background: var(--bg-elevated);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.panel.left { border-right: 1px solid var(--border); }
-.panel.right { border-left: 1px solid var(--border); }
-.panel-header {
-  padding: 14px 16px 12px;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-  background: linear-gradient(180deg, #FAFAF7, var(--bg-elevated));
-}
-.panel-title {
-  font-family: 'Space Grotesk', sans-serif;
-  font-weight: 700;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--fg);
-}
-.panel-title svg { color: var(--accent); }
-.panel-subtitle { font-size: 11px; color: var(--fg-muted); margin-top: 3px; }
-.panel-content { flex: 1; overflow-y: auto; padding: 14px; }
-
-/* Material list */
-.material-group { margin-bottom: 18px; }
-.material-group:last-child { margin-bottom: 0; }
-.material-group-title {
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--fg-muted);
-  font-weight: 700;
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.material-group-title::before {
-  content: '';
-  width: 3px; height: 14px;
-  background: var(--accent);
-  border-radius: 2px;
-}
-.material-group-title::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, var(--border), transparent);
-}
-.material-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-.material-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 8px 4px 5px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
-  background: transparent;
-  border: 1px solid transparent;
-  position: relative;
-}
-.material-item:hover {
-  background: var(--accent-soft);
-  border-color: var(--accent);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(255,91,31,0.18);
-}
-.material-item:active { transform: scale(0.94); }
-.material-item.flash { animation: flash 0.4s ease; }
-@keyframes flash {
-  0% { background: var(--accent); color: white; transform: scale(0.94); }
-  100% { background: transparent; color: inherit; transform: scale(1); }
-}
-.material-thumb { background: white; border: 1px solid var(--border); border-radius: 4px; display: block; }
-.material-label { font-size: 9px; color: var(--fg-muted); margin-top: 4px; text-align: center; font-family: 'JetBrains Mono', monospace; font-weight: 500; }
-
-/* Canvas area */
-.canvas-area {
-  position: relative;
-  background-color: #ECE7DA;
-  background-image: radial-gradient(circle at 1px 1px, rgba(0,0,0,0.05) 1px, transparent 0);
-  background-size: 16px 16px;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.canvas-container {
-  position: relative;
-  transform-origin: center center;
-  transition: transform 0.25s cubic-bezier(0.34, 1.4, 0.64, 1);
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.05), 0 20px 60px rgba(0,0,0,0.18), 0 8px 20px rgba(0,0,0,0.08);
-  background: white;
-}
-.canvas-container.erasing { cursor: crosshair; }
-.canvas-container.dragging { cursor: grabbing; }
-#mainCanvas { display: block; }
-
-.empty-state { text-align: center; color: var(--fg-muted); padding: 20px; max-width: 360px; }
-.empty-icon {
-  width: 80px; height: 80px;
-  margin: 0 auto 16px;
-  border-radius: 20px;
-  background: white;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-  position: relative;
-}
-.empty-icon::before {
-  content: '';
-  position: absolute;
-  inset: -8px;
-  border: 2px dashed var(--accent);
-  border-radius: 24px;
-  opacity: 0.3;
-  animation: pulse 2.5s infinite;
-}
-@keyframes pulse {
-  0%, 100% { transform: scale(1); opacity: 0.3; }
-  50% { transform: scale(1.05); opacity: 0.6; }
-}
-.empty-title { font-family: 'Space Grotesk', sans-serif; font-size: 17px; font-weight: 700; color: var(--fg); margin-bottom: 6px; }
-.empty-desc { font-size: 12px; line-height: 1.6; }
-.empty-steps { margin-top: 18px; text-align: left; background: white; border-radius: 12px; padding: 14px 16px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
-.empty-steps-title { font-size: 10px; font-weight: 700; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 8px; }
-.empty-steps ol { padding-left: 20px; margin: 0; font-size: 11px; line-height: 1.8; color: var(--fg-muted); }
-.empty-steps ol li::marker { color: var(--accent); font-weight: 700; }
-
-/* Float controls */
-.float-toolbar { position: absolute; top: 16px; right: 16px; display: flex; gap: 8px; z-index: 10; }
-.float-btn {
-  width: 40px; height: 40px;
-  border-radius: 10px;
-  background: white;
-  border: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer;
-  font-size: 16px;
-  color: var(--fg);
-  transition: all 0.15s;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-  font-family: inherit;
-  padding: 0;
-}
-.float-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(255,91,31,0.18); }
-.float-btn.active { background: var(--accent); color: white; border-color: var(--accent); box-shadow: 0 4px 14px rgba(255,91,31,0.4); }
-
-.zoom-control {
-  position: absolute;
-  bottom: 16px;
-  right: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  background: white;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 4px;
-  z-index: 10;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-}
-.zoom-control .float-btn { width: 36px; height: 36px; border: none; box-shadow: none; border-radius: 8px; }
-.zoom-control .float-btn:hover { background: var(--accent-soft); }
-.zoom-display { text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--fg-muted); padding: 2px 0; font-weight: 600; }
-
-.align-hint {
-  position: absolute;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%) translateY(-20px);
-  background: var(--blue);
-  color: white;
-  padding: 6px 16px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-  z-index: 10;
-  opacity: 0;
-  transition: all 0.2s;
-  pointer-events: none;
-  box-shadow: 0 4px 14px rgba(25,118,210,0.4);
-  letter-spacing: 0.05em;
-}
-.align-hint.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-/* 缩放比例确认提示卡片 */
-.scale-confirm {
-  position: absolute;
-  top: 16px;
-  left: 50%;
-  transform: translateX(-50%) translateY(-20px);
-  background: white;
-  border: 2px solid var(--accent);
-  border-radius: 14px;
-  padding: 14px 18px;
-  z-index: 15;
-  opacity: 0;
-  pointer-events: none;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 10px 40px rgba(255,91,31,0.25), 0 4px 12px rgba(0,0,0,0.08);
-  min-width: 340px;
-}
-.scale-confirm.show { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
-.scale-confirm-header { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
-.scale-confirm-icon {
-  width: 28px; height: 28px;
-  border-radius: 8px;
-  background: var(--accent-soft);
-  display: flex; align-items: center; justify-content: center;
-  color: var(--accent);
-  flex-shrink: 0;
-}
-.scale-confirm-title { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 13px; color: var(--fg); }
-.scale-confirm-body { font-size: 11px; color: var(--fg-muted); line-height: 1.6; margin-bottom: 12px; }
-.scale-confirm-body .scale-value {
-  font-family: 'JetBrains Mono', monospace;
-  font-weight: 700;
-  font-size: 18px;
-  color: var(--accent);
-  display: inline-block;
-  vertical-align: middle;
-  margin: 0 2px;
-}
-.scale-confirm-actions { display: flex; gap: 8px; justify-content: flex-end; }
-.scale-confirm-actions .btn { width: auto; padding: 6px 16px; font-size: 11px; }
-
-/* Right panel blocks */
-.section-block { margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px dashed var(--border); }
-.section-block:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-.section-title {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--fg-muted);
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-/* Buttons */
-.btn {
-  padding: 9px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--border);
-  background: white;
-  color: var(--fg);
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  width: 100%;
-}
-.btn:hover { border-color: var(--fg); background: #FAFAFA; transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,0.04); }
-.btn:active { transform: translateY(0); }
-.btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
-.btn-primary:hover { background: var(--accent-deep); border-color: var(--accent-deep); box-shadow: 0 4px 14px rgba(255,91,31,0.35); }
-.btn-success { background: var(--green); color: white; border-color: var(--green); }
-.btn-success:hover { background: var(--green-deep); border-color: var(--green-deep); box-shadow: 0 4px 14px rgba(0,200,83,0.35); }
-.btn-danger { background: white; color: var(--red); border-color: #FFCDD2; }
-.btn-danger:hover { background: #FFEBEE; border-color: var(--red); }
-.btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-.space-y-2 > * + * { margin-top: 6px; }
-
-/* Scale control */
-.scale-control {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 4px;
-}
-.scale-input {
-  flex: 1;
-  padding: 6px 8px;
-  border: none;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 14px;
-  font-weight: 600;
-  text-align: center;
-  background: transparent;
-  color: var(--fg);
-  width: 100%;
-  min-width: 0;
-}
-.scale-input:focus { outline: none; }
-.scale-input::-webkit-outer-spin-button, .scale-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-.scale-btn {
-  width: 28px; height: 28px;
-  border-radius: 6px;
-  border: none;
-  background: white;
-  cursor: pointer;
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--fg);
-  display: flex; align-items: center; justify-content: center;
-  transition: all 0.12s;
-  flex-shrink: 0;
-}
-.scale-btn:hover { background: var(--accent); color: white; }
-.scale-unit { font-size: 12px; color: var(--fg-muted); padding-right: 4px; font-family: 'JetBrains Mono', monospace; font-weight: 600; }
-
-.usage-note {
-  margin-top: 10px;
-  background: var(--yellow);
-  border-radius: 8px;
-  padding: 10px 12px;
-  font-size: 11px;
-  line-height: 1.7;
-  font-weight: 600;
-  color: #5D4E00;
-  border-left: 3px solid var(--yellow-deep);
-}
-.usage-note-title { display: block; font-weight: 800; margin-bottom: 4px; color: #8B6914; font-size: 11px; letter-spacing: 0.02em; }
-
-/* Checkbox */
-.check-item {
-  display: flex;
-  align-items: center;
-  padding: 6px 0;
-  gap: 10px;
-  cursor: pointer;
-  font-size: 12px;
-  font-weight: 600;
-  user-select: none;
-}
-.check-item input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; margin: 0; flex-shrink: 0; }
-.check-item.disabled { opacity: 0.6; cursor: not-allowed; }
-.check-item.disabled input { cursor: not-allowed; }
-
-.sub-controls {
-  margin-left: 26px;
-  margin-top: 4px;
-  margin-bottom: 8px;
-  padding: 10px;
-  background: var(--bg);
-  border-radius: 8px;
-  border: 1px solid var(--border);
-}
-
-/* Inputs */
-.input { width: 100%; padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 12px; background: white; color: var(--fg); }
-.input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,91,31,0.1); }
-.input-row { display: flex; gap: 4px; align-items: center; }
-.input-row .input { flex: 1; min-width: 0; }
-.input-sep { color: var(--fg-muted); font-family: 'JetBrains Mono', monospace; font-size: 12px; flex-shrink: 0; }
-.input-label { font-size: 10px; color: var(--fg-muted); margin-bottom: 4px; display: block; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
-
-/* Avatar preview */
-.avatar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
-.avatar-preview {
-  width: 56px; height: 56px;
-  border-radius: 50%;
-  border: 2px solid var(--green);
-  background: #CCC;
-  display: flex; align-items: center; justify-content: center;
-  overflow: hidden;
-  flex-shrink: 0;
-  position: relative;
-  background-size: cover;
-  background-position: center;
-}
-.avatar-preview svg { fill: white; width: 28px; height: 28px; }
-.avatar-buttons { flex: 1; display: flex; flex-direction: column; gap: 4px; }
-.avatar-buttons .btn { padding: 5px 8px; font-size: 11px; width: 100%; }
-
-/* Shortcuts */
-.shortcut-list { display: grid; gap: 4px; }
-.shortcut-item { display: flex; justify-content: space-between; align-items: center; padding: 5px 8px; background: var(--bg); border-radius: 5px; font-size: 11px; }
-.shortcut-item .label { color: var(--fg-muted); }
-.kbd {
-  font-family: 'JetBrains Mono', monospace;
-  background: white;
-  border: 1px solid var(--border);
-  border-bottom-width: 2px;
-  padding: 1px 5px;
-  border-radius: 3px;
-  font-size: 10px;
-  color: var(--fg);
-  font-weight: 600;
-  display: inline-block;
-}
-
-/* Status bar */
-.status-bar {
-  height: 28px;
-  background: var(--bg-deep);
-  color: rgba(255,255,255,0.7);
-  display: flex;
-  align-items: center;
-  padding: 0 16px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10px;
-  gap: 18px;
-  flex-shrink: 0;
-}
-.status-item { display: flex; align-items: center; gap: 6px; }
-.status-item .label { color: rgba(255,255,255,0.35); }
-.status-dot { width: 6px; height: 6px; border-radius: 50%; background: #555; }
-.status-dot.active { background: var(--green); box-shadow: 0 0 8px var(--green); animation: blink 2s infinite; }
-.status-dot.warn { background: var(--accent); box-shadow: 0 0 8px var(--accent); animation: blink 1s infinite; }
-@keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-
-/* Toast */
-.toast {
-  position: fixed;
-  top: 72px;
-  left: 50%;
-  transform: translateX(-50%) translateY(-20px);
-  background: var(--bg-deep);
-  color: white;
-  padding: 10px 20px;
-  border-radius: 10px;
-  font-size: 12px;
-  font-weight: 600;
-  opacity: 0;
-  pointer-events: none;
-  transition: all 0.25s;
-  z-index: 100;
-  box-shadow: 0 8px 28px rgba(0,0,0,0.25);
-  border: 1px solid rgba(255,255,255,0.1);
-}
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-/* Scrollbar */
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: var(--fg-muted); }
-
-@media (max-width: 1200px) {
-  html, body { overflow-y: auto; height: auto; }
-  .layout { grid-template-columns: 1fr; grid-template-rows: auto auto auto; height: auto; }
-  .panel.left, .panel.right { border: none; border-top: 1px solid var(--border); max-height: 300px; }
-  .canvas-area { min-height: 420px; }
-}
+  :root {
+    --bg: #0E1116;
+    --card: #161B22;
+    --card-hover: #1C232C;
+    --border: #2A3038;
+    --primary: #FF5722;
+    --primary-hover: #FF7043;
+    --secondary: #FFC107;
+    --success: #00C853;
+    --text: #E6EDF3;
+    --text-muted: #8B949E;
+    --danger: #F44336;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans SC', system-ui, sans-serif;
+    overflow: hidden;
+    height: 100vh;
+  }
+  .app-header {
+    height: 56px;
+    background: linear-gradient(90deg, #161B22 0%, #1C232C 100%);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 16px;
+    position: relative;
+    z-index: 100;
+  }
+  .app-header::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: -1px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--primary), transparent);
+    opacity: 0.4;
+  }
+  .logo {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 700;
+    font-size: 22px;
+    color: var(--primary);
+    letter-spacing: 2px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo::before {
+    content: '';
+    width: 6px;
+    height: 26px;
+    background: linear-gradient(180deg, var(--primary), var(--secondary));
+    border-radius: 2px;
+    box-shadow: 0 0 16px var(--primary);
+  }
+  .version-tag {
+    font-size: 11px;
+    color: var(--text-muted);
+    padding: 2px 8px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    letter-spacing: 0.5px;
+  }
+  .status-bar {
+    margin-left: auto;
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    gap: 18px;
+  }
+  .status-bar span b {
+    color: var(--text);
+    font-weight: 500;
+  }
+  .status-msg {
+    color: var(--secondary);
+  }
+  .main-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr 340px;
+    height: calc(100vh - 56px);
+  }
+  .panel {
+    background: var(--card);
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .panel::-webkit-scrollbar { width: 6px; }
+  .panel::-webkit-scrollbar-track { background: transparent; }
+  .panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  .panel::-webkit-scrollbar-thumb:hover { background: #3A4048; }
+  .materials-panel {
+    border-right: 1px solid var(--border);
+    padding: 16px;
+  }
+  .section-title {
+    font-family: 'Oswald', sans-serif;
+    font-size: 13px;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    margin: 0 0 10px;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title::before {
+    content: '';
+    width: 3px;
+    height: 14px;
+    background: var(--primary);
+    border-radius: 1px;
+  }
+  .materials-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .material-item {
+    aspect-ratio: 1;
+    background: #FFFFFF;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+    overflow: hidden;
+    padding: 3px;
+    position: relative;
+  }
+  .material-item:hover {
+    border-color: var(--primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 87, 34, 0.35);
+  }
+  .material-item:active {
+    transform: scale(0.94);
+  }
+  .material-item img {
+    max-width: 100%;
+    max-height: 72%;
+    object-fit: contain;
+    pointer-events: none;
+  }
+  .material-item .label {
+    font-size: 9px;
+    color: #888;
+    margin-top: 2px;
+    white-space: nowrap;
+    font-family: 'Oswald', sans-serif;
+    pointer-events: none;
+  }
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border), transparent);
+    margin: 14px 0;
+  }
+  .canvas-panel {
+    position: relative;
+    background: #050709;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .canvas-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+    background-size: 24px 24px;
+    pointer-events: none;
+  }
+  .canvas-panel::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 50%, transparent 40%, rgba(0,0,0,0.5) 100%);
+    pointer-events: none;
+  }
+  .canvas-stage {
+    position: relative;
+    transform-origin: center;
+    transition: transform 0.2s ease-out;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.05);
+    z-index: 1;
+  }
+  #main-canvas {
+    display: block;
+    background: #FFFFFF;
+  }
+  .canvas-empty {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: var(--text-muted);
+    pointer-events: none;
+    z-index: 5;
+  }
+  .canvas-empty i {
+    font-size: 72px;
+    color: var(--border);
+    margin-bottom: 18px;
+    display: block;
+  }
+  .canvas-empty .hint {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .canvas-empty .accent {
+    color: var(--primary);
+    font-weight: 600;
+  }
+  .canvas-overlay {
+    position: absolute;
+    z-index: 10;
+  }
+  .canvas-overlay.top-right { top: 16px; right: 16px; }
+  .canvas-overlay.bottom-right {
+    bottom: 16px;
+    right: 16px;
+    display: flex;
+    gap: 4px;
+    background: rgba(22, 27, 34, 0.92);
+    backdrop-filter: blur(10px);
+    padding: 4px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .canvas-overlay.top-center {
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+  .canvas-overlay.bottom-left {
+    bottom: 16px;
+    left: 16px;
+    background: rgba(22, 27, 34, 0.92);
+    backdrop-filter: blur(10px);
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'Oswald', sans-serif;
+  }
+  .overlay-btn {
+    background: rgba(22, 27, 34, 0.92);
+    backdrop-filter: blur(10px);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+  }
+  .overlay-btn:hover {
+    background: var(--card-hover);
+    border-color: var(--primary);
+  }
+  .overlay-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+    box-shadow: 0 0 16px rgba(255, 87, 34, 0.4);
+  }
+  .zoom-btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 600;
+  }
+  .align-hint {
+    background: var(--primary);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 0.15s;
+    box-shadow: 0 4px 16px rgba(255, 87, 34, 0.5);
+  }
+  .align-hint.visible { opacity: 1; }
+  .control-panel {
+    border-left: 1px solid var(--border);
+    padding: 16px;
+  }
+  .control-section { margin-bottom: 20px; }
+  .btn-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+  .btn {
+    background: var(--card-hover);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 9px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: inherit;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-weight: 500;
+  }
+  .btn:hover {
+    background: #242B33;
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+  .btn-primary {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+  }
+  .btn-primary:hover {
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
+    color: white;
+  }
+  .btn-success {
+    background: var(--success);
+    color: white;
+    border-color: var(--success);
+  }
+  .btn-success:hover {
+    background: #00E676;
+    border-color: #00E676;
+    color: white;
+  }
+  .btn-danger {
+    background: transparent;
+    color: var(--danger);
+    border-color: rgba(244, 67, 54, 0.4);
+  }
+  .btn-danger:hover {
+    background: rgba(244, 67, 54, 0.1);
+    border-color: var(--danger);
+    color: var(--danger);
+  }
+  .btn-block { grid-column: 1 / -1; }
+  .scale-control {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .scale-control input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 7px 8px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: 'Oswald', sans-serif;
+    text-align: center;
+    font-weight: 600;
+  }
+  .scale-control input:focus { outline: none; border-color: var(--primary); }
+  .scale-btn {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .scale-unit {
+    color: var(--text-muted);
+    font-size: 12px;
+    font-family: 'Oswald', sans-serif;
+  }
+  .usage-note {
+    background: #FFF9C4;
+    color: #5D4037;
+    padding: 10px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    line-height: 1.65;
+    font-weight: 600;
+    margin-top: 10px;
+    border-left: 3px solid #FBC02D;
+  }
+  .usage-note .title {
+    color: #E65100;
+    font-weight: 700;
+    margin-bottom: 4px;
+    display: block;
+  }
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    background: var(--bg);
+    border-radius: 6px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    transition: all 0.15s;
+  }
+  .checkbox-row:hover { border-color: var(--primary); }
+  .checkbox-row input {
+    accent-color: var(--primary);
+    cursor: pointer;
+    width: 14px;
+    height: 14px;
+  }
+  .checkbox-row label {
+    cursor: pointer;
+    flex: 1;
+    font-size: 13px;
+    user-select: none;
+  }
+  .checkbox-row .tag {
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 8px;
+    background: var(--border);
+    color: var(--text-muted);
+    font-family: 'Oswald', sans-serif;
+  }
+  .checkbox-row .tag.on {
+    background: var(--success);
+    color: white;
+  }
+  .input-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+  .input-row label {
+    font-size: 12px;
+    color: var(--text-muted);
+    min-width: 36px;
+  }
+  .input-row input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: inherit;
+    min-width: 0;
+  }
+  .input-row input:focus { outline: none; border-color: var(--primary); }
+  .input-row input[type="time"] {
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
+  }
+  .avatar-preview {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #CCCCCC center/cover;
+    border: 2px solid var(--success);
+    flex-shrink: 0;
+    position: relative;
+    overflow: hidden;
+  }
+  .avatar-preview::after {
+    content: '\f007';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 22px;
+  }
+  .avatar-preview.has-image::after { display: none; }
+  .sub-control {
+    padding: 10px;
+    background: var(--bg);
+    border-radius: 6px;
+    margin-top: 6px;
+    border: 1px solid var(--border);
+  }
+  .hidden { display: none !important; }
+  .shortcuts {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.9;
+  }
+  .shortcuts kbd {
+    background: var(--card-hover);
+    border: 1px solid var(--border);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-family: 'Oswald', monospace;
+    color: var(--text);
+    font-size: 10px;
+    margin: 0 2px;
+  }
+  .toast {
+    position: fixed;
+    top: 76px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: var(--card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px 22px;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    z-index: 1000;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+  }
+  .toast.visible { transform: translateX(-50%) translateY(0); }
+  .toast.success { border-color: var(--success); }
+  .toast.success i { color: var(--success); }
+  .toast.error { border-color: var(--danger); }
+  .toast.error i { color: var(--danger); }
+  .toast.info i { color: var(--secondary); }
+  .modal-mask {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .modal-mask.visible { opacity: 1; pointer-events: auto; }
+  .modal {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 24px;
+    border-radius: 12px;
+    max-width: 400px;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+    transform: scale(0.9);
+    transition: transform 0.2s;
+  }
+  .modal-mask.visible .modal { transform: scale(1); }
+  .modal h3 {
+    margin: 0 0 12px;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .modal h3 i { color: var(--secondary); }
+  .modal p {
+    color: var(--text-muted);
+    margin: 0 0 20px;
+    line-height: 1.6;
+    font-size: 13px;
+  }
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+  .tip-line {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    text-align: center;
+    line-height: 1.5;
+  }
+  @media (max-width: 1200px) {
+    .main-layout {
+      grid-template-columns: 1fr;
+      grid-template-rows: 280px 1fr 320px;
+      height: auto;
+    }
+    body { overflow: auto; height: auto; min-height: 100vh; }
+  }
 </style>
 </head>
 <body>
-
-<header>
-  <div class="brand">
-    <div class="brand-logo">SP</div>
-    <div>
-      <h1 class="font-display">运动截图拼图工具</h1>
-      <div class="subtitle">v1.9 · BROWSER COMPOSITOR</div>
-    </div>
-  </div>
-  <div class="header-meta">
-    <div class="header-meta-item"><span>素材</span><strong>37</strong></div>
-    <div class="header-meta-item"><span>已放置</span><strong id="metaCount">0</strong></div>
-    <div class="header-meta-item"><span>抹平</span><strong id="metaErase">0</strong></div>
-    <div class="header-meta-item"><span>历史</span><strong id="metaHistory">0</strong></div>
+<header class="app-header">
+  <div class="logo">RUN PIC STUDIO</div>
+  <span class="version-tag">v2.0</span>
+  <div class="status-bar">
+    <span>缩放 <b id="status-zoom">100%</b></span>
+    <span>坐标 <b id="status-coord">0, 0</b></span>
+    <span class="status-msg" id="status-msg">就绪</span>
   </div>
 </header>
 
-<main class="layout">
-  <aside class="panel left">
-    <div class="panel-header">
-      <div class="panel-title">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-        素材库
-      </div>
-      <div class="panel-subtitle">点击素材添加到画布中央</div>
-    </div>
-    <div class="panel-content" id="materialList"></div>
-  </aside>
+<div class="main-layout">
+  <aside class="panel materials-panel" id="materials-panel"></aside>
 
-  <section class="canvas-area" id="canvasArea">
-    <div class="float-toolbar">
-      <button class="float-btn" id="eraseBtn" title="抹平工具 (再次点击退出)">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/></svg>
+  <section class="canvas-panel" id="canvas-panel">
+    <div class="canvas-stage" id="canvas-stage">
+      <canvas id="main-canvas" width="800" height="600"></canvas>
+    </div>
+    <div class="canvas-empty" id="canvas-empty">
+      <i class="fa-solid fa-image"></i>
+      <div class="hint">
+        <div>点击右侧 <span class="accent">「上传底图」</span> 开始</div>
+        <div style="font-size: 11px; margin-top: 6px; color: var(--text-muted);">支持 JPG / PNG / WEBP 格式</div>
+      </div>
+    </div>
+    <div class="canvas-overlay top-right">
+      <button class="overlay-btn" id="erase-btn">
+        <i class="fa-solid fa-eraser"></i> 抹平工具
       </button>
     </div>
-
-    <div class="align-hint" id="alignHint">↔ 已对齐</div>
-
-    <!-- 缩放比例确认提示卡片 -->
-    <div class="scale-confirm" id="scaleConfirm">
-      <div class="scale-confirm-header">
-        <div class="scale-confirm-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 12h4l3-9 4 18 3-9h4"/></svg>
-        </div>
-        <div class="scale-confirm-title">检测到素材缩放变化</div>
-      </div>
-      <div class="scale-confirm-body">
-        当前素材缩放比例为 <span class="scale-value" id="confirmScaleValue">85</span>%<br>
-        是否将此比例设为默认？后续新素材将按此比例显示。
-      </div>
-      <div class="scale-confirm-actions">
-        <button class="btn" id="confirmScaleCancel">取消</button>
-        <button class="btn btn-primary" id="confirmScaleApply">设为默认</button>
-      </div>
+    <div class="canvas-overlay top-center">
+      <div class="align-hint" id="align-hint">↔ 已对齐</div>
     </div>
-
-    <div class="canvas-container" id="canvasContainer" style="display:none">
-      <canvas id="mainCanvas"></canvas>
+    <div class="canvas-overlay bottom-left" id="canvas-info">
+      <span id="canvas-info-text">未加载底图</span>
     </div>
-
-    <div class="empty-state" id="emptyState">
-      <div class="empty-icon">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#FF5B1F" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg>
-      </div>
-      <div class="empty-title">上传底图开始拼图</div>
-      <div class="empty-desc">支持 JPG / PNG / WEBP 格式<br>点击右侧"上传底图"按钮选择本地图片</div>
-      <div class="empty-steps">
-        <div class="empty-steps-title">使用流程</div>
-        <ol>
-          <li>上传底图后用抹平工具清除原数据</li>
-          <li>设置默认缩放比例（先试一个素材）</li>
-          <li>从左侧素材库点击数字/单位拼接</li>
-          <li>拖拽调整位置，对齐辅助自动吸附</li>
-          <li>编辑日期时间，导出为 JPG</li>
-        </ol>
-      </div>
-    </div>
-
-    <div class="zoom-control">
-      <button class="float-btn" id="zoomIn" title="放大">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
-      </button>
-      <div class="zoom-display" id="zoomDisplay">100%</div>
-      <button class="float-btn" id="zoomOut" title="缩小">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/></svg>
-      </button>
-      <button class="float-btn" id="zoomFit" title="适应窗口">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7V3h4M21 7V3h-4M3 17v4h4M21 17v4h-4"/></svg>
-      </button>
+    <div class="canvas-overlay bottom-right">
+      <button class="overlay-btn zoom-btn" id="zoom-in" title="放大">+</button>
+      <button class="overlay-btn zoom-btn" id="zoom-out" title="缩小">−</button>
+      <button class="overlay-btn zoom-btn" id="zoom-fit" title="适应窗口">⤢</button>
     </div>
   </section>
 
-  <aside class="panel right">
-    <div class="panel-header">
-      <div class="panel-title">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        操作面板
+  <aside class="panel control-panel">
+    <div class="control-section">
+      <h3 class="section-title">操作</h3>
+      <div class="btn-row">
+        <button class="btn btn-primary btn-block" id="upload-btn">
+          <i class="fa-solid fa-upload"></i> 上传底图
+        </button>
+        <button class="btn" id="undo-btn">
+          <i class="fa-solid fa-rotate-left"></i> 撤销
+        </button>
+        <button class="btn btn-danger" id="reset-btn">
+          <i class="fa-solid fa-trash-can"></i> 重置
+        </button>
+        <button class="btn btn-success btn-block" id="export-btn">
+          <i class="fa-solid fa-download"></i> 导出 JPG
+        </button>
       </div>
-      <div class="panel-subtitle">所有功能控制集中在此</div>
+      <input type="file" id="file-input" accept="image/jpeg,image/png,image/webp" class="hidden">
+      <input type="file" id="avatar-input" accept="image/jpeg,image/png" class="hidden">
     </div>
-    <div class="panel-content">
 
-      <div class="section-block">
-        <div class="section-title">文件操作</div>
-        <div class="space-y-2">
-          <button class="btn btn-primary" id="uploadBtn">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            上传底图
-          </button>
-          <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp" hidden>
-          <div class="btn-row">
-            <button class="btn" id="undoBtn">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 7v6h6"/><path d="M3 13a9 9 0 1 0 3-7"/></svg>
-              撤销
+    <div class="control-section">
+      <h3 class="section-title">默认缩放比例</h3>
+      <div class="scale-control">
+        <button class="btn scale-btn" id="scale-dec">−</button>
+        <input type="number" id="scale-input" value="100" min="20" max="300" step="10">
+        <span class="scale-unit">%</span>
+        <button class="btn scale-btn" id="scale-inc">+</button>
+      </div>
+      <button class="btn btn-block" id="set-default-scale" style="background: var(--secondary); color: #000; border-color: var(--secondary); font-weight: 600;">
+        <i class="fa-solid fa-check"></i> 设为后续素材比例
+      </button>
+      <div class="tip-line">
+        点击此按钮，将当前选中素材的缩放比例<br>设为后续新素材的默认比例
+      </div>
+      <div class="usage-note">
+        <span class="title">⚠️ 使用说明</span>
+        ① 先拖一个素材到画布上，拖拽右下角绿色手柄调整大小<br>
+        ② 右侧会自动显示当前素材的缩放比例，供你参考<br>
+        ③ 觉得大小合适后，点击「设为后续素材比例」按钮<br>
+        ④ 后面新加的素材都会自动按这个大小显示<br>
+        ⑤ 也可以直接在输入框里输入数字，或点 +/- 按钮调整<br>
+        ⑥ 已经放上去的素材不会变，每个素材也可以单独缩放
+      </div>
+    </div>
+
+    <div class="control-section">
+      <h3 class="section-title">自定义信息</h3>
+      <div class="checkbox-row">
+        <input type="checkbox" id="show-avatar">
+        <label for="show-avatar">显示头像</label>
+        <span class="tag" id="avatar-tag">关</span>
+      </div>
+      <div class="sub-control hidden" id="avatar-control">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="avatar-preview" id="avatar-preview"></div>
+          <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+            <button class="btn" id="upload-avatar-btn" style="font-size: 11px; padding: 5px;">
+              <i class="fa-solid fa-upload"></i> 上传头像
             </button>
-            <button class="btn btn-danger" id="resetBtn">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-              重置
+            <button class="btn btn-danger" id="delete-avatar-btn" style="font-size: 11px; padding: 5px;">
+              <i class="fa-solid fa-xmark"></i> 删除头像
             </button>
           </div>
-          <button class="btn btn-success" id="exportBtn">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            导出 JPG
-          </button>
         </div>
       </div>
 
-      <div class="section-block">
-        <div class="section-title">⚙ 默认缩放比例</div>
-        <div class="scale-control">
-          <button class="scale-btn" id="scaleMinus">−</button>
-          <input type="number" class="scale-input" id="scaleInput" value="100" min="20" max="300">
-          <span class="scale-unit">%</span>
-          <button class="scale-btn" id="scalePlus">+</button>
-        </div>
-        <div class="usage-note">
-          <span class="usage-note-title">⚠ 使用说明</span>
-          ① 先拖一个素材到画布上，看看大小是否合适<br>
-          ② 如果太大或太小，拖拽素材右下角绿色手柄调整<br>
-          ③ 调整后系统会提示当前比例，确认后设为默认<br>
-          ④ 后续新加的素材都会自动按此比例显示
+      <div class="checkbox-row">
+        <input type="checkbox" id="show-username">
+        <label for="show-username">显示用户名</label>
+        <span class="tag" id="username-tag">关</span>
+      </div>
+      <div class="sub-control hidden" id="username-control">
+        <div class="input-row">
+          <label>用户名</label>
+          <input type="text" id="username-input" value="用户名61515321" maxlength="30">
         </div>
       </div>
 
-      <div class="section-block">
-        <div class="section-title">👤 自定义信息</div>
-
-        <label class="check-item">
-          <input type="checkbox" id="showAvatar"> 显示头像
-        </label>
-        <div class="sub-controls" id="avatarControls" style="display:none">
-          <div class="avatar-row">
-            <div class="avatar-preview" id="avatarPreview">
-              <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M12 14c-4 0-8 2-8 6v2h16v-2c0-4-4-6-8-6z"/></svg>
-            </div>
-            <div class="avatar-buttons">
-              <button class="btn" id="uploadAvatarBtn">上传头像</button>
-              <button class="btn" id="removeAvatarBtn">删除头像</button>
-            </div>
-          </div>
-          <input type="file" id="avatarInput" accept="image/jpeg,image/png" hidden>
+      <div class="checkbox-row">
+        <input type="checkbox" id="show-datetime" checked>
+        <label for="show-datetime">显示日期时间</label>
+        <span class="tag on" id="datetime-tag">开</span>
+      </div>
+      <div class="sub-control" id="datetime-control">
+        <div class="input-row">
+          <label>日期</label>
+          <input type="number" id="year-input" value="2025" min="2000" max="2099">
+          <input type="number" id="month-input" value="6" min="1" max="12">
+          <input type="number" id="day-input" value="4" min="1" max="31">
         </div>
-
-        <label class="check-item">
-          <input type="checkbox" id="showUsername"> 显示用户名
-        </label>
-        <div class="sub-controls" id="usernameControls" style="display:none">
-          <input type="text" class="input" id="usernameInput" value="用户名61515321" placeholder="输入用户名">
-        </div>
-
-        <label class="check-item">
-          <input type="checkbox" id="showDate" checked> 显示日期时间
-        </label>
-        <div class="sub-controls" id="dateControls">
-          <div class="input-label">日期</div>
-          <div class="input-row" style="margin-bottom:8px">
-            <input type="number" class="input" id="dateYear" value="2025" min="2000" max="2100">
-            <span class="input-sep">/</span>
-            <input type="number" class="input" id="dateMonth" value="6" min="1" max="12">
-            <span class="input-sep">/</span>
-            <input type="number" class="input" id="dateDay" value="4" min="1" max="31">
-          </div>
-          <div class="input-label">时间</div>
-          <div class="input-row">
-            <input type="time" class="input" id="timeStart" value="16:08">
-            <span class="input-sep">-</span>
-            <input type="time" class="input" id="timeEnd" value="16:43">
-          </div>
+        <div class="input-row">
+          <label>时间</label>
+          <input type="time" id="start-time" value="16:08">
+          <span style="color: var(--text-muted);">-</span>
+          <input type="time" id="end-time" value="16:43">
         </div>
       </div>
+    </div>
 
-      <div class="section-block">
-        <div class="section-title">快捷键</div>
-        <div class="shortcut-list">
-          <div class="shortcut-item"><span class="label">移动 1px</span><span><span class="kbd">←↑→↓</span></span></div>
-          <div class="shortcut-item"><span class="label">移动 10px</span><span><span class="kbd">Shift</span>+<span class="kbd">←↑→↓</span></span></div>
-          <div class="shortcut-item"><span class="label">删除</span><span><span class="kbd">Del</span></span></div>
-          <div class="shortcut-item"><span class="label">放大 10%</span><span><span class="kbd">+</span></span></div>
-          <div class="shortcut-item"><span class="label">缩小 10%</span><span><span class="kbd">-</span></span></div>
-          <div class="shortcut-item"><span class="label">取消选中</span><span><span class="kbd">Esc</span></span></div>
-          <div class="shortcut-item"><span class="label">禁用吸附</span><span><span class="kbd">Shift</span>+拖拽</span></div>
-        </div>
+    <div class="control-section">
+      <h3 class="section-title">快捷键</h3>
+      <div class="shortcuts">
+        <kbd>← ↑ → ↓</kbd> 移动1px<br>
+        <kbd>Shift</kbd>+<kbd>方向键</kbd> 移动10px<br>
+        <kbd>Del</kbd>/<kbd>Backspace</kbd> 删除选中<br>
+        <kbd>+</kbd>/<kbd>−</kbd> 缩放10%<br>
+        <kbd>Esc</kbd> 取消选中/框选<br>
+        <kbd>Shift</kbd>+拖拽 禁用吸附
       </div>
-
     </div>
   </aside>
-</main>
-
-<div class="status-bar">
-  <div class="status-item">
-    <span class="status-dot" id="statusDot"></span>
-    <span id="statusText">等待上传底图</span>
-  </div>
-  <div class="status-item"><span class="label">缩放</span><span id="statusZoom">100%</span></div>
-  <div class="status-item"><span class="label">素材</span><span id="statusCount">0</span></div>
-  <div class="status-item"><span class="label">选中缩放</span><span id="statusSelScale">—</span></div>
-  <div class="status-item"><span class="label">坐标</span><span id="statusCoord">—</span></div>
-  <div class="status-item" style="margin-left:auto"><span class="label">模式</span><span id="statusMode">空闲</span></div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast">
+  <i class="fa-solid fa-circle-info"></i>
+  <span id="toast-msg">提示</span>
+</div>
+
+<div class="modal-mask" id="modal-mask">
+  <div class="modal">
+    <h3><i class="fa-solid fa-triangle-exclamation"></i><span id="modal-title">确认</span></h3>
+    <p id="modal-msg">确定要执行此操作吗？</p>
+    <div class="modal-actions">
+      <button class="btn" id="modal-cancel">取消</button>
+      <button class="btn btn-primary" id="modal-ok">确认</button>
+    </div>
+  </div>
+</div>
 
 <script>
-// ==================== 素材定义 ====================
-const MATERIALS_GROUP1 = [
-  { key: 'b0', text: '0', type: 'number', label: 'b0' },
-  { key: 'b1', text: '1', type: 'number', label: 'b1' },
-  { key: 'b2', text: '2', type: 'number', label: 'b2' },
-  { key: 'b3', text: '3', type: 'number', label: 'b3' },
-  { key: 'b4', text: '4', type: 'number', label: 'b4' },
-  { key: 'b5', text: '5', type: 'number', label: 'b5' },
-  { key: 'b6', text: '6', type: 'number', label: 'b6' },
-  { key: 'b7', text: '7', type: 'number', label: 'b7' },
-  { key: 'b8', text: '8', type: 'number', label: 'b8' },
-  { key: 'b9', text: '9', type: 'number', label: 'b9' },
-  { key: 'bgl', text: '公里', type: 'unit', label: '公里' },
-  { key: 'bm', text: '.', type: 'punct', label: '点' },
-  { key: 'b2m', text: ':', type: 'punct', label: '冒号' },
-  { key: 'bqk', text: '千卡', type: 'unit', label: '千卡' },
-  { key: 'bmi', text: '米', type: 'unit', label: '米' },
+// ============== 素材库定义 ==============
+const MATERIAL_GROUPS = [
+  {
+    title: '基础数字组（b系列）',
+    items: [
+      { key: 'b0', text: '0', style: 'b' }, { key: 'b1', text: '1', style: 'b' },
+      { key: 'b2', text: '2', style: 'b' }, { key: 'b3', text: '3', style: 'b' },
+      { key: 'b4', text: '4', style: 'b' }, { key: 'b5', text: '5', style: 'b' },
+      { key: 'b6', text: '6', style: 'b' }, { key: 'b7', text: '7', style: 'b' },
+      { key: 'b8', text: '8', style: 'b' }, { key: 'b9', text: '9', style: 'b' },
+      { key: 'bgl', text: '公里', style: 'unit' },
+      { key: 'bm', text: '.', style: 'b' },
+      { key: 'b2m', text: ':', style: 'b' },
+      { key: 'bqk', text: '千卡', style: 'unit' },
+      { key: 'bmi', text: '米', style: 'unit' }
+    ]
+  },
+  {
+    title: '通用数字组',
+    items: [
+      { key: '0', text: '0', style: 'normal' }, { key: '1', text: '1', style: 'normal' },
+      { key: '2', text: '2', style: 'normal' }, { key: '3', text: '3', style: 'normal' },
+      { key: '4', text: '4', style: 'normal' }, { key: '5', text: '5', style: 'normal' },
+      { key: '6', text: '6', style: 'normal' }, { key: '7', text: '7', style: 'normal' },
+      { key: '8', text: '8', style: 'normal' }, { key: '9', text: '9', style: 'normal' },
+      { key: 'ceng', text: '层', style: 'unit' },
+      { key: 'ge', text: '个', style: 'unit' },
+      { key: 'hm', text: '毫秒', style: 'unit' },
+      { key: 'mi', text: '米', style: 'unit' },
+      { key: 'ps1', text: '配速', style: 'unit' },
+      { key: 'ps2', text: "''", style: 'unit' },
+      { key: 'qk', text: '千卡', style: 'unit' },
+      { key: 'qks', text: '千米/时', style: 'unit' },
+      { key: 'tang', text: '趟', style: 'unit' },
+      { key: 'wa', text: '瓦', style: 'unit' },
+      { key: 'm', text: '.', style: 'normal' },
+      { key: '2m', text: ':', style: 'normal' }
+    ]
+  }
 ];
-const MATERIALS_GROUP2 = [
-  { key: '0', text: '0', type: 'number', label: '0' },
-  { key: '1', text: '1', type: 'number', label: '1' },
-  { key: '2', text: '2', type: 'number', label: '2' },
-  { key: '3', text: '3', type: 'number', label: '3' },
-  { key: '4', text: '4', type: 'number', label: '4' },
-  { key: '5', text: '5', type: 'number', label: '5' },
-  { key: '6', text: '6', type: 'number', label: '6' },
-  { key: '7', text: '7', type: 'number', label: '7' },
-  { key: '8', text: '8', type: 'number', label: '8' },
-  { key: '9', text: '9', type: 'number', label: '9' },
-  { key: 'ceng', text: '层', type: 'unit', label: '层' },
-  { key: 'ge', text: '个', type: 'unit', label: '个' },
-  { key: 'hm', text: '毫秒', type: 'unit', label: '毫秒' },
-  { key: 'mi', text: '米', type: 'unit', label: '米' },
-  { key: 'ps1', text: "配速'", type: 'unit', label: "配速'" },
-  { key: 'ps2', text: '配速"', type: 'unit', label: '配速"' },
-  { key: 'qk', text: '千卡', type: 'unit', label: '千卡' },
-  { key: 'qks', text: '千米/时', type: 'unit', label: '千米/时' },
-  { key: 'tang', text: '趟', type: 'unit', label: '趟' },
-  { key: 'wa', text: '瓦', type: 'unit', label: '瓦' },
-  { key: 'm', text: '.', type: 'punct', label: '点' },
-  { key: '2m', text: ':', type: 'punct', label: '冒号' },
-];
-const MATERIAL_CACHE = {};
 
-function generateMaterialCanvas(def) {
-  const c = document.createElement('canvas');
-  let w, h;
-  if (def.type === 'number') { w = 60; h = 80; }
-  else if (def.type === 'punct') { w = 30; h = 80; }
-  else { w = Math.max(40, def.text.length * 32); h = 40; }
-  c.width = w; c.height = h;
-  const cx = c.getContext('2d');
-  cx.fillStyle = '#FFFFFF';
-  cx.fillRect(0, 0, w, h);
-  cx.fillStyle = '#000000';
-  if (def.type === 'number') cx.font = 'bold 70px "Space Grotesk", Arial, sans-serif';
-  else if (def.type === 'punct') cx.font = 'bold 60px "Space Grotesk", Arial, sans-serif';
-  else cx.font = 'bold 30px "Space Grotesk", Arial, sans-serif';
-  cx.textAlign = 'center';
-  cx.textBaseline = 'middle';
-  cx.fillText(def.text, w/2, h/2 + 3);
-  return c;
+// ============== 生成素材图片 ==============
+function generateMaterialCanvas(item) {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  const padding = 4;
+  let fontSize, fontWeight, color, fontFamily;
+  if (item.style === 'b') {
+    fontSize = 80; fontWeight = '700'; color = '#1a1a1a'; fontFamily = 'Oswald, sans-serif';
+  } else if (item.style === 'normal') {
+    fontSize = 80; fontWeight = '700'; color = '#E63946'; fontFamily = 'Oswald, sans-serif';
+  } else {
+    fontSize = 32; fontWeight = '600'; color = '#333333'; fontFamily = 'Noto Sans SC, sans-serif';
+  }
+  ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+  const metrics = ctx.measureText(item.text);
+  const w = Math.max(8, Math.ceil(metrics.width) + padding * 2);
+  const h = Math.ceil(fontSize * 1.25) + padding * 2;
+  canvas.width = w; canvas.height = h;
+  ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
+  ctx.fillStyle = color;
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'left';
+  ctx.fillText(item.text, padding, h / 2);
+  return canvas;
 }
-function initMaterials() {
-  [...MATERIALS_GROUP1, ...MATERIALS_GROUP2].forEach(def => {
-    MATERIAL_CACHE[def.key] = { def, canvas: generateMaterialCanvas(def) };
+
+const materialCanvases = {};
+function initMaterialsLib() {
+  MATERIAL_GROUPS.forEach(group => {
+    group.items.forEach(item => {
+      materialCanvases[item.key] = generateMaterialCanvas(item);
+    });
   });
 }
 
-// ==================== 全局状态 ====================
+function renderMaterialsPanel() {
+  const panel = document.getElementById('materials-panel');
+  let html = '';
+  MATERIAL_GROUPS.forEach((group, gIdx) => {
+    html += `<h3 class="section-title">${group.title}</h3>`;
+    html += `<div class="materials-grid">`;
+    group.items.forEach(item => {
+      const canvas = materialCanvases[item.key];
+      const dataUrl = canvas.toDataURL();
+      html += `
+        <div class="material-item" data-key="${item.key}" title="${item.text}">
+          <img src="${dataUrl}" alt="${item.text}">
+          <div class="label">${item.key}</div>
+        </div>`;
+    });
+    html += `</div>`;
+    if (gIdx < MATERIAL_GROUPS.length - 1) html += `<div class="divider"></div>`;
+  });
+  panel.innerHTML = html;
+  panel.querySelectorAll('.material-item').forEach(el => {
+    el.addEventListener('click', () => {
+      if (!state.baseImage) {
+        showToast('请先上传底图', 'error');
+        return;
+      }
+      placeMaterial(el.dataset.key);
+    });
+  });
+}
+
+// ============== 状态 ==============
 const state = {
   baseImage: null,
-  materials: [],
-  eraserRects: [],
-  history: [],
-  defaultScale: 100,
+  baseImageData: null,
+  canvas: null,
+  ctx: null,
+  canvasWidth: 800,
+  canvasHeight: 600,
   canvasZoom: 1,
-  showAvatar: false,
-  showUsername: false,
-  showDate: true,
-  avatarImage: null,
-  username: '用户名61515321',
-  date: { year: 2025, month: 6, day: 4, start: '16:08', end: '16:43' },
+  materials: [],
   customInfo: {
-    avatar: { x: 30, y: 30, scale: 1 },
-    username: { x: 134, y: 57, scale: 1 },
-    date: { x: 30, y: 30, scale: 1 }
+    avatar: { visible: false, image: null, x: 130, y: 130, scale: 1, id: 'avatar', type: 'avatar' },
+    username: { visible: false, text: '用户名61515321', x: 250, y: 110, scale: 1, id: 'username', type: 'username' },
+    datetime: { visible: true, year: 2025, month: 6, day: 4, startTime: '16:08', endTime: '16:43', x: 250, y: 160, scale: 1, id: 'datetime', type: 'datetime' }
   },
   selected: null,
   eraseMode: false,
-  isDragging: false,
-  isErasing: false,
-  isResizing: false,
-  eraseStart: null,
-  eraseCurrent: null,
-  dragOffset: null,
-  shiftPressed: false,
-  resizeOriginal: null,
-  resizeStartScale: null,
-  alignLines: [],
-  aligned: false,
+  eraseRect: null,
+  isMouseDown: false,
+  dragMode: null,
+  dragStart: { x: 0, y: 0 },
+  elementStart: { x: 0, y: 0, scale: 1 },
+  resizeInitialDist: 0,
+  defaultScale: 100,
+  history: [],
+  alignGuides: [],
+  shiftKey: false
 };
-let materialCounter = 0;
-let canvas, ctx;
-let renderQueued = false;
 
-// ==================== 渲染素材列表 ====================
-function renderMaterialList() {
-  const list = document.getElementById('materialList');
-  list.innerHTML = '';
-  const g1 = document.createElement('div');
-  g1.className = 'material-group';
-  g1.innerHTML = '<div class="material-group-title"><span>第一组 · B系列 (15)</span></div>';
-  const g1grid = document.createElement('div');
-  g1grid.className = 'material-grid';
-  MATERIALS_GROUP1.forEach(def => g1grid.appendChild(createMaterialItem(def)));
-  g1.appendChild(g1grid);
-  list.appendChild(g1);
-  const g2 = document.createElement('div');
-  g2.className = 'material-group';
-  g2.innerHTML = '<div class="material-group-title"><span>第二组 · 数字与单位 (22)</span></div>';
-  const g2grid = document.createElement('div');
-  g2grid.className = 'material-grid';
-  MATERIALS_GROUP2.forEach(def => g2grid.appendChild(createMaterialItem(def)));
-  g2.appendChild(g2grid);
-  list.appendChild(g2);
-}
-function createMaterialItem(def) {
-  const item = document.createElement('div');
-  item.className = 'material-item';
-  item.title = def.label;
-  const cached = MATERIAL_CACHE[def.key];
-  const thumb = document.createElement('canvas');
-  const maxW = 50, maxH = 40;
-  const scale = Math.min(maxW / cached.canvas.width, maxH / cached.canvas.height, 1);
-  thumb.width = Math.max(1, Math.round(cached.canvas.width * scale));
-  thumb.height = Math.max(1, Math.round(cached.canvas.height * scale));
-  thumb.getContext('2d').drawImage(cached.canvas, 0, 0, thumb.width, thumb.height);
-  thumb.className = 'material-thumb';
-  const label = document.createElement('div');
-  label.className = 'material-label';
-  label.textContent = def.label;
-  item.appendChild(thumb);
-  item.appendChild(label);
-  item.addEventListener('click', () => {
-    addMaterialToCanvas(def.key);
-    item.classList.add('flash');
-    setTimeout(() => item.classList.remove('flash'), 400);
-  });
-  return item;
+// ============== 初始化 ==============
+function init() {
+  state.canvas = document.getElementById('main-canvas');
+  state.ctx = state.canvas.getContext('2d');
+  initMaterialsLib();
+  renderMaterialsPanel();
+  setupEvents();
+  state.ctx.fillStyle = '#FFFFFF';
+  state.ctx.fillRect(0, 0, state.canvasWidth, state.canvasHeight);
+  updateStatus('就绪');
 }
 
-// ==================== Canvas 渲染 ====================
-function scheduleRender() {
-  if (renderQueued) return;
-  renderQueued = true;
-  requestAnimationFrame(() => { renderQueued = false; render(); });
+// ============== 工具函数 ==============
+function getCanvasCoords(e) {
+  const rect = state.canvas.getBoundingClientRect();
+  const scaleX = state.canvas.width / rect.width;
+  const scaleY = state.canvas.height / rect.height;
+  let clientX, clientY;
+  if (e.touches && e.touches.length > 0) {
+    clientX = e.touches[0].clientX; clientY = e.touches[0].clientY;
+  } else if (e.changedTouches && e.changedTouches.length > 0) {
+    clientX = e.changedTouches[0].clientX; clientY = e.changedTouches[0].clientY;
+  } else {
+    clientX = e.clientX; clientY = e.clientY;
+  }
+  return {
+    x: (clientX - rect.left) * scaleX,
+    y: (clientY - rect.top) * scaleY
+  };
 }
+
+function getElementBounds(el) {
+  let w, h;
+  const ctx = state.ctx;
+  if (el.type === 'material') {
+    w = el.originalWidth * el.scale;
+    h = el.originalHeight * el.scale;
+  } else if (el.type === 'avatar') {
+    w = 96 * el.scale;
+    h = 96 * el.scale;
+  } else if (el.type === 'username') {
+    ctx.font = `500 ${43 * el.scale}px 'Noto Sans SC', sans-serif`;
+    w = ctx.measureText(el.text || '用户名').width;
+    h = 43 * el.scale * 1.2;
+  } else if (el.type === 'datetime') {
+    const text = formatDateTime(el);
+    ctx.font = `${39 * el.scale}px 'Noto Sans SC', sans-serif`;
+    w = ctx.measureText(text).width;
+    h = 39 * el.scale * 1.2;
+  }
+  return { x: el.x - w/2, y: el.y - h/2, w, h };
+}
+
+function formatDateTime(el) {
+  return `${el.year}/${String(el.month).padStart(2,'0')}/${String(el.day).padStart(2,'0')} ${el.startTime} - ${el.endTime}`;
+}
+
+function getResizeHandle(el) {
+  const b = getElementBounds(el);
+  return { x: b.x + b.w, y: b.y + b.h };
+}
+
+function hitTest(x, y) {
+  if (state.selected) {
+    const handle = getResizeHandle(state.selected);
+    const dx = x - handle.x;
+    const dy = y - handle.y;
+    if (Math.sqrt(dx*dx + dy*dy) < 14) return { type: 'resize', el: state.selected };
+  }
+  const elements = [
+    ...state.materials.slice().reverse(),
+    ...(state.customInfo.avatar.visible ? [state.customInfo.avatar] : []),
+    ...(state.customInfo.username.visible ? [state.customInfo.username] : []),
+    ...(state.customInfo.datetime.visible ? [state.customInfo.datetime] : [])
+  ];
+  for (const el of elements) {
+    const b = getElementBounds(el);
+    if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) {
+      return { type: 'element', el };
+    }
+  }
+  return null;
+}
+
+// ============== 渲染 ==============
 function render() {
-  if (!state.baseImage) return;
-  const w = state.baseImage.width;
-  const h = state.baseImage.height;
-  if (canvas.width !== w) canvas.width = w;
-  if (canvas.height !== h) canvas.height = h;
-  document.getElementById('canvasContainer').style.transform = `scale(${state.canvasZoom})`;
+  const ctx = state.ctx;
+  ctx.clearRect(0, 0, state.canvasWidth, state.canvasHeight);
   ctx.fillStyle = '#FFFFFF';
-  ctx.fillRect(0, 0, w, h);
-  ctx.drawImage(state.baseImage, 0, 0);
-  state.eraserRects.forEach(rect => {
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
-  });
-  state.materials.forEach(m => {
-    const cached = MATERIAL_CACHE[m.key];
-    ctx.drawImage(cached.canvas, m.x, m.y, m.originalWidth * m.scale, m.originalHeight * m.scale);
-  });
-  if (state.showDate) drawDate(ctx);
-  if (state.showAvatar) drawAvatar(ctx);
-  if (state.showUsername) drawUsername(ctx);
-  if (state.eraseMode && state.eraseStart && state.eraseCurrent) {
-    const x1 = Math.min(state.eraseStart.x, state.eraseCurrent.x);
-    const y1 = Math.min(state.eraseStart.y, state.eraseCurrent.y);
-    const x2 = Math.max(state.eraseStart.x, state.eraseCurrent.x);
-    const y2 = Math.max(state.eraseStart.y, state.eraseCurrent.y);
+  ctx.fillRect(0, 0, state.canvasWidth, state.canvasHeight);
+  if (state.baseImageData) {
+    ctx.putImageData(state.baseImageData, 0, 0);
+  }
+  if (state.eraseRect) {
     ctx.fillStyle = 'rgba(33, 150, 243, 0.3)';
-    ctx.fillRect(x1, y1, x2 - x1, y2 - y1);
+    ctx.fillRect(state.eraseRect.x, state.eraseRect.y, state.eraseRect.w, state.eraseRect.h);
     ctx.strokeStyle = '#2196F3';
-    ctx.lineWidth = 1;
     ctx.setLineDash([6, 3]);
-    ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(state.eraseRect.x, state.eraseRect.y, state.eraseRect.w, state.eraseRect.h);
     ctx.setLineDash([]);
   }
-  state.alignLines.forEach(line => {
-    ctx.strokeStyle = line.color;
+  state.materials.forEach(m => drawElement(m));
+  if (state.customInfo.avatar.visible) drawElement(state.customInfo.avatar);
+  if (state.customInfo.username.visible) drawElement(state.customInfo.username);
+  if (state.customInfo.datetime.visible) drawElement(state.customInfo.datetime);
+  state.alignGuides.forEach(g => {
+    ctx.strokeStyle = g.highlight ? '#1976D2' : '#2196F3';
     ctx.lineWidth = 2;
-    ctx.setLineDash([6, 3]);
+    ctx.setLineDash([4, 4]);
     ctx.beginPath();
-    if (line.orient === 'v') { ctx.moveTo(line.pos, 0); ctx.lineTo(line.pos, canvas.height); }
-    else { ctx.moveTo(0, line.pos); ctx.lineTo(canvas.width, line.pos); }
+    ctx.moveTo(g.x, 0);
+    ctx.lineTo(g.x, state.canvasHeight);
     ctx.stroke();
     ctx.setLineDash([]);
   });
-  if (state.selected) drawSelection(ctx, state.selected);
+  if (state.selected) drawSelection(state.selected);
 }
-function drawAvatar(c) {
-  const a = state.customInfo.avatar;
-  const size = Math.max(2, 96 * a.scale);
-  c.save();
-  c.beginPath();
-  c.arc(a.x + size/2, a.y + size/2, Math.max(1, size/2), 0, Math.PI * 2);
-  c.closePath();
-  if (state.avatarImage) {
-    c.clip();
-    c.drawImage(state.avatarImage, a.x, a.y, size, size);
+
+function drawElement(el) {
+  const ctx = state.ctx;
+  if (el.type === 'material') {
+    const b = getElementBounds(el);
+    ctx.drawImage(el.canvas, b.x, b.y, b.w, b.h);
+  } else if (el.type === 'avatar') {
+    drawAvatar(el);
+  } else if (el.type === 'username') {
+    ctx.font = `500 ${43 * el.scale}px 'Noto Sans SC', sans-serif`;
+    ctx.fillStyle = '#000000';
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left';
+    const b = getElementBounds(el);
+    ctx.fillText(el.text, b.x, el.y);
+  } else if (el.type === 'datetime') {
+    const text = formatDateTime(el);
+    ctx.font = `${39 * el.scale}px 'Noto Sans SC', sans-serif`;
+    ctx.fillStyle = '#888888';
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left';
+    const b = getElementBounds(el);
+    ctx.fillText(text, b.x, el.y);
+  }
+}
+
+function drawAvatar(avatar) {
+  const ctx = state.ctx;
+  const size = 96 * avatar.scale;
+  const x = avatar.x - size/2;
+  const y = avatar.y - size/2;
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(avatar.x, avatar.y, size/2, 0, Math.PI * 2);
+  ctx.closePath();
+  ctx.clip();
+  if (avatar.image) {
+    const img = avatar.image;
+    const minDim = Math.min(img.width, img.height);
+    const sx = (img.width - minDim) / 2;
+    const sy = (img.height - minDim) / 2;
+    ctx.drawImage(img, sx, sy, minDim, minDim, x, y, size, size);
   } else {
-    c.fillStyle = '#CCCCCC';
-    c.fill();
-    const cx = a.x + size/2;
-    const cy = a.y + size/2;
-    c.fillStyle = '#FFFFFF';
-    c.beginPath();
-    c.arc(cx, cy - size*0.12, Math.max(1, size*0.16), 0, Math.PI * 2);
-    c.fill();
-    c.beginPath();
-    c.ellipse(cx, cy + size*0.18, Math.max(1, size*0.26), Math.max(1, size*0.18), 0, 0, Math.PI * 2);
-    c.fill();
+    ctx.fillStyle = '#CCCCCC';
+    ctx.fillRect(x, y, size, size);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc(avatar.x, avatar.y - size*0.15, size*0.16, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(avatar.x, avatar.y + size*0.3, size*0.28, Math.PI, 0);
+    ctx.fill();
   }
-  c.strokeStyle = '#00C853';
-  c.lineWidth = 2;
-  c.beginPath();
-  c.arc(a.x + size/2, a.y + size/2, Math.max(1, size/2 - 1), 0, Math.PI * 2);
-  c.stroke();
-  c.restore();
+  ctx.restore();
+  ctx.strokeStyle = '#00C853';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(avatar.x, avatar.y, size/2, 0, Math.PI * 2);
+  ctx.stroke();
 }
-function drawUsername(c) {
-  const u = state.customInfo.username;
-  c.save();
-  c.fillStyle = '#000000';
-  c.font = `500 ${43 * u.scale}px "Manrope", sans-serif`;
-  c.textAlign = 'left';
-  c.textBaseline = 'top';
-  c.fillText(state.username, u.x, u.y);
-  c.restore();
+
+function drawSelection(el) {
+  const ctx = state.ctx;
+  const b = getElementBounds(el);
+  ctx.strokeStyle = '#2196F3';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([6, 3]);
+  ctx.strokeRect(b.x - 1, b.y - 1, b.w + 2, b.h + 2);
+  ctx.setLineDash([]);
+  ctx.fillStyle = '#2196F3';
+  const corners = [
+    { x: b.x, y: b.y }, { x: b.x + b.w, y: b.y },
+    { x: b.x, y: b.y + b.h }, { x: b.x + b.w, y: b.y + b.h }
+  ];
+  corners.forEach(c => { ctx.fillRect(c.x - 3, c.y - 3, 6, 6); });
+  ctx.fillStyle = '#00C853';
+  ctx.beginPath();
+  ctx.arc(b.x + b.w, b.y + b.h, 7, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#FFFFFF';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
 }
-function getDateString() {
-  const d = state.date;
-  return `${d.year}/${String(d.month).padStart(2,'0')}/${String(d.day).padStart(2,'0')} ${d.start} - ${d.end}`;
-}
-function drawDate(c) {
-  const d = state.customInfo.date;
-  c.save();
-  c.fillStyle = '#888888';
-  c.font = `${39 * d.scale}px "Manrope", sans-serif`;
-  c.textAlign = 'left';
-  c.textBaseline = 'top';
-  c.fillText(getDateString(), d.x, d.y);
-  c.restore();
-}
-function getSelectedBounds(sel) {
-  if (!sel) return null;
-  if (sel.type === 'material') {
-    const m = state.materials.find(x => x.id === sel.id);
-    if (!m) return null;
-    return { x: m.x, y: m.y, w: m.originalWidth * m.scale, h: m.originalHeight * m.scale };
-  }
-  if (sel.type === 'avatar') {
-    const a = state.customInfo.avatar;
-    const s = 96 * a.scale;
-    return { x: a.x, y: a.y, w: s, h: s };
-  }
-  if (sel.type === 'username') {
-    const u = state.customInfo.username;
-    ctx.font = `500 ${43 * u.scale}px "Manrope", sans-serif`;
-    const w = ctx.measureText(state.username).width;
-    return { x: u.x, y: u.y, w: Math.max(20, w), h: 43 * u.scale * 1.2 };
-  }
-  if (sel.type === 'date') {
-    const d = state.customInfo.date;
-    ctx.font = `${39 * d.scale}px "Manrope", sans-serif`;
-    const w = ctx.measureText(getDateString()).width;
-    return { x: d.x, y: d.y, w: Math.max(20, w), h: 39 * d.scale * 1.2 };
-  }
-  return null;
-}
-function getResizeHandlePos(sel) {
-  const b = getSelectedBounds(sel);
-  if (!b) return null;
-  return { x: b.x + b.w, y: b.y + b.h };
-}
-function drawSelection(c, sel) {
-  const b = getSelectedBounds(sel);
-  if (!b) return;
-  c.save();
-  c.strokeStyle = '#2196F3';
-  c.lineWidth = 2;
-  c.setLineDash([6, 3]);
-  c.strokeRect(b.x, b.y, b.w, b.h);
-  c.setLineDash([]);
-  c.fillStyle = '#2196F3';
-  [[b.x, b.y], [b.x + b.w, b.y], [b.x, b.y + b.h], [b.x + b.w, b.y + b.h]].forEach(([x, y]) => {
-    c.fillRect(x - 3, y - 3, 6, 6);
+
+// ============== 事件处理 ==============
+function setupEvents() {
+  const canvas = state.canvas;
+  canvas.addEventListener('mousedown', onPointerDown);
+  canvas.addEventListener('mousemove', onPointerMove);
+  canvas.addEventListener('mouseup', onPointerUp);
+  canvas.addEventListener('mouseleave', onPointerUp);
+  canvas.addEventListener('contextmenu', e => {
+    e.preventDefault();
+    if (state.eraseRect) {
+      state.eraseRect = null;
+      state.dragMode = null;
+      state.isMouseDown = false;
+      render();
+    }
   });
-  c.fillStyle = '#00C853';
-  c.beginPath();
-  c.arc(b.x + b.w, b.y + b.h, 7, 0, Math.PI * 2);
-  c.fill();
-  c.strokeStyle = '#FFFFFF';
-  c.lineWidth = 1.5;
-  c.stroke();
-  c.restore();
-}
+  canvas.addEventListener('touchstart', onPointerDown, { passive: false });
+  canvas.addEventListener('touchmove', onPointerMove, { passive: false });
+  canvas.addEventListener('touchend', onPointerUp);
+  document.addEventListener('keydown', onKeyDown);
+  document.addEventListener('keyup', e => { state.shiftKey = e.shiftKey; });
 
-// ==================== 工具函数 ====================
-function getCanvasPos(e) {
-  const rect = canvas.getBoundingClientRect();
-  const clientX = e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
-  const clientY = e.clientY !== undefined ? e.clientY : (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
-  return { x: (clientX - rect.left) / state.canvasZoom, y: (clientY - rect.top) / state.canvasZoom };
-}
-function pointInRect(p, r) { return p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h; }
-function distance(p1, p2) { return Math.sqrt((p1.x - p2.x)**2 + (p1.y - p2.y)**2); }
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(t._timer);
-  t._timer = setTimeout(() => t.classList.remove('show'), 2200);
-}
-function getSelectedScale(sel) {
-  if (!sel) return null;
-  if (sel.type === 'material') {
-    const m = state.materials.find(x => x.id === sel.id);
-    return m ? m.scale : null;
-  }
-  if (sel.type === 'avatar') return state.customInfo.avatar.scale;
-  if (sel.type === 'username') return state.customInfo.username.scale;
-  if (sel.type === 'date') return state.customInfo.date.scale;
-  return null;
-}
-function updateStatus() {
-  document.getElementById('statusCount').textContent = state.materials.length;
-  document.getElementById('metaCount').textContent = state.materials.length;
-  document.getElementById('metaErase').textContent = state.eraserRects.length;
-  document.getElementById('metaHistory').textContent = state.history.length;
-  document.getElementById('statusZoom').textContent = Math.round(state.canvasZoom * 100) + '%';
-  document.getElementById('zoomDisplay').textContent = Math.round(state.canvasZoom * 100) + '%';
-  const selScale = getSelectedScale(state.selected);
-  document.getElementById('statusSelScale').textContent = selScale ? Math.round(selScale * 100) + '%' : '—';
-  const dot = document.getElementById('statusDot');
-  const text = document.getElementById('statusText');
-  const mode = document.getElementById('statusMode');
-  if (state.eraseMode) {
-    dot.className = 'status-dot warn';
-    text.textContent = '抹平模式 · 拖拽框选区域';
-    mode.textContent = '抹平';
-  } else if (state.baseImage) {
-    dot.className = 'status-dot active';
-    text.textContent = '编辑中';
-    mode.textContent = '正常';
-  } else {
-    dot.className = 'status-dot';
-    text.textContent = '等待上传底图';
-    mode.textContent = '空闲';
-  }
-}
+  document.getElementById('upload-btn').onclick = () => document.getElementById('file-input').click();
+  document.getElementById('file-input').onchange = onUploadBaseImage;
+  document.getElementById('erase-btn').onclick = toggleEraseMode;
+  document.getElementById('undo-btn').onclick = undo;
+  document.getElementById('reset-btn').onclick = confirmReset;
+  document.getElementById('export-btn').onclick = exportJPG;
+  document.getElementById('scale-inc').onclick = () => adjustScaleInput(10);
+  document.getElementById('scale-dec').onclick = () => adjustScaleInput(-10);
+  document.getElementById('scale-input').onchange = onScaleInputChange;
+  document.getElementById('set-default-scale').onclick = setAsDefaultScale;
+  document.getElementById('zoom-in').onclick = () => setCanvasZoom(state.canvasZoom * 1.2);
+  document.getElementById('zoom-out').onclick = () => setCanvasZoom(state.canvasZoom / 1.2);
+  document.getElementById('zoom-fit').onclick = fitCanvasToWindow;
+  window.addEventListener('resize', () => { if (state.baseImage) fitCanvasToWindow(); });
 
-// ==================== 缩放比例确认提示 ====================
-function showScaleConfirm(currentScale) {
-  const card = document.getElementById('scaleConfirm');
-  document.getElementById('confirmScaleValue').textContent = currentScale;
-  card.classList.add('show');
-  clearTimeout(card._timer);
-  card._timer = setTimeout(() => card.classList.remove('show'), 15000);
-}
-function hideScaleConfirm() {
-  document.getElementById('scaleConfirm').classList.remove('show');
-}
-
-// ==================== 素材操作 ====================
-function addMaterialToCanvas(key) {
-  if (!state.baseImage) { showToast('请先上传底图'); return; }
-  const cached = MATERIAL_CACHE[key];
-  const scale = state.defaultScale / 100;
-  const w = cached.canvas.width * scale;
-  const h = cached.canvas.height * scale;
-  const cx = state.baseImage.width / 2;
-  const cy = state.baseImage.height / 2;
-  const m = {
-    id: 'm' + (++materialCounter),
-    type: 'material',
-    key,
-    x: cx - w/2,
-    y: cy - h/2,
-    scale,
-    originalWidth: cached.canvas.width,
-    originalHeight: cached.canvas.height,
+  document.getElementById('show-avatar').onchange = e => {
+    state.customInfo.avatar.visible = e.target.checked;
+    document.getElementById('avatar-control').classList.toggle('hidden', !e.target.checked);
+    document.getElementById('avatar-tag').classList.toggle('on', e.target.checked);
+    document.getElementById('avatar-tag').textContent = e.target.checked ? '开' : '关';
+    if (e.target.checked) pushHistory();
+    render();
   };
-  state.materials.push(m);
-  state.history.push({ type: 'addMaterial', id: m.id });
-  state.selected = { type: 'material', id: m.id };
-  scheduleRender();
-  updateStatus();
-  showToast(`已添加素材 · 当前默认比例 ${state.defaultScale}%`);
+  document.getElementById('show-username').onchange = e => {
+    state.customInfo.username.visible = e.target.checked;
+    document.getElementById('username-control').classList.toggle('hidden', !e.target.checked);
+    document.getElementById('username-tag').classList.toggle('on', e.target.checked);
+    document.getElementById('username-tag').textContent = e.target.checked ? '开' : '关';
+    if (e.target.checked) pushHistory();
+    render();
+  };
+  document.getElementById('show-datetime').onchange = e => {
+    state.customInfo.datetime.visible = e.target.checked;
+    document.getElementById('datetime-tag').classList.toggle('on', e.target.checked);
+    document.getElementById('datetime-tag').textContent = e.target.checked ? '开' : '关';
+    pushHistory();
+    render();
+  };
+  document.getElementById('upload-avatar-btn').onclick = () => document.getElementById('avatar-input').click();
+  document.getElementById('avatar-input').onchange = onUploadAvatar;
+  document.getElementById('delete-avatar-btn').onclick = deleteAvatar;
+  document.getElementById('username-input').oninput = e => {
+    state.customInfo.username.text = e.target.value || '用户名61515321';
+    render();
+  };
+  ['year-input', 'month-input', 'day-input', 'start-time', 'end-time'].forEach(id => {
+    document.getElementById(id).oninput = () => {
+      const d = state.customInfo.datetime;
+      d.year = parseInt(document.getElementById('year-input').value) || 2025;
+      d.month = parseInt(document.getElementById('month-input').value) || 1;
+      d.day = parseInt(document.getElementById('day-input').value) || 1;
+      d.startTime = document.getElementById('start-time').value || '00:00';
+      d.endTime = document.getElementById('end-time').value || '00:00';
+      render();
+    };
+  });
 }
 
-// ==================== 鼠标事件 ====================
-function onCanvasDown(e) {
+function onPointerDown(e) {
+  e.preventDefault();
   if (!state.baseImage) return;
-  if (e.preventDefault) e.preventDefault();
-  hideScaleConfirm();
-  const pos = getCanvasPos(e);
+  const pos = getCanvasCoords(e);
+  state.isMouseDown = true;
+  state.dragStart = pos;
   if (state.eraseMode) {
-    state.isErasing = true;
-    state.eraseStart = pos;
-    state.eraseCurrent = pos;
+    state.dragMode = 'erase';
+    state.eraseRect = { x: pos.x, y: pos.y, w: 0, h: 0 };
     return;
   }
-  if (state.selected) {
-    const hp = getResizeHandlePos(state.selected);
-    const hitR = Math.min(40, Math.max(8, 12 / state.canvasZoom));
-    if (hp && distance(pos, hp) < hitR) {
-      state.isResizing = true;
-      const b = getSelectedBounds(state.selected);
-      const cx = b.x + b.w/2;
-      const cy = b.y + b.h/2;
-      state.resizeStartScale = getSelectedScale(state.selected);
-      let origScale = 1;
-      if (state.selected.type === 'material') {
-        const m = state.materials.find(x => x.id === state.selected.id);
-        if (m) origScale = m.scale;
-      } else if (state.selected.type === 'avatar') origScale = state.customInfo.avatar.scale;
-      else if (state.selected.type === 'username') origScale = state.customInfo.username.scale;
-      else if (state.selected.type === 'date') origScale = state.customInfo.date.scale;
-      state.resizeOriginal = { bounds: b, cx, cy, scale: origScale };
-      return;
-    }
-  }
-  const hit = hitTest(pos);
-  if (hit) {
-    state.selected = hit;
-    if (hit.type === 'material') {
-      const idx = state.materials.findIndex(m => m.id === hit.id);
-      if (idx >= 0) {
-        const m = state.materials.splice(idx, 1)[0];
-        state.materials.push(m);
+  const hit = hitTest(pos.x, pos.y);
+  if (hit && hit.type === 'resize') {
+    state.selected = hit.el;
+    state.dragMode = 'resize';
+    state.elementStart = { x: hit.el.x, y: hit.el.y, scale: hit.el.scale };
+    const dx = pos.x - hit.el.x;
+    const dy = pos.y - hit.el.y;
+    state.resizeInitialDist = Math.max(1, Math.sqrt(dx*dx + dy*dy));
+  } else if (hit && hit.type === 'element') {
+    if (state.selected !== hit.el) {
+      state.selected = hit.el;
+      if (hit.el.type === 'material') {
+        const idx = state.materials.indexOf(hit.el);
+        if (idx >= 0) {
+          state.materials.splice(idx, 1);
+          state.materials.push(hit.el);
+        }
       }
     }
-    state.isDragging = true;
-    const b = getSelectedBounds(hit);
-    state.dragOffset = { x: pos.x - b.x, y: pos.y - b.y };
-    document.getElementById('canvasContainer').classList.add('dragging');
+    state.dragMode = 'move';
+    state.elementStart = { x: hit.el.x, y: hit.el.y };
+    updateScaleInputFromSelection();
   } else {
     state.selected = null;
+    state.dragMode = null;
   }
-  updateStatus();
-  scheduleRender();
-}
-function onCanvasMove(e) {
-  if (!state.baseImage) return;
-  const pos = getCanvasPos(e);
-  document.getElementById('statusCoord').textContent = `${Math.round(pos.x)}, ${Math.round(pos.y)}`;
-  if (state.isErasing) { state.eraseCurrent = pos; scheduleRender(); return; }
-  if (state.isResizing) { handleResize(pos); return; }
-  if (state.isDragging && state.selected) { handleDrag(pos); return; }
-}
-function onCanvasUp(e) {
-  if (state.isErasing) {
-    const x1 = Math.min(state.eraseStart.x, state.eraseCurrent.x);
-    const y1 = Math.min(state.eraseStart.y, state.eraseCurrent.y);
-    const x2 = Math.max(state.eraseStart.x, state.eraseCurrent.x);
-    const y2 = Math.max(state.eraseStart.y, state.eraseCurrent.y);
-    if (x2 - x1 > 2 && y2 - y1 > 2) {
-      state.eraserRects.push({ x: x1, y: y1, w: x2 - x1, h: y2 - y1 });
-      state.history.push({ type: 'erase', index: state.eraserRects.length - 1 });
-      updateStatus();
-    }
-    state.isErasing = false;
-    state.eraseStart = null;
-    state.eraseCurrent = null;
-    scheduleRender();
-    return;
-  }
-  // 缩放结束 — 检测是否需要提示设为默认比例
-  if (state.isResizing && state.selected && state.resizeStartScale !== null) {
-    const newScale = getSelectedScale(state.selected);
-    if (newScale !== null) {
-      const newPercent = Math.round(newScale * 100);
-      const oldPercent = Math.round(state.resizeStartScale * 100);
-      const defaultPercent = state.defaultScale;
-      // 缩放变化超过3% 且 与当前默认比例不同时提示
-      if (Math.abs(newPercent - oldPercent) >= 3 && Math.abs(newPercent - defaultPercent) >= 3) {
-        showScaleConfirm(newPercent);
-      }
-    }
-  }
-  state.isDragging = false;
-  state.isResizing = false;
-  state.resizeStartScale = null;
-  state.alignLines = [];
-  document.getElementById('alignHint').classList.remove('show');
-  document.getElementById('canvasContainer').classList.remove('dragging');
-  updateStatus();
-  scheduleRender();
-}
-function hitTest(pos) {
-  if (state.showDate) { const b = getSelectedBounds({ type: 'date' }); if (b && pointInRect(pos, b)) return { type: 'date' }; }
-  if (state.showUsername) { const b = getSelectedBounds({ type: 'username' }); if (b && pointInRect(pos, b)) return { type: 'username' }; }
-  if (state.showAvatar) { const b = getSelectedBounds({ type: 'avatar' }); if (b && pointInRect(pos, b)) return { type: 'avatar' }; }
-  for (let i = state.materials.length - 1; i >= 0; i--) {
-    const m = state.materials[i];
-    const b = getSelectedBounds({ type: 'material', id: m.id });
-    if (b && pointInRect(pos, b)) return { type: 'material', id: m.id };
-  }
-  return null;
-}
-function handleDrag(pos) {
-  const sel = state.selected;
-  const b = getSelectedBounds(sel);
-  if (!b) return;
-  let newX = pos.x - state.dragOffset.x;
-  let newY = pos.y - state.dragOffset.y;
-  state.alignLines = [];
-  state.aligned = false;
-  if (!state.shiftPressed) {
-    const candidates = [];
-    state.materials.forEach(m => {
-      if (sel.type === 'material' && m.id === sel.id) return;
-      const bb = getSelectedBounds({ type: 'material', id: m.id });
-      if (bb) candidates.push(bb);
-    });
-    if (state.showAvatar && sel.type !== 'avatar') { const bb = getSelectedBounds({ type: 'avatar' }); if (bb) candidates.push(bb); }
-    if (state.showUsername && sel.type !== 'username') { const bb = getSelectedBounds({ type: 'username' }); if (bb) candidates.push(bb); }
-    if (state.showDate && sel.type !== 'date') { const bb = getSelectedBounds({ type: 'date' }); if (bb) candidates.push(bb); }
-    const myW = b.w, myH = b.h;
-    let bestDX = 10, bestDY = 10;
-    let alignX = null, alignY = null;
-    candidates.forEach(ob => {
-      const dx1 = newX - ob.x;
-      if (Math.abs(dx1) < bestDX) { bestDX = Math.abs(dx1); alignX = { pos: ob.x, type: 'left' }; }
-      const dx2 = (newX + myW) - (ob.x + ob.w);
-      if (Math.abs(dx2) < bestDX) { bestDX = Math.abs(dx2); alignX = { pos: ob.x + ob.w, type: 'right' }; }
-      const dcx = (newX + myW/2) - (ob.x + ob.w/2);
-      if (Math.abs(dcx) < bestDX) { bestDX = Math.abs(dcx); alignX = { pos: ob.x + ob.w/2, type: 'center' }; }
-      const dy1 = newY - ob.y;
-      if (Math.abs(dy1) < bestDY) { bestDY = Math.abs(dy1); alignY = { pos: ob.y, type: 'top' }; }
-      const dy2 = (newY + myH) - (ob.y + ob.h);
-      if (Math.abs(dy2) < bestDY) { bestDY = Math.abs(dy2); alignY = { pos: ob.y + ob.h, type: 'bottom' }; }
-      const dcy = (newY + myH/2) - (ob.y + ob.h/2);
-      if (Math.abs(dcy) < bestDY) { bestDY = Math.abs(dcy); alignY = { pos: ob.y + ob.h/2, type: 'vcenter' }; }
-    });
-    if (alignX) {
-      if (alignX.type === 'left') newX = alignX.pos;
-      else if (alignX.type === 'right') newX = alignX.pos - myW;
-      else if (alignX.type === 'center') newX = alignX.pos - myW/2;
-      state.alignLines.push({ orient: 'v', pos: alignX.pos, color: '#1976D2' });
-      state.aligned = true;
-    }
-    if (alignY) {
-      if (alignY.type === 'top') newY = alignY.pos;
-      else if (alignY.type === 'bottom') newY = alignY.pos - myH;
-      else if (alignY.type === 'vcenter') newY = alignY.pos - myH/2;
-      state.alignLines.push({ orient: 'h', pos: alignY.pos, color: '#1976D2' });
-      state.aligned = true;
-    }
-  }
-  if (sel.type === 'material') { const m = state.materials.find(x => x.id === sel.id); if (m) { m.x = newX; m.y = newY; } }
-  else if (sel.type === 'avatar') { state.customInfo.avatar.x = newX; state.customInfo.avatar.y = newY; }
-  else if (sel.type === 'username') { state.customInfo.username.x = newX; state.customInfo.username.y = newY; }
-  else if (sel.type === 'date') { state.customInfo.date.x = newX; state.customInfo.date.y = newY; }
-  document.getElementById('alignHint').classList.toggle('show', state.aligned);
-  scheduleRender();
-}
-function handleResize(pos) {
-  const sel = state.selected;
-  const orig = state.resizeOriginal;
-  if (!orig) return;
-  const dx = pos.x - orig.cx;
-  const dy = pos.y - orig.cy;
-  const newRadius = Math.sqrt(dx*dx + dy*dy);
-  const origRadius = Math.sqrt((orig.bounds.w/2)**2 + (orig.bounds.h/2)**2);
-  const ratio = newRadius / Math.max(1, origRadius);
-  let newScale = orig.scale * ratio;
-  newScale = Math.max(0.2, Math.min(3, newScale));
-  if (sel.type === 'material') {
-    const m = state.materials.find(x => x.id === sel.id);
-    if (m) {
-      m.scale = newScale;
-      m.x = orig.cx - m.originalWidth * newScale / 2;
-      m.y = orig.cy - m.originalHeight * newScale / 2;
-    }
-  } else if (sel.type === 'avatar') {
-    const size = 96 * newScale;
-    state.customInfo.avatar.scale = newScale;
-    state.customInfo.avatar.x = orig.cx - size/2;
-    state.customInfo.avatar.y = orig.cy - size/2;
-  } else if (sel.type === 'username') {
-    state.customInfo.username.scale = newScale;
-    state.customInfo.username.x = orig.cx;
-    state.customInfo.username.y = orig.cy - 43 * newScale * 0.6;
-  } else if (sel.type === 'date') {
-    state.customInfo.date.scale = newScale;
-    state.customInfo.date.x = orig.cx;
-    state.customInfo.date.y = orig.cy - 39 * newScale * 0.6;
-  }
-  updateStatus();
-  scheduleRender();
+  render();
 }
 
-// ==================== 键盘事件 ====================
+function onPointerMove(e) {
+  if (e.preventDefault) e.preventDefault();
+  const pos = getCanvasCoords(e);
+  document.getElementById('status-coord').textContent = `${Math.round(pos.x)}, ${Math.round(pos.y)}`;
+  if (!state.isMouseDown) {
+    if (state.eraseMode) {
+      state.canvas.style.cursor = 'crosshair';
+    } else {
+      const hit = hitTest(pos.x, pos.y);
+      if (hit && hit.type === 'resize') state.canvas.style.cursor = 'nwse-resize';
+      else if (hit && hit.type === 'element') state.canvas.style.cursor = 'move';
+      else state.canvas.style.cursor = 'default';
+    }
+    return;
+  }
+  if (state.dragMode === 'erase') {
+    state.eraseRect = {
+      x: Math.min(state.dragStart.x, pos.x),
+      y: Math.min(state.dragStart.y, pos.y),
+      w: Math.abs(pos.x - state.dragStart.x),
+      h: Math.abs(pos.y - state.dragStart.y)
+    };
+    render();
+  } else if (state.dragMode === 'move' && state.selected) {
+    const dx = pos.x - state.dragStart.x;
+    const dy = pos.y - state.dragStart.y;
+    state.selected.x = state.elementStart.x + dx;
+    state.selected.y = state.elementStart.y + dy;
+    if (!state.shiftKey) checkAlignment(state.selected);
+    render();
+  } else if (state.dragMode === 'resize' && state.selected) {
+    const el = state.selected;
+    const dx = pos.x - el.x;
+    const dy = pos.y - el.y;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    let newScale = state.elementStart.scale * (dist / Math.max(1, state.resizeInitialDist));
+    newScale = Math.max(0.2, Math.min(3, newScale));
+    el.scale = newScale;
+    updateScaleInputFromSelection();
+    render();
+  }
+}
+
+function onPointerUp(e) {
+  if (!state.isMouseDown) return;
+  state.isMouseDown = false;
+  if (state.dragMode === 'erase' && state.eraseRect) {
+    if (state.eraseRect.w > 2 && state.eraseRect.h > 2) {
+      pushHistory();
+      applyErase(state.eraseRect);
+      updateStatus('已抹平区域');
+    }
+    state.eraseRect = null;
+    state.dragMode = null;
+    render();
+  } else if (state.dragMode === 'move' || state.dragMode === 'resize') {
+    if (state.selected) {
+      if (state.dragMode === 'move') {
+        const moved = Math.abs(state.selected.x - state.elementStart.x) > 0.5 ||
+                      Math.abs(state.selected.y - state.elementStart.y) > 0.5;
+        if (moved) pushHistory();
+      } else if (state.dragMode === 'resize') {
+        const scaled = Math.abs(state.selected.scale - state.elementStart.scale) > 0.001;
+        if (scaled) pushHistory();
+      }
+    }
+    state.alignGuides = [];
+    document.getElementById('align-hint').classList.remove('visible');
+    state.dragMode = null;
+    render();
+  }
+}
+
 function onKeyDown(e) {
-  if (e.key === 'Shift') state.shiftPressed = true;
-  const tag = e.target.tagName;
-  if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  state.shiftKey = e.shiftKey;
   if (e.key === 'Escape') {
-    hideScaleConfirm();
-    if (state.isErasing) { state.isErasing = false; state.eraseStart = null; state.eraseCurrent = null; scheduleRender(); }
-    else if (state.eraseMode) {
-      state.eraseMode = false;
-      document.getElementById('eraseBtn').classList.remove('active');
-      document.getElementById('canvasContainer').classList.remove('erasing');
-      updateStatus();
-    } else if (state.selected) { state.selected = null; updateStatus(); scheduleRender(); }
+    if (state.eraseRect) {
+      state.eraseRect = null;
+      state.isMouseDown = false;
+      state.dragMode = null;
+      render();
+    } else if (state.selected) {
+      state.selected = null;
+      render();
+    }
     return;
   }
   if (!state.selected) return;
-  const sel = state.selected;
-  const move = e.shiftKey ? 10 : 1;
-  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-    e.preventDefault();
-    let dx = 0, dy = 0;
-    if (e.key === 'ArrowLeft') dx = -move;
-    if (e.key === 'ArrowRight') dx = move;
-    if (e.key === 'ArrowUp') dy = -move;
-    if (e.key === 'ArrowDown') dy = move;
-    moveSelected(sel, dx, dy);
-    scheduleRender();
-    return;
+  const el = state.selected;
+  const step = e.shiftKey ? 10 : 1;
+  switch (e.key) {
+    case 'ArrowLeft': el.x -= step; e.preventDefault(); break;
+    case 'ArrowRight': el.x += step; e.preventDefault(); break;
+    case 'ArrowUp': el.y -= step; e.preventDefault(); break;
+    case 'ArrowDown': el.y += step; e.preventDefault(); break;
+    case 'Delete':
+    case 'Backspace':
+      if (el.type === 'datetime') {
+        showToast('日期时间不可删除，可取消勾选隐藏', 'error');
+        return;
+      }
+      deleteElement(el);
+      e.preventDefault();
+      return;
+    case '+':
+    case '=':
+      el.scale = Math.min(3, el.scale + 0.1);
+      updateScaleInputFromSelection();
+      e.preventDefault();
+      break;
+    case '-':
+    case '_':
+      el.scale = Math.max(0.2, el.scale - 0.1);
+      updateScaleInputFromSelection();
+      e.preventDefault();
+      break;
+    default: return;
   }
-  if (e.key === 'Delete' || e.key === 'Backspace') {
-    e.preventDefault();
-    if (sel.type === 'date') { showToast('日期时间不可删除'); return; }
-    deleteSelected(sel);
-    return;
-  }
-  if (e.key === '+' || e.key === '=') { e.preventDefault(); scaleSelected(sel, 1.1); return; }
-  if (e.key === '-' || e.key === '_') { e.preventDefault(); scaleSelected(sel, 0.9); return; }
-}
-function onKeyUp(e) { if (e.key === 'Shift') state.shiftPressed = false; }
-function moveSelected(sel, dx, dy) {
-  if (sel.type === 'material') { const m = state.materials.find(x => x.id === sel.id); if (m) { m.x += dx; m.y += dy; } }
-  else if (sel.type === 'avatar') { state.customInfo.avatar.x += dx; state.customInfo.avatar.y += dy; }
-  else if (sel.type === 'username') { state.customInfo.username.x += dx; state.customInfo.username.y += dy; }
-  else if (sel.type === 'date') { state.customInfo.date.x += dx; state.customInfo.date.y += dy; }
-}
-function scaleSelected(sel, factor) {
-  if (sel.type === 'material') {
-    const m = state.materials.find(x => x.id === sel.id);
-    if (!m) return;
-    const newScale = Math.max(0.2, Math.min(3, m.scale * factor));
-    const cx = m.x + m.originalWidth * m.scale / 2;
-    const cy = m.y + m.originalHeight * m.scale / 2;
-    m.scale = newScale;
-    m.x = cx - m.originalWidth * newScale / 2;
-    m.y = cy - m.originalHeight * newScale / 2;
-  } else if (sel.type === 'avatar') {
-    const a = state.customInfo.avatar;
-    const newScale = Math.max(0.2, Math.min(3, a.scale * factor));
-    const cx = a.x + 96 * a.scale / 2;
-    const cy = a.y + 96 * a.scale / 2;
-    a.scale = newScale;
-    a.x = cx - 96 * newScale / 2;
-    a.y = cy - 96 * newScale / 2;
-  } else if (sel.type === 'username') {
-    const u = state.customInfo.username;
-    const newScale = Math.max(0.2, Math.min(3, u.scale * factor));
-    const cx = u.x;
-    const cy = u.y + 43 * u.scale * 0.6;
-    u.scale = newScale;
-    u.x = cx;
-    u.y = cy - 43 * newScale * 0.6;
-  } else if (sel.type === 'date') {
-    const d = state.customInfo.date;
-    const newScale = Math.max(0.2, Math.min(3, d.scale * factor));
-    const cx = d.x;
-    const cy = d.y + 39 * d.scale * 0.6;
-    d.scale = newScale;
-    d.x = cx;
-    d.y = cy - 39 * newScale * 0.6;
-  }
-  updateStatus();
-  scheduleRender();
-}
-function deleteSelected(sel) {
-  if (sel.type === 'material') {
-    const idx = state.materials.findIndex(m => m.id === sel.id);
-    if (idx >= 0) {
-      state.materials.splice(idx, 1);
-      state.history = state.history.filter(h => !(h.type === 'addMaterial' && h.id === sel.id));
-    }
-  } else if (sel.type === 'avatar') {
-    state.showAvatar = false;
-    document.getElementById('showAvatar').checked = false;
-    document.getElementById('avatarControls').style.display = 'none';
-  } else if (sel.type === 'username') {
-    state.showUsername = false;
-    document.getElementById('showUsername').checked = false;
-    document.getElementById('usernameControls').style.display = 'none';
-  }
-  state.selected = null;
-  scheduleRender();
-  updateStatus();
+  pushHistory();
+  render();
 }
 
-// ==================== 底图上传 ====================
-function uploadBaseImage(file) {
+// ============== 抹平 ==============
+function applyErase(rect) {
+  const ctx = state.ctx;
+  ctx.putImageData(state.baseImageData, 0, 0);
+  ctx.fillStyle = '#FFFFFF';
+  ctx.fillRect(rect.x, rect.y, rect.w, rect.h);
+  state.baseImageData = ctx.getImageData(0, 0, state.canvasWidth, state.canvasHeight);
+  render();
+}
+
+function toggleEraseMode() {
+  state.eraseMode = !state.eraseMode;
+  document.getElementById('erase-btn').classList.toggle('active', state.eraseMode);
+  state.canvas.style.cursor = state.eraseMode ? 'crosshair' : 'default';
+  state.selected = null;
+  updateStatus(state.eraseMode ? '抹平模式：按住拖拽框选区域' : '正常模式');
+  render();
+}
+
+// ============== 上传 ==============
+function onUploadBaseImage(e) {
+  const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = e => {
+  reader.onload = ev => {
     const img = new Image();
     img.onload = () => {
-      if (state.baseImage) {
-        if (!confirm('更换底图将清空所有素材和抹平操作，是否继续？')) return;
-        state.materials = [];
-        state.eraserRects = [];
-        state.history = [];
-        state.selected = null;
+      const hasContent = state.materials.length > 0 || state.history.length > 0;
+      if (state.baseImage && hasContent) {
+        showModal('更换底图', '更换底图将清空画布上所有已放置的素材和抹平操作，是否继续？', () => {
+          loadBaseImage(img);
+        });
+      } else {
+        loadBaseImage(img);
       }
-      state.baseImage = img;
-      document.getElementById('emptyState').style.display = 'none';
-      document.getElementById('canvasContainer').style.display = 'block';
-      state.customInfo.date = { x: 30, y: 30, scale: 1 };
-      fitCanvas();
-      scheduleRender();
-      updateStatus();
-      showToast(`底图已加载 · ${img.width} × ${img.height}`);
     };
-    img.src = e.target.result;
+    img.src = ev.target.result;
   };
   reader.readAsDataURL(file);
-}
-function fitCanvas() {
-  if (!state.baseImage) return;
-  const area = document.getElementById('canvasArea');
-  const padding = 80;
-  const aw = Math.max(100, area.clientWidth - padding * 2);
-  const ah = Math.max(100, area.clientHeight - padding * 2);
-  const zoom = Math.min(aw / state.baseImage.width, ah / state.baseImage.height, 1);
-  state.canvasZoom = Math.max(0.15, zoom);
+  e.target.value = '';
 }
 
-// ==================== 撤销与重置 ====================
-function undo() {
-  if (state.history.length === 0) { showToast('没有可撤销的操作'); return; }
-  const last = state.history.pop();
-  if (last.type === 'addMaterial') { const idx = state.materials.findIndex(m => m.id === last.id); if (idx >= 0) state.materials.splice(idx, 1); }
-  else if (last.type === 'erase') { state.eraserRects.splice(last.index, 1); }
-  state.selected = null;
-  scheduleRender();
-  updateStatus();
-  showToast('已撤销');
-}
-function reset() {
-  if (!state.baseImage) { showToast('画布为空'); return; }
-  if (!confirm('确定要清空画布吗？此操作不可恢复')) return;
+function loadBaseImage(img) {
+  state.baseImage = img;
+  state.canvasWidth = img.width;
+  state.canvasHeight = img.height;
+  state.canvas.width = img.width;
+  state.canvas.height = img.height;
+  state.ctx.drawImage(img, 0, 0);
+  state.baseImageData = state.ctx.getImageData(0, 0, img.width, img.height);
   state.materials = [];
-  state.eraserRects = [];
-  state.history = [];
   state.selected = null;
-  state.showAvatar = false;
-  state.showUsername = false;
-  state.showDate = true;
-  state.avatarImage = null;
-  state.username = '用户名61515321';
-  state.date = { year: 2025, month: 6, day: 4, start: '16:08', end: '16:43' };
-  state.customInfo = { avatar: { x: 30, y: 30, scale: 1 }, username: { x: 134, y: 57, scale: 1 }, date: { x: 30, y: 30, scale: 1 } };
-  document.getElementById('showAvatar').checked = false;
-  document.getElementById('showUsername').checked = false;
-  document.getElementById('showDate').checked = true;
-  document.getElementById('avatarControls').style.display = 'none';
-  document.getElementById('usernameControls').style.display = 'none';
-  document.getElementById('dateControls').style.display = 'block';
-  document.getElementById('usernameInput').value = '用户名61515321';
-  document.getElementById('dateYear').value = 2025;
-  document.getElementById('dateMonth').value = 6;
-  document.getElementById('dateDay').value = 4;
-  document.getElementById('timeStart').value = '16:08';
-  document.getElementById('timeEnd').value = '16:43';
-  const prev = document.getElementById('avatarPreview');
-  prev.style.backgroundImage = '';
-  prev.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M12 14c-4 0-8 2-8 6v2h16v-2c0-4-4-6-8-6z"/></svg>';
-  hideScaleConfirm();
-  scheduleRender();
-  updateStatus();
-  showToast('画布已重置');
+  state.history = [];
+  state.customInfo.avatar.x = 130;
+  state.customInfo.avatar.y = 130;
+  state.customInfo.username.x = 250;
+  state.customInfo.username.y = 110;
+  state.customInfo.datetime.x = 250;
+  state.customInfo.datetime.y = 160;
+  document.getElementById('canvas-empty').style.display = 'none';
+  document.getElementById('canvas-info-text').textContent = `${img.width} × ${img.height}`;
+  fitCanvasToWindow();
+  render();
+  updateStatus(`底图已加载：${img.width}×${img.height}`);
+  showToast('底图加载成功', 'success');
 }
 
-// ==================== 导出 ====================
-function exportJPG() {
-  if (!state.baseImage) { showToast('请先上传底图'); return; }
-  const exp = document.createElement('canvas');
-  exp.width = state.baseImage.width;
-  exp.height = state.baseImage.height;
-  const ec = exp.getContext('2d');
-  ec.fillStyle = '#FFFFFF';
-  ec.fillRect(0, 0, exp.width, exp.height);
-  ec.drawImage(state.baseImage, 0, 0);
-  state.eraserRects.forEach(rect => { ec.fillStyle = '#FFFFFF'; ec.fillRect(rect.x, rect.y, rect.w, rect.h); });
-  state.materials.forEach(m => {
-    const cached = MATERIAL_CACHE[m.key];
-    ec.drawImage(cached.canvas, m.x, m.y, m.originalWidth * m.scale, m.originalHeight * m.scale);
+function onUploadAvatar(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      state.customInfo.avatar.image = img;
+      const preview = document.getElementById('avatar-preview');
+      preview.style.backgroundImage = `url(${ev.target.result})`;
+      preview.classList.add('has-image');
+      pushHistory();
+      render();
+      showToast('头像已更新', 'success');
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+function deleteAvatar() {
+  state.customInfo.avatar.image = null;
+  const preview = document.getElementById('avatar-preview');
+  preview.style.backgroundImage = '';
+  preview.classList.remove('has-image');
+  pushHistory();
+  render();
+  showToast('头像已删除', 'success');
+}
+
+// ============== 素材放置 ==============
+function placeMaterial(key) {
+  const src = materialCanvases[key];
+  if (!src) return;
+  const newMat = {
+    id: 'mat_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
+    type: 'material',
+    materialKey: key,
+    canvas: src,
+    originalWidth: src.width,
+    originalHeight: src.height,
+    x: state.canvasWidth / 2,
+    y: state.canvasHeight / 2,
+    scale: state.defaultScale / 100
+  };
+  state.materials.push(newMat);
+  state.selected = newMat;
+  pushHistory();
+  updateScaleInputFromSelection();
+  render();
+  updateStatus(`已放置素材：${key}`);
+}
+
+function deleteElement(el) {
+  pushHistory();
+  if (el.type === 'material') {
+    const idx = state.materials.indexOf(el);
+    if (idx >= 0) state.materials.splice(idx, 1);
+  } else if (el.type === 'avatar') {
+    state.customInfo.avatar.image = null;
+    const preview = document.getElementById('avatar-preview');
+    preview.style.backgroundImage = '';
+    preview.classList.remove('has-image');
+  } else if (el.type === 'username') {
+    state.customInfo.username.text = '用户名61515321';
+    document.getElementById('username-input').value = '用户名61515321';
+  }
+  state.selected = null;
+  render();
+  showToast('已删除', 'success');
+}
+
+// ============== 缩放比例 ==============
+function adjustScaleInput(delta) {
+  const input = document.getElementById('scale-input');
+  let v = parseInt(input.value) + delta;
+  v = Math.max(20, Math.min(300, v));
+  input.value = v;
+  state.defaultScale = v;
+}
+
+function onScaleInputChange(e) {
+  let v = parseInt(e.target.value) || 100;
+  v = Math.max(20, Math.min(300, v));
+  e.target.value = v;
+  state.defaultScale = v;
+}
+
+function updateScaleInputFromSelection() {
+  if (state.selected) {
+    const v = Math.round(state.selected.scale * 100);
+    document.getElementById('scale-input').value = v;
+  }
+}
+
+function setAsDefaultScale() {
+  if (!state.selected) {
+    showToast('请先选中一个素材作为参考', 'error');
+    return;
+  }
+  const v = Math.round(state.selected.scale * 100);
+  state.defaultScale = v;
+  document.getElementById('scale-input').value = v;
+  showToast(`已设为后续素材默认比例：${v}%`, 'success');
+}
+
+// ============== 画布缩放 ==============
+function setCanvasZoom(zoom) {
+  state.canvasZoom = Math.max(0.15, Math.min(8, zoom));
+  document.getElementById('canvas-stage').style.transform = `scale(${state.canvasZoom})`;
+  document.getElementById('status-zoom').textContent = Math.round(state.canvasZoom * 100) + '%';
+}
+
+function fitCanvasToWindow() {
+  if (!state.baseImage) return;
+  const panel = document.getElementById('canvas-panel');
+  const padding = 80;
+  const maxW = panel.clientWidth - padding;
+  const maxH = panel.clientHeight - padding;
+  const zoom = Math.min(maxW / state.canvasWidth, maxH / state.canvasHeight);
+  setCanvasZoom(zoom);
+}
+
+// ============== 对齐 ==============
+function checkAlignment(draggedEl) {
+  const guides = [];
+  const draggedBounds = getElementBounds(draggedEl);
+  const dragLeft = draggedBounds.x;
+  const dragRight = draggedBounds.x + draggedBounds.w;
+  const dragCenterX = draggedEl.x;
+  const others = [
+    ...state.materials.filter(m => m !== draggedEl),
+    ...(state.customInfo.avatar.visible && state.customInfo.avatar !== draggedEl ? [state.customInfo.avatar] : []),
+    ...(state.customInfo.username.visible && state.customInfo.username !== draggedEl ? [state.customInfo.username] : []),
+    ...(state.customInfo.datetime.visible && state.customInfo.datetime !== draggedEl ? [state.customInfo.datetime] : [])
+  ];
+  let snapped = false;
+  const threshold = 10;
+  for (const other of others) {
+    const ob = getElementBounds(other);
+    const oLeft = ob.x;
+    const oRight = ob.x + ob.w;
+    const oCenterX = other.x;
+    if (Math.abs(dragLeft - oLeft) < threshold) {
+      guides.push({ x: oLeft, highlight: true });
+      draggedEl.x += (oLeft - dragLeft);
+      snapped = true;
+    } else if (Math.abs(dragRight - oRight) < threshold) {
+      guides.push({ x: oRight, highlight: true });
+      draggedEl.x = oRight - draggedBounds.w / 2;
+      snapped = true;
+    } else if (Math.abs(dragCenterX - oCenterX) < threshold) {
+      guides.push({ x: oCenterX, highlight: true });
+      draggedEl.x = oCenterX;
+      snapped = true;
+    }
+  }
+  state.alignGuides = guides;
+  document.getElementById('align-hint').classList.toggle('visible', snapped);
+}
+
+// ============== 历史 ==============
+function pushHistory() {
+  const ci = state.customInfo;
+  const snap = {
+    materials: state.materials.map(m => ({...m})),
+    customInfo: {
+      avatar: { visible: ci.avatar.visible, image: ci.avatar.image, x: ci.avatar.x, y: ci.avatar.y, scale: ci.avatar.scale, id: 'avatar', type: 'avatar' },
+      username: { visible: ci.username.visible, text: ci.username.text, x: ci.username.x, y: ci.username.y, scale: ci.username.scale, id: 'username', type: 'username' },
+      datetime: { visible: ci.datetime.visible, year: ci.datetime.year, month: ci.datetime.month, day: ci.datetime.day, startTime: ci.datetime.startTime, endTime: ci.datetime.endTime, x: ci.datetime.x, y: ci.datetime.y, scale: ci.datetime.scale, id: 'datetime', type: 'datetime' }
+    },
+    baseImageData: state.baseImageData ? new ImageData(
+      new Uint8ClampedArray(state.baseImageData.data),
+      state.baseImageData.width,
+      state.baseImageData.height
+    ) : null
+  };
+  state.history.push(snap);
+  if (state.history.length > 50) state.history.shift();
+}
+
+function undo() {
+  if (state.history.length === 0) {
+    showToast('没有可撤销的操作', 'error');
+    return;
+  }
+  const snap = state.history.pop();
+  state.materials = snap.materials;
+  state.customInfo = snap.customInfo;
+  state.baseImageData = snap.baseImageData;
+  state.selected = null;
+  state.alignGuides = [];
+  document.getElementById('align-hint').classList.remove('visible');
+  document.getElementById('show-avatar').checked = state.customInfo.avatar.visible;
+  document.getElementById('show-username').checked = state.customInfo.username.visible;
+  document.getElementById('show-datetime').checked = state.customInfo.datetime.visible;
+  document.getElementById('avatar-control').classList.toggle('hidden', !state.customInfo.avatar.visible);
+  document.getElementById('username-control').classList.toggle('hidden', !state.customInfo.username.visible);
+  document.getElementById('avatar-tag').classList.toggle('on', state.customInfo.avatar.visible);
+  document.getElementById('username-tag').classList.toggle('on', state.customInfo.username.visible);
+  document.getElementById('datetime-tag').classList.toggle('on', state.customInfo.datetime.visible);
+  document.getElementById('avatar-tag').textContent = state.customInfo.avatar.visible ? '开' : '关';
+  document.getElementById('username-tag').textContent = state.customInfo.username.visible ? '开' : '关';
+  document.getElementById('datetime-tag').textContent = state.customInfo.datetime.visible ? '开' : '关';
+  document.getElementById('username-input').value = state.customInfo.username.text;
+  document.getElementById('year-input').value = state.customInfo.datetime.year;
+  document.getElementById('month-input').value = state.customInfo.datetime.month;
+  document.getElementById('day-input').value = state.customInfo.datetime.day;
+  document.getElementById('start-time').value = state.customInfo.datetime.startTime;
+  document.getElementById('end-time').value = state.customInfo.datetime.endTime;
+  if (state.customInfo.avatar.image) {
+    const reader = new FileReader();
+    // image对象直接保留，预览也保留
+  }
+  render();
+  showToast('已撤销', 'success');
+}
+
+function confirmReset() {
+  if (!state.baseImage) {
+    showToast('请先上传底图', 'error');
+    return;
+  }
+  showModal('重置画布', '确定要清空画布吗？此操作不可恢复', () => {
+    state.materials = [];
+    state.selected = null;
+    state.alignGuides = [];
+    if (state.baseImage) {
+      state.ctx.drawImage(state.baseImage, 0, 0);
+      state.baseImageData = state.ctx.getImageData(0, 0, state.canvasWidth, state.canvasHeight);
+    }
+    state.history = [];
+    render();
+    showToast('画布已重置', 'success');
   });
-  if (state.showDate) drawDate(ec);
-  if (state.showAvatar) drawAvatar(ec);
-  if (state.showUsername) drawUsername(ec);
-  exp.toBlob(blob => {
-    const url = URL.createObjectURL(blob);
+}
+
+// ============== 导出 ==============
+function exportJPG() {
+  if (!state.baseImage) {
+    showToast('请先上传底图', 'error');
+    return;
+  }
+  const exportCanvas = document.createElement('canvas');
+  exportCanvas.width = state.canvasWidth;
+  exportCanvas.height = state.canvasHeight;
+  const ectx = exportCanvas.getContext('2d');
+  ectx.fillStyle = '#FFFFFF';
+  ectx.fillRect(0, 0, state.canvasWidth, state.canvasHeight);
+  if (state.baseImageData) {
+    ectx.putImageData(state.baseImageData, 0, 0);
+  }
+  const originalCtx = state.ctx;
+  state.ctx = ectx;
+  const oldSelected = state.selected;
+  const oldGuides = state.alignGuides;
+  state.selected = null;
+  state.alignGuides = [];
+  state.materials.forEach(m => drawElement(m));
+  if (state.customInfo.avatar.visible) drawElement(state.customInfo.avatar);
+  if (state.customInfo.username.visible) drawElement(state.customInfo.username);
+  if (state.customInfo.datetime.visible) drawElement(state.customInfo.datetime);
+  state.ctx = originalCtx;
+  state.selected = oldSelected;
+  state.alignGuides = oldGuides;
+  exportCanvas.toBlob(blob => {
     const a = document.createElement('a');
-    a.href = url;
+    a.href = URL.createObjectURL(blob);
     a.download = '拼图完成.jpg';
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
-    showToast('已导出 拼图完成.jpg');
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+    showToast('已导出 拼图完成.jpg', 'success');
   }, 'image/jpeg', 0.92);
 }
 
-// ==================== 头像 ====================
-function uploadAvatar(file) {
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const img = new Image();
-    img.onload = () => {
-      state.avatarImage = img;
-      const prev = document.getElementById('avatarPreview');
-      prev.innerHTML = '';
-      prev.style.backgroundImage = `url(${e.target.result})`;
-      scheduleRender();
-      showToast('头像已上传');
-    };
-    img.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
-}
-function removeAvatar() {
-  state.avatarImage = null;
-  const prev = document.getElementById('avatarPreview');
-  prev.style.backgroundImage = '';
-  prev.innerHTML = '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M12 14c-4 0-8 2-8 6v2h16v-2c0-4-4-6-8-6z"/></svg>';
-  scheduleRender();
-  showToast('头像已删除');
+// ============== UI 辅助 ==============
+function updateStatus(msg) {
+  document.getElementById('status-msg').textContent = msg;
 }
 
-// ==================== 初始化 ====================
-function init() {
-  initMaterials();
-  renderMaterialList();
-  canvas = document.getElementById('mainCanvas');
-  ctx = canvas.getContext('2d');
-
-  document.getElementById('uploadBtn').addEventListener('click', () => document.getElementById('fileInput').click());
-  document.getElementById('fileInput').addEventListener('change', e => { if (e.target.files[0]) uploadBaseImage(e.target.files[0]); e.target.value = ''; });
-  document.getElementById('eraseBtn').addEventListener('click', () => {
-    state.eraseMode = !state.eraseMode;
-    document.getElementById('eraseBtn').classList.toggle('active', state.eraseMode);
-    document.getElementById('canvasContainer').classList.toggle('erasing', state.eraseMode);
-    state.selected = null;
-    scheduleRender();
-    updateStatus();
-    showToast(state.eraseMode ? '已进入抹平模式 · 拖拽框选区域' : '已退出抹平模式');
-  });
-  document.getElementById('undoBtn').addEventListener('click', undo);
-  document.getElementById('resetBtn').addEventListener('click', reset);
-  document.getElementById('exportBtn').addEventListener('click', exportJPG);
-
-  // 默认缩放比例
-  const scaleInput = document.getElementById('scaleInput');
-  const setScale = v => {
-    v = Math.max(20, Math.min(300, parseInt(v) || 100));
-    state.defaultScale = v;
-    scaleInput.value = v;
-  };
-  scaleInput.addEventListener('input', e => setScale(e.target.value));
-  scaleInput.addEventListener('blur', e => setScale(e.target.value));
-  document.getElementById('scalePlus').addEventListener('click', () => setScale(state.defaultScale + 10));
-  document.getElementById('scaleMinus').addEventListener('click', () => setScale(state.defaultScale - 10));
-
-  // 缩放确认提示按钮
-  document.getElementById('confirmScaleApply').addEventListener('click', () => {
-    const newScale = Math.round(getSelectedScale(state.selected) * 100);
-    setScale(newScale);
-    hideScaleConfirm();
-    showToast(`默认缩放比例已设为 ${newScale}% · 后续素材按此比例显示`);
-  });
-  document.getElementById('confirmScaleCancel').addEventListener('click', () => {
-    hideScaleConfirm();
-    showToast('已取消 · 保持原默认比例');
-  });
-
-  // 自定义信息开关
-  document.getElementById('showAvatar').addEventListener('change', e => {
-    state.showAvatar = e.target.checked;
-    document.getElementById('avatarControls').style.display = e.target.checked ? 'block' : 'none';
-    if (e.target.checked) {
-      state.customInfo.avatar = { x: 30, y: 30, scale: 1 };
-      if (state.showDate && state.customInfo.date.x < 100) { state.customInfo.date.x = 134; state.customInfo.date.y = 104; }
-      if (state.showUsername && state.customInfo.username.x < 100) { state.customInfo.username.x = 134; state.customInfo.username.y = 57; }
-    }
-    scheduleRender();
-  });
-  document.getElementById('showUsername').addEventListener('change', e => {
-    state.showUsername = e.target.checked;
-    document.getElementById('usernameControls').style.display = e.target.checked ? 'block' : 'none';
-    if (e.target.checked) {
-      state.customInfo.username = { x: 134, y: 57, scale: 1 };
-      if (state.showDate && state.customInfo.date.x < 100) { state.customInfo.date.x = 134; state.customInfo.date.y = 104; }
-    }
-    scheduleRender();
-  });
-  // 日期时间现在可取消
-  document.getElementById('showDate').addEventListener('change', e => {
-    state.showDate = e.target.checked;
-    document.getElementById('dateControls').style.display = e.target.checked ? 'block' : 'none';
-    if (e.target.checked) {
-      state.customInfo.date = { x: 30, y: 30, scale: 1 };
-    }
-    scheduleRender();
-    showToast(e.target.checked ? '日期时间已显示' : '日期时间已隐藏');
-  });
-
-  document.getElementById('uploadAvatarBtn').addEventListener('click', () => document.getElementById('avatarInput').click());
-  document.getElementById('avatarInput').addEventListener('change', e => { if (e.target.files[0]) uploadAvatar(e.target.files[0]); e.target.value = ''; });
-  document.getElementById('removeAvatarBtn').addEventListener('click', removeAvatar);
-  document.getElementById('usernameInput').addEventListener('input', e => {
-    state.username = e.target.value || '用户名61515321';
-    scheduleRender();
-  });
-  ['dateYear', 'dateMonth', 'dateDay'].forEach(id => {
-    document.getElementById(id).addEventListener('input', () => {
-      state.date.year = parseInt(document.getElementById('dateYear').value) || 2025;
-      state.date.month = parseInt(document.getElementById('dateMonth').value) || 1;
-      state.date.day = parseInt(document.getElementById('dateDay').value) || 1;
-      scheduleRender();
-    });
-  });
-  document.getElementById('timeStart').addEventListener('input', e => { state.date.start = e.target.value || '16:08'; scheduleRender(); });
-  document.getElementById('timeEnd').addEventListener('input', e => { state.date.end = e.target.value || '16:43'; scheduleRender(); });
-
-  // 画布缩放
-  document.getElementById('zoomIn').addEventListener('click', () => { state.canvasZoom = Math.min(8, state.canvasZoom * 1.2); scheduleRender(); updateStatus(); });
-  document.getElementById('zoomOut').addEventListener('click', () => { state.canvasZoom = Math.max(0.15, state.canvasZoom / 1.2); scheduleRender(); updateStatus(); });
-  document.getElementById('zoomFit').addEventListener('click', () => { fitCanvas(); scheduleRender(); updateStatus(); });
-
-  // 画布鼠标事件
-  canvas.addEventListener('mousedown', onCanvasDown);
-  document.addEventListener('mousemove', onCanvasMove);
-  document.addEventListener('mouseup', onCanvasUp);
-  // 触摸事件
-  canvas.addEventListener('touchstart', e => { if (e.touches.length === 1) onCanvasDown(e.touches[0]); }, { passive: false });
-  canvas.addEventListener('touchmove', e => { if (e.touches.length === 1) { e.preventDefault(); onCanvasMove(e.touches[0]); } }, { passive: false });
-  canvas.addEventListener('touchend', e => { onCanvasUp(e); });
-  // 右键取消框选
-  canvas.addEventListener('contextmenu', e => {
-    e.preventDefault();
-    if (state.isErasing) { state.isErasing = false; state.eraseStart = null; state.eraseCurrent = null; scheduleRender(); showToast('已取消本次框选'); }
-  });
-  // 键盘
-  document.addEventListener('keydown', onKeyDown);
-  document.addEventListener('keyup', onKeyUp);
-  // 窗口大小变化
-  window.addEventListener('resize', () => { if (state.baseImage) { fitCanvas(); scheduleRender(); updateStatus(); } });
-
-  updateStatus();
+let toastTimer = null;
+function showToast(msg, type = 'info') {
+  const toast = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  toast.className = 'toast ' + type + ' visible';
+  const icon = toast.querySelector('i');
+  icon.className = type === 'success' ? 'fa-solid fa-circle-check' :
+                   type === 'error' ? 'fa-solid fa-circle-exclamation' :
+                   'fa-solid fa-circle-info';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('visible'), 2200);
 }
-window.addEventListener('DOMContentLoaded', init);
+
+function showModal(title, msg, onOk) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-msg').textContent = msg;
+  const mask = document.getElementById('modal-mask');
+  mask.classList.add('visible');
+  const ok = document.getElementById('modal-ok');
+  const cancel = document.getElementById('modal-cancel');
+  const close = () => mask.classList.remove('visible');
+  ok.onclick = () => { close(); onOk(); };
+  cancel.onclick = close;
+}
+
+init();
 </script>
 </body>
 </html>
