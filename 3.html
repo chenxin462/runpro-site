@@ -85,9 +85,7 @@
     color: var(--text);
     font-weight: 500;
   }
-  .status-msg {
-    color: var(--secondary);
-  }
+  .status-msg { color: var(--secondary); }
   .main-layout {
     display: grid;
     grid-template-columns: 280px 1fr 340px;
@@ -150,14 +148,20 @@
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(255, 87, 34, 0.35);
   }
-  .material-item:active {
-    transform: scale(0.94);
-  }
+  .material-item:active { transform: scale(0.94); }
   .material-item img {
-    max-width: 100%;
-    max-height: 72%;
+    max-width: 50px;
+    max-height: 40px;
     object-fit: contain;
     pointer-events: none;
+  }
+  .material-item .mat-loading {
+    color: #999;
+    font-size: 14px;
+  }
+  .material-item .mat-error {
+    color: #ccc;
+    font-size: 9px;
   }
   .material-item .label {
     font-size: 9px;
@@ -204,10 +208,7 @@
     box-shadow: 0 12px 48px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.05);
     z-index: 1;
   }
-  #main-canvas {
-    display: block;
-    background: #FFFFFF;
-  }
+  #main-canvas { display: block; background: #FFFFFF; }
   .canvas-empty {
     position: absolute;
     top: 50%;
@@ -224,46 +225,30 @@
     margin-bottom: 18px;
     display: block;
   }
-  .canvas-empty .hint {
-    font-size: 14px;
-    line-height: 1.6;
-  }
-  .canvas-empty .accent {
-    color: var(--primary);
-    font-weight: 600;
-  }
-  .canvas-overlay {
-    position: absolute;
-    z-index: 10;
-  }
+  .canvas-empty .hint { font-size: 14px; line-height: 1.6; }
+  .canvas-empty .accent { color: var(--primary); font-weight: 600; }
+  .canvas-overlay { position: absolute; z-index: 10; }
   .canvas-overlay.top-right { top: 16px; right: 16px; }
   .canvas-overlay.bottom-right {
-    bottom: 16px;
-    right: 16px;
-    display: flex;
-    gap: 4px;
+    bottom: 16px; right: 16px;
+    display: flex; gap: 4px;
     background: rgba(22, 27, 34, 0.92);
     backdrop-filter: blur(10px);
-    padding: 4px;
-    border-radius: 8px;
+    padding: 4px; border-radius: 8px;
     border: 1px solid var(--border);
   }
   .canvas-overlay.top-center {
-    top: 16px;
-    left: 50%;
+    top: 16px; left: 50%;
     transform: translateX(-50%);
     pointer-events: none;
   }
   .canvas-overlay.bottom-left {
-    bottom: 16px;
-    left: 16px;
+    bottom: 16px; left: 16px;
     background: rgba(22, 27, 34, 0.92);
     backdrop-filter: blur(10px);
-    padding: 6px 12px;
-    border-radius: 6px;
+    padding: 6px 12px; border-radius: 6px;
     border: 1px solid var(--border);
-    font-size: 11px;
-    color: var(--text-muted);
+    font-size: 11px; color: var(--text-muted);
     font-family: 'Oswald', sans-serif;
   }
   .overlay-btn {
@@ -292,12 +277,9 @@
     box-shadow: 0 0 16px rgba(255, 87, 34, 0.4);
   }
   .zoom-btn {
-    width: 32px;
-    height: 32px;
-    padding: 0;
+    width: 32px; height: 32px; padding: 0;
     justify-content: center;
-    font-size: 16px;
-    font-weight: 600;
+    font-size: 16px; font-weight: 600;
   }
   .align-hint {
     background: var(--primary);
@@ -375,9 +357,7 @@
   }
   .btn-block { grid-column: 1 / -1; }
   .scale-control {
-    display: flex;
-    gap: 6px;
-    align-items: center;
+    display: flex; gap: 6px; align-items: center;
     margin-bottom: 8px;
   }
   .scale-control input {
@@ -394,12 +374,9 @@
   }
   .scale-control input:focus { outline: none; border-color: var(--primary); }
   .scale-btn {
-    width: 30px;
-    height: 30px;
-    padding: 0;
+    width: 30px; height: 30px; padding: 0;
     justify-content: center;
-    font-size: 16px;
-    font-weight: 700;
+    font-size: 16px; font-weight: 700;
   }
   .scale-unit {
     color: var(--text-muted);
@@ -439,8 +416,7 @@
   .checkbox-row input {
     accent-color: var(--primary);
     cursor: pointer;
-    width: 14px;
-    height: 14px;
+    width: 14px; height: 14px;
   }
   .checkbox-row label {
     cursor: pointer;
@@ -488,8 +464,7 @@
     font-weight: 600;
   }
   .avatar-preview {
-    width: 56px;
-    height: 56px;
+    width: 56px; height: 56px;
     border-radius: 50%;
     background: #CCCCCC center/cover;
     border: 2px solid var(--success);
@@ -792,82 +767,100 @@
 </div>
 
 <script>
-// ============== 素材库定义 ==============
+// ============== 素材库定义（从 ./materials/ 加载真实文件） ==============
 const MATERIAL_GROUPS = [
   {
     title: '基础数字组（b系列）',
     items: [
-      { key: 'b0', text: '0', style: 'b' }, { key: 'b1', text: '1', style: 'b' },
-      { key: 'b2', text: '2', style: 'b' }, { key: 'b3', text: '3', style: 'b' },
-      { key: 'b4', text: '4', style: 'b' }, { key: 'b5', text: '5', style: 'b' },
-      { key: 'b6', text: '6', style: 'b' }, { key: 'b7', text: '7', style: 'b' },
-      { key: 'b8', text: '8', style: 'b' }, { key: 'b9', text: '9', style: 'b' },
-      { key: 'bgl', text: '公里', style: 'unit' },
-      { key: 'bm', text: '.', style: 'b' },
-      { key: 'b2m', text: ':', style: 'b' },
-      { key: 'bqk', text: '千卡', style: 'unit' },
-      { key: 'bmi', text: '米', style: 'unit' }
+      { key: 'b0', label: 'b0' }, { key: 'b1', label: 'b1' },
+      { key: 'b2', label: 'b2' }, { key: 'b3', label: 'b3' },
+      { key: 'b4', label: 'b4' }, { key: 'b5', label: 'b5' },
+      { key: 'b6', label: 'b6' }, { key: 'b7', label: 'b7' },
+      { key: 'b8', label: 'b8' }, { key: 'b9', label: 'b9' },
+      { key: 'bgl', label: 'bgl' },
+      { key: 'bm', label: 'bm' },
+      { key: 'b2m', label: 'b2m' },
+      { key: 'bqk', label: 'bqk' },
+      { key: 'bmi', label: 'bmi' }
     ]
   },
   {
     title: '通用数字组',
     items: [
-      { key: '0', text: '0', style: 'normal' }, { key: '1', text: '1', style: 'normal' },
-      { key: '2', text: '2', style: 'normal' }, { key: '3', text: '3', style: 'normal' },
-      { key: '4', text: '4', style: 'normal' }, { key: '5', text: '5', style: 'normal' },
-      { key: '6', text: '6', style: 'normal' }, { key: '7', text: '7', style: 'normal' },
-      { key: '8', text: '8', style: 'normal' }, { key: '9', text: '9', style: 'normal' },
-      { key: 'ceng', text: '层', style: 'unit' },
-      { key: 'ge', text: '个', style: 'unit' },
-      { key: 'hm', text: '毫秒', style: 'unit' },
-      { key: 'mi', text: '米', style: 'unit' },
-      { key: 'ps1', text: '配速', style: 'unit' },
-      { key: 'ps2', text: "''", style: 'unit' },
-      { key: 'qk', text: '千卡', style: 'unit' },
-      { key: 'qks', text: '千米/时', style: 'unit' },
-      { key: 'tang', text: '趟', style: 'unit' },
-      { key: 'wa', text: '瓦', style: 'unit' },
-      { key: 'm', text: '.', style: 'normal' },
-      { key: '2m', text: ':', style: 'normal' }
+      { key: '0', label: '0' }, { key: '1', label: '1' },
+      { key: '2', label: '2' }, { key: '3', label: '3' },
+      { key: '4', label: '4' }, { key: '5', label: '5' },
+      { key: '6', label: '6' }, { key: '7', label: '7' },
+      { key: '8', label: '8' }, { key: '9', label: '9' },
+      { key: 'ceng', label: 'ceng' },
+      { key: 'ge', label: 'ge' },
+      { key: 'hm', label: 'hm' },
+      { key: 'mi', label: 'mi' },
+      { key: 'ps1', label: 'ps1' },
+      { key: 'ps2', label: 'ps2' },
+      { key: 'qk', label: 'qk' },
+      { key: 'qks', label: 'qks' },
+      { key: 'tang', label: 'tang' },
+      { key: 'wa', label: 'wa' },
+      { key: 'm', label: 'm' },
+      { key: '2m', label: '2m' }
     ]
   }
 ];
 
-// ============== 生成素材图片 ==============
-function generateMaterialCanvas(item) {
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d');
-  const padding = 4;
-  let fontSize, fontWeight, color, fontFamily;
-  if (item.style === 'b') {
-    fontSize = 80; fontWeight = '700'; color = '#1a1a1a'; fontFamily = 'Oswald, sans-serif';
-  } else if (item.style === 'normal') {
-    fontSize = 80; fontWeight = '700'; color = '#E63946'; fontFamily = 'Oswald, sans-serif';
-  } else {
-    fontSize = 32; fontWeight = '600'; color = '#333333'; fontFamily = 'Noto Sans SC, sans-serif';
-  }
-  ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
-  const metrics = ctx.measureText(item.text);
-  const w = Math.max(8, Math.ceil(metrics.width) + padding * 2);
-  const h = Math.ceil(fontSize * 1.25) + padding * 2;
-  canvas.width = w; canvas.height = h;
-  ctx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
-  ctx.fillStyle = color;
-  ctx.textBaseline = 'middle';
-  ctx.textAlign = 'left';
-  ctx.fillText(item.text, padding, h / 2);
-  return canvas;
+// 素材图片缓存（Image 对象）
+const materialImages = {};
+
+// ============== 加载素材图片 ==============
+function loadMaterialImage(key) {
+  return new Promise((resolve) => {
+    if (materialImages[key]) {
+      resolve(materialImages[key]);
+      return;
+    }
+    const img = new Image();
+    img.onload = () => {
+      materialImages[key] = img;
+      resolve(img);
+    };
+    img.onerror = () => {
+      console.warn('素材加载失败:', key);
+      resolve(null);
+    };
+    img.src = `./materials/${key}.jpg`;
+  });
 }
 
-const materialCanvases = {};
-function initMaterialsLib() {
+function preloadAllMaterials() {
+  let loaded = 0;
+  let total = 0;
+  MATERIAL_GROUPS.forEach(g => total += g.items.length);
+
   MATERIAL_GROUPS.forEach(group => {
     group.items.forEach(item => {
-      materialCanvases[item.key] = generateMaterialCanvas(item);
+      loadMaterialImage(item.key).then(() => {
+        loaded++;
+        updateMaterialThumb(item.key);
+        if (loaded === total) {
+          updateStatus('素材库加载完成');
+        }
+      });
     });
   });
 }
 
+function updateMaterialThumb(key) {
+  const imgEl = document.getElementById(`mat-img-${key}`);
+  const loadingEl = document.getElementById(`mat-loading-${key}`);
+  if (!imgEl) return;
+  if (materialImages[key]) {
+    imgEl.src = materialImages[key].src;
+    imgEl.style.display = '';
+    if (loadingEl) loadingEl.style.display = 'none';
+  }
+}
+
+// ============== 渲染素材面板 ==============
 function renderMaterialsPanel() {
   const panel = document.getElementById('materials-panel');
   let html = '';
@@ -875,23 +868,29 @@ function renderMaterialsPanel() {
     html += `<h3 class="section-title">${group.title}</h3>`;
     html += `<div class="materials-grid">`;
     group.items.forEach(item => {
-      const canvas = materialCanvases[item.key];
-      const dataUrl = canvas.toDataURL();
       html += `
-        <div class="material-item" data-key="${item.key}" title="${item.text}">
-          <img src="${dataUrl}" alt="${item.text}">
-          <div class="label">${item.key}</div>
+        <div class="material-item" data-key="${item.key}" title="${item.label}">
+          <div class="mat-loading" id="mat-loading-${item.key}">
+            <i class="fa-solid fa-spinner fa-spin"></i>
+          </div>
+          <img id="mat-img-${item.key}" style="display:none;" alt="${item.label}">
+          <div class="label">${item.label}</div>
         </div>`;
     });
     html += `</div>`;
     if (gIdx < MATERIAL_GROUPS.length - 1) html += `<div class="divider"></div>`;
   });
   panel.innerHTML = html;
+
   panel.querySelectorAll('.material-item').forEach(el => {
     el.addEventListener('click', () => {
       if (!state.baseImage) {
         showToast('请先上传底图', 'error');
         return;
+      }
+      // ★ 关键修复：点击素材放置时，自动退出抹平模式
+      if (state.eraseMode) {
+        exitEraseMode();
       }
       placeMaterial(el.dataset.key);
     });
@@ -931,8 +930,8 @@ const state = {
 function init() {
   state.canvas = document.getElementById('main-canvas');
   state.ctx = state.canvas.getContext('2d');
-  initMaterialsLib();
-  renderMaterialsPanel();
+  renderMaterialsPanel();       // 先渲染面板结构（显示 loading）
+  preloadAllMaterials();        // 异步加载所有素材图片
   setupEvents();
   state.ctx.fillStyle = '#FFFFFF';
   state.ctx.fillRect(0, 0, state.canvasWidth, state.canvasHeight);
@@ -1050,7 +1049,9 @@ function drawElement(el) {
   const ctx = state.ctx;
   if (el.type === 'material') {
     const b = getElementBounds(el);
-    ctx.drawImage(el.canvas, b.x, b.y, b.w, b.h);
+    if (el.image) {
+      ctx.drawImage(el.image, b.x, b.y, b.w, b.h);
+    }
   } else if (el.type === 'avatar') {
     drawAvatar(el);
   } else if (el.type === 'username') {
@@ -1383,11 +1384,31 @@ function applyErase(rect) {
 }
 
 function toggleEraseMode() {
-  state.eraseMode = !state.eraseMode;
-  document.getElementById('erase-btn').classList.toggle('active', state.eraseMode);
-  state.canvas.style.cursor = state.eraseMode ? 'crosshair' : 'default';
+  if (state.eraseMode) {
+    exitEraseMode();
+  } else {
+    enterEraseMode();
+  }
+}
+
+function enterEraseMode() {
+  state.eraseMode = true;
+  document.getElementById('erase-btn').classList.add('active');
+  state.canvas.style.cursor = 'crosshair';
   state.selected = null;
-  updateStatus(state.eraseMode ? '抹平模式：按住拖拽框选区域' : '正常模式');
+  updateStatus('抹平模式：按住拖拽框选区域');
+  render();
+}
+
+// ★ 关键修复：独立的退出抹平模式函数
+function exitEraseMode() {
+  state.eraseMode = false;
+  state.eraseRect = null;
+  state.dragMode = null;
+  state.isMouseDown = false;
+  document.getElementById('erase-btn').classList.remove('active');
+  state.canvas.style.cursor = 'default';
+  updateStatus('正常模式');
   render();
 }
 
@@ -1425,6 +1446,8 @@ function loadBaseImage(img) {
   state.materials = [];
   state.selected = null;
   state.history = [];
+  // 如果抹平模式还开着，关闭它
+  if (state.eraseMode) exitEraseMode();
   state.customInfo.avatar.x = 130;
   state.customInfo.avatar.y = 130;
   state.customInfo.username.x = 250;
@@ -1471,16 +1494,24 @@ function deleteAvatar() {
 }
 
 // ============== 素材放置 ==============
-function placeMaterial(key) {
-  const src = materialCanvases[key];
-  if (!src) return;
+async function placeMaterial(key) {
+  // 确保图片已加载
+  if (!materialImages[key]) {
+    showToast('素材加载中，请稍候...', 'info');
+    await loadMaterialImage(key);
+    if (!materialImages[key]) {
+      showToast('素材加载失败，请检查 ./materials/ 目录', 'error');
+      return;
+    }
+  }
+  const img = materialImages[key];
   const newMat = {
     id: 'mat_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
     type: 'material',
     materialKey: key,
-    canvas: src,
-    originalWidth: src.width,
-    originalHeight: src.height,
+    image: img,
+    originalWidth: img.naturalWidth,
+    originalHeight: img.naturalHeight,
     x: state.canvasWidth / 2,
     y: state.canvasHeight / 2,
     scale: state.defaultScale / 100
@@ -1633,6 +1664,7 @@ function undo() {
   state.selected = null;
   state.alignGuides = [];
   document.getElementById('align-hint').classList.remove('visible');
+  // 同步 UI
   document.getElementById('show-avatar').checked = state.customInfo.avatar.visible;
   document.getElementById('show-username').checked = state.customInfo.username.visible;
   document.getElementById('show-datetime').checked = state.customInfo.datetime.visible;
@@ -1650,9 +1682,18 @@ function undo() {
   document.getElementById('day-input').value = state.customInfo.datetime.day;
   document.getElementById('start-time').value = state.customInfo.datetime.startTime;
   document.getElementById('end-time').value = state.customInfo.datetime.endTime;
+  // 头像预览同步
+  const preview = document.getElementById('avatar-preview');
   if (state.customInfo.avatar.image) {
-    const reader = new FileReader();
-    // image对象直接保留，预览也保留
+    const tmpCanvas = document.createElement('canvas');
+    tmpCanvas.width = state.customInfo.avatar.image.width;
+    tmpCanvas.height = state.customInfo.avatar.image.height;
+    tmpCanvas.getContext('2d').drawImage(state.customInfo.avatar.image, 0, 0);
+    preview.style.backgroundImage = `url(${tmpCanvas.toDataURL()})`;
+    preview.classList.add('has-image');
+  } else {
+    preview.style.backgroundImage = '';
+    preview.classList.remove('has-image');
   }
   render();
   showToast('已撤销', 'success');
@@ -1667,6 +1708,7 @@ function confirmReset() {
     state.materials = [];
     state.selected = null;
     state.alignGuides = [];
+    if (state.eraseMode) exitEraseMode();
     if (state.baseImage) {
       state.ctx.drawImage(state.baseImage, 0, 0);
       state.baseImageData = state.ctx.getImageData(0, 0, state.canvasWidth, state.canvasHeight);
