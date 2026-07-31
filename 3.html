@@ -74,6 +74,25 @@
     border-radius: 10px;
     letter-spacing: 0.5px;
   }
+  .help-btn {
+    margin-left: 10px;
+    background: var(--card-hover);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+  }
+  .help-btn:hover {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+  }
   .status-bar {
     margin-left: auto;
     font-size: 12px;
@@ -476,6 +495,58 @@
   .modal p { color: var(--text-muted); margin: 0 0 20px; line-height: 1.6; font-size: 13px; }
   .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
   .tip-line { font-size: 10px; color: var(--text-muted); margin-top: 4px; text-align: center; line-height: 1.5; }
+  
+  /* 使用说明弹窗样式 */
+  .help-modal {
+    max-width: 640px;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+  .help-modal::-webkit-scrollbar { width: 6px; }
+  .help-modal::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  .help-step {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+    padding-bottom: 20px;
+    border-bottom: 1px dashed var(--border);
+  }
+  .help-step:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .help-step-num {
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    background: var(--primary);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-family: 'Oswald', sans-serif;
+  }
+  .help-step-content h4 {
+    margin: 0 0 6px;
+    font-size: 15px;
+    color: var(--text);
+  }
+  .help-step-content p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+  .help-step-content kbd {
+    background: var(--card-hover);
+    border: 1px solid var(--border);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-family: 'Oswald', monospace;
+    color: var(--secondary);
+    font-size: 11px;
+    margin: 0 2px;
+  }
+
   @media (max-width: 1200px) {
     .main-layout { grid-template-columns: 1fr; grid-template-rows: 280px 1fr 320px; height: auto; }
     body { overflow: auto; height: auto; min-height: 100vh; }
@@ -486,6 +557,9 @@
 <header class="app-header">
   <div class="logo">RUN PIC STUDIO</div>
   <span class="version-tag">v2.0</span>
+  <button class="help-btn" id="help-btn">
+    <i class="fa-solid fa-book-open"></i> 使用说明
+  </button>
   <div class="status-bar">
     <span>缩放 <b id="status-zoom">100%</b></span>
     <span>坐标 <b id="status-coord">0, 0</b></span>
@@ -509,7 +583,7 @@
     </div>
     <div class="canvas-overlay top-right">
       <button class="overlay-btn" id="erase-btn">
-        <i class="fa-solid fa-eraser"></i> 抹平工具
+        <i class="fa-solid fa-eraser"></i> 区域擦除
       </button>
     </div>
     <div class="canvas-overlay top-center">
@@ -632,6 +706,7 @@
   <span id="toast-msg">提示</span>
 </div>
 
+<!-- 通用确认弹窗 -->
 <div class="modal-mask" id="modal-mask">
   <div class="modal">
     <h3><i class="fa-solid fa-triangle-exclamation"></i><span id="modal-title">确认</span></h3>
@@ -639,6 +714,76 @@
     <div class="modal-actions">
       <button class="btn" id="modal-cancel">取消</button>
       <button class="btn btn-primary" id="modal-ok">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- 使用说明弹窗 -->
+<div class="modal-mask" id="help-modal-mask">
+  <div class="modal help-modal">
+    <h3 style="margin-bottom: 20px;">
+      <i class="fa-solid fa-book-open" style="color: var(--primary);"></i> 
+      <span>详细使用说明</span>
+    </h3>
+    
+    <div class="help-step">
+      <div class="help-step-num">1</div>
+      <div class="help-step-content">
+        <h4>上传底图</h4>
+        <p>点击右侧操作区的「上传底图」按钮，选择你想要编辑的运动截图（支持 JPG/PNG/WEBP）。上传后，图片会自动适应画布窗口。你可以使用鼠标<kbd>滚轮</kbd>以鼠标位置为中心放大或缩小画布，按住鼠标左键拖动<kbd>空白区域</kbd>可以平移画布位置。</p>
+      </div>
+    </div>
+
+    <div class="help-step">
+      <div class="help-step-num">2</div>
+      <div class="help-step-content">
+        <h4>擦除原有数据（区域擦除）</h4>
+        <p>点击画布右上角的「区域擦除」按钮进入擦除模式。按住鼠标左键在需要清除的数据上拖拽框选，松开鼠标后，框选区域会被填充为纯白色。可以多次框选擦除。按<kbd>Esc</kbd>或鼠标右键可取消当前框选。再次点击「区域擦除」按钮可退出该模式进行正常排版。</p>
+      </div>
+    </div>
+
+    <div class="help-step">
+      <div class="help-step-num">3</div>
+      <div class="help-step-content">
+        <h4>添加与缩放素材</h4>
+        <p>在左侧素材库点击所需的数字或单位，素材会自动出现在当前可视画面的中心。点击选中素材后，拖拽其右下角的<kbd>绿色圆形手柄</kbd>可等比例缩放大小。缩放时，右侧的「默认缩放比例」输入框会实时显示当前比例，方便参考。</p>
+      </div>
+    </div>
+
+    <div class="help-step">
+      <div class="help-step-num">4</div>
+      <div class="help-step-content">
+        <h4>一键设置后续素材比例（重要）</h4>
+        <p>当你把第一个素材调整到合适大小后，点击右侧黄色的「设为后续素材比例」按钮。之后你每次点击添加的新素材，都会自动应用这个大小，无需重复调整。如果你觉得大小不合适，随时可以修改输入框数值或重新选中素材进行设置。</p>
+      </div>
+    </div>
+
+    <div class="help-step">
+      <div class="help-step-num">5</div>
+      <div class="help-step-content">
+        <h4>对齐与排版</h4>
+        <p>拖拽素材移动时，系统会自动检测与其他素材的边缘对齐情况。当间距小于10px时，会自动吸附并显示蓝色虚线辅助线，顶部会提示「已对齐」。支持左对齐、右对齐、中心对齐以及边缘紧贴对齐，方便完美拼接数字。按住<kbd>Shift</kbd>拖拽可临时禁用吸附。选中素材后可用<kbd>方向键</kbd>微调位置。</p>
+      </div>
+    </div>
+
+    <div class="help-step">
+      <div class="help-step-num">6</div>
+      <div class="help-step-content">
+        <h4>自定义信息（可选）</h4>
+        <p>在右侧勾选「显示头像」、「显示用户名」或「显示日期时间」，对应的模块会出现在画布上。你可以上传自己的头像、修改用户名或调整日期时间，这些模块同样可以拖动、缩放。如果不需要某些信息，取消勾选即可隐藏。</p>
+      </div>
+    </div>
+
+    <div class="help-step">
+      <div class="help-step-num">7</div>
+      <div class="help-step-content">
+        <h4>撤销与导出</h4>
+        <p>如果操作失误，随时点击「撤销」回退上一步。全部排版完成后，点击「导出 JPG」按钮，系统会将底图、擦除效果、所有素材和自定义信息合成为一张高清晰度的图片并自动下载，文件名为「拼图完成.jpg」。</p>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="help-modal-close">我明白了</button>
     </div>
   </div>
 </div>
@@ -762,7 +907,6 @@ const state = {
   history: [],
   alignGuides: [],
   shiftKey: false,
-  // 平移相关
   panStartScreen: { x: 0, y: 0 },
   panStartOffset: { x: 0, y: 0 },
   hasPanned: false
@@ -781,7 +925,7 @@ function init() {
   updateStatus('就绪');
 }
 
-// ============== 画布变换（平移+缩放） ==============
+// ============== 画布变换 ==============
 function updateCanvasTransform() {
   const stage = document.getElementById('canvas-stage');
   stage.style.transform = `translate(${state.canvasOffsetX}px, ${state.canvasOffsetY}px) scale(${state.canvasZoom})`;
@@ -791,7 +935,6 @@ function updateCanvasTransform() {
 function setCanvasZoom(zoom, centerX, centerY) {
   const newZoom = Math.max(0.15, Math.min(8, zoom));
   if (centerX !== undefined && centerY !== undefined) {
-    // 以指定点为中心缩放
     const container = document.getElementById('canvas-panel');
     const rect = container.getBoundingClientRect();
     const cx = (centerX - rect.left - state.canvasOffsetX) / state.canvasZoom;
@@ -816,7 +959,6 @@ function fitCanvasToWindow() {
   updateCanvasTransform();
 }
 
-// 获取当前视口中心对应的画布坐标
 function getViewportCenterCanvasCoords() {
   const container = document.getElementById('canvas-panel');
   const rect = container.getBoundingClientRect();
@@ -827,7 +969,7 @@ function getViewportCenterCanvasCoords() {
   return { x, y };
 }
 
-// ============== 坐标转换 ==============
+// ============== 坐标转换与碰撞 ==============
 function getCanvasCoords(e) {
   const rect = state.canvas.getBoundingClientRect();
   const scaleX = state.canvas.width / rect.width;
@@ -907,7 +1049,6 @@ function render() {
   if (state.customInfo.avatar.visible) drawElement(state.customInfo.avatar);
   if (state.customInfo.username.visible) drawElement(state.customInfo.username);
   if (state.customInfo.datetime.visible) drawElement(state.customInfo.datetime);
-  // 对齐辅助线
   state.alignGuides.forEach(g => {
     ctx.strokeStyle = g.highlight ? '#1976D2' : '#2196F3';
     ctx.lineWidth = 1.5;
@@ -987,7 +1128,7 @@ function drawSelection(el) {
   ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 1.5; ctx.stroke();
 }
 
-// ============== 对齐吸附系统（完整6方向 + 紧贴） ==============
+// ============== 对齐吸附系统 ==============
 function checkAlignment(draggedEl) {
   const others = [
     ...state.materials.filter(m => m !== draggedEl),
@@ -1007,7 +1148,6 @@ function checkAlignment(draggedEl) {
 
   for (const other of others) {
     const ob = getElementBounds(other);
-    // X方向：左对左、右对右、中心对中心、左对右（紧贴）、右对左（紧贴）
     const xChecks = [
       { dragVal: db.x,             otherVal: ob.x,             guideX: ob.x },
       { dragVal: db.x + db.w,      otherVal: ob.x + ob.w,      guideX: ob.x + ob.w },
@@ -1019,7 +1159,6 @@ function checkAlignment(draggedEl) {
       const dist = Math.abs(c.dragVal - c.otherVal);
       if (dist < bestXDist) { bestXDist = dist; bestX = { guideX: c.guideX, delta: c.otherVal - c.dragVal }; }
     }
-    // Y方向：上对上、下对下、中心对中心、上对下（紧贴）、下对上（紧贴）
     const yChecks = [
       { dragVal: db.y,             otherVal: ob.y,             guideY: ob.y },
       { dragVal: db.y + db.h,      otherVal: ob.y + ob.h,      guideY: ob.y + ob.h },
@@ -1063,7 +1202,6 @@ function setupEvents() {
   canvas.addEventListener('touchmove', onPointerMove, { passive: false });
   canvas.addEventListener('touchend', onPointerUp);
 
-  // ★ 滚轮缩放：以鼠标位置为锚点
   panel.addEventListener('wheel', (e) => {
     if (!state.baseImage) return;
     e.preventDefault();
@@ -1084,6 +1222,7 @@ function setupEvents() {
   document.getElementById('scale-dec').onclick = () => adjustScaleInput(-10);
   document.getElementById('scale-input').onchange = onScaleInputChange;
   document.getElementById('set-default-scale').onclick = setAsDefaultScale;
+  
   document.getElementById('zoom-in').onclick = () => {
     const rect = document.getElementById('canvas-panel').getBoundingClientRect();
     setCanvasZoom(state.canvasZoom * 1.2, rect.left + rect.width/2, rect.top + rect.height/2);
@@ -1094,6 +1233,13 @@ function setupEvents() {
   };
   document.getElementById('zoom-fit').onclick = fitCanvasToWindow;
   window.addEventListener('resize', () => { if (state.baseImage) fitCanvasToWindow(); });
+
+  // 使用说明弹窗控制
+  document.getElementById('help-btn').onclick = () => document.getElementById('help-modal-mask').classList.add('visible');
+  document.getElementById('help-modal-close').onclick = () => document.getElementById('help-modal-mask').classList.remove('visible');
+  document.getElementById('help-modal-mask').addEventListener('click', (e) => {
+    if (e.target.id === 'help-modal-mask') e.target.classList.remove('visible');
+  });
 
   document.getElementById('show-avatar').onchange = e => {
     state.customInfo.avatar.visible = e.target.checked;
@@ -1170,7 +1316,6 @@ function onPointerDown(e) {
     state.elementStart = { x: hit.el.x, y: hit.el.y };
     updateScaleInputFromSelection();
   } else {
-    // ★ 空白区域：准备平移画布
     state.dragMode = 'pan';
     let cx = e.clientX, cy = e.clientY;
     if (e.touches && e.touches[0]) { cx = e.touches[0].clientX; cy = e.touches[0].clientY; }
@@ -1186,7 +1331,6 @@ function onPointerMove(e) {
   document.getElementById('status-coord').textContent = `${Math.round(pos.x)}, ${Math.round(pos.y)}`;
 
   if (!state.isMouseDown) {
-    // 更新光标样式
     if (state.eraseMode) { state.canvas.style.cursor = 'crosshair'; }
     else {
       const hit = hitTest(pos.x, pos.y);
@@ -1220,7 +1364,6 @@ function onPointerMove(e) {
     updateScaleInputFromSelection();
     render();
   } else if (state.dragMode === 'pan') {
-    // ★ 平移画布
     let cx = e.clientX, cy = e.clientY;
     if (e.touches && e.touches[0]) { cx = e.touches[0].clientX; cy = e.touches[0].clientY; }
     const dx = cx - state.panStartScreen.x;
@@ -1244,13 +1387,12 @@ function onPointerUp(e) {
     if (state.eraseRect.w > 2 && state.eraseRect.h > 2) {
       pushHistory();
       applyErase(state.eraseRect);
-      updateStatus('已抹平区域');
+      updateStatus('已擦除区域');
     }
     state.eraseRect = null;
     state.dragMode = null;
     render();
   } else if (state.dragMode === 'pan') {
-    // 没有真正平移 = 点击空白 = 取消选中
     if (!state.hasPanned) {
       state.selected = null;
       render();
@@ -1304,7 +1446,7 @@ function onKeyDown(e) {
   render();
 }
 
-// ============== 抹平 ==============
+// ============== 擦除 ==============
 function applyErase(rect) {
   const ctx = state.ctx;
   ctx.putImageData(state.baseImageData, 0, 0);
@@ -1320,7 +1462,7 @@ function enterEraseMode() {
   document.getElementById('erase-btn').classList.add('active');
   state.canvas.style.cursor = 'crosshair';
   state.selected = null;
-  updateStatus('抹平模式：按住拖拽框选区域');
+  updateStatus('擦除模式：按住拖拽框选区域，松开涂白');
   render();
 }
 function exitEraseMode() {
@@ -1344,7 +1486,7 @@ function onUploadBaseImage(e) {
     img.onload = () => {
       const hasContent = state.materials.length > 0 || state.history.length > 0;
       if (state.baseImage && hasContent) {
-        showModal('更换底图', '更换底图将清空画布上所有已放置的素材和抹平操作，是否继续？', () => loadBaseImage(img));
+        showModal('更换底图', '更换底图将清空画布上所有已放置的素材和擦除操作，是否继续？', () => loadBaseImage(img));
       } else { loadBaseImage(img); }
     };
     img.src = ev.target.result;
@@ -1407,7 +1549,7 @@ function deleteAvatar() {
   showToast('头像已删除', 'success');
 }
 
-// ============== 素材放置（在视口中心） ==============
+// ============== 素材放置 ==============
 async function placeMaterial(key) {
   if (!materialImages[key]) {
     showToast('素材加载中，请稍候...', 'info');
@@ -1415,7 +1557,6 @@ async function placeMaterial(key) {
     if (!materialImages[key]) { showToast('素材加载失败，请检查 ./materials/ 目录', 'error'); return; }
   }
   const img = materialImages[key];
-  // ★ 新素材放在当前视口中心
   const center = getViewportCenterCanvasCoords();
   const newMat = {
     id: 'mat_' + Date.now() + '_' + Math.random().toString(36).slice(2,6),
