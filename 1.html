@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>运动截图拼图工具 · v1.9</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f7fa;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .app {
+      display: flex;
+      height: 100vh;
+      gap: 0;
+      background: #eef1f5;
+    }
+    /* 左侧素材区 */
+    .panel-left {
+      width: 200px;
+      min-width: 180px;
+      background: #ffffff;
+      border-right: 1px solid #d0d7de;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 12px 8px;
+    }
+    .panel-left h3 {
+      font-size: 13px;
+      color: #24292f;
+      margin: 8px 0 4px 0;
+      padding: 0 4px;
+      letter-spacing: 0.3px;
+    }
+    .material-group {
+      overflow-y: auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .material-group .group-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #57606a;
+      border-bottom: 1px solid #d8dee4;
+      padding-bottom: 4px;
+      margin: 6px 0 4px 0;
+    }
+    .material-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+    .mat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #f6f8fa;
+      border-radius: 6px;
+      padding: 4px 2px;
+      width: 52px;
+      cursor: pointer;
+      transition: 0.12s;
+      border: 2px solid transparent;
+    }
+    .mat-item:hover {
+      background: #ddf4ff;
+      border-color: #58a6ff;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    }
+    .mat-item:active {
+      transform: scale(0.94);
+    }
+    .mat-item img {
+      max-width: 44px;
+      max-height: 34px;
+      object-fit: contain;
+      display: block;
+      image-rendering: auto;
+    }
+    .mat-item span {
+      font-size: 10px;
+      color: #24292f;
+      margin-top: 2px;
+      line-height: 1.2;
+      max-width: 48px;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    /* 中间画布 */
+    .panel-center {
+      flex: 1;
+      background: #d9dee4;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .canvas-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background: #d9dee4;
+    }
+    #mainCanvas {
+      display: block;
+      background: white;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      image-rendering: auto;
+      max-width: 100%;
+      max-height: 100%;
+      cursor: default;
+    }
+    /* 画布浮层控件 */
+    .canvas-float {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      gap: 8px;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(6px);
+      padding: 8px 12px;
+      border-radius: 40px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      z-index: 20;
+    }
+    .canvas-float button {
+      background: transparent;
+      border: none;
+      font-size: 20px;
+      padding: 4px 8px;
+      border-radius: 30px;
+      cursor: pointer;
+      color: #1f2937;
+      font-weight: 500;
+      transition: 0.1s;
+    }
+    .canvas-float button:hover { background: #e5e9f0; }
+    .canvas-float .zoom-level {
+      font-size: 14px;
+      padding: 0 6px;
+      min-width: 48px;
+      text-align: center;
+      color: #1f2937;
+    }
+    /* 右侧操作区 */
+    .panel-right {
+      width: 260px;
+      min-width: 230px;
+      background: #ffffff;
+      border-left: 1px solid #d0d7de;
+      padding: 16px 14px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .panel-right .section {
+      border-bottom: 1px solid #e9ecf0;
+      padding-bottom: 12px;
+    }
+    .panel-right .section:last-child { border-bottom: none; }
+    .btn {
+      background: #f0f2f5;
+      border: 1px solid #d0d7de;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: 0.1s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn:hover { background: #e5e9f0; }
+    .btn-primary { background: #1f6feb; color: white; border-color: #1f6feb; }
+    .btn-primary:hover { background: #1158c7; }
+    .btn-danger { background: #cf222e; color: white; border-color: #cf222e; }
+    .btn-danger:hover { background: #a0111f; }
+    .btn-sm { font-size: 12px; padding: 4px 10px; }
+    .flex-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .flex-col { display: flex; flex-direction: column; gap: 6px; }
+    .label { font-size: 13px; font-weight: 500; color: #1f2937; }
+    .input-text { border: 1px solid #d0d7de; border-radius: 6px; padding: 4px 8px; font-size: 13px; width: 100%; }
+    .input-small { width: 60px; }
+    .info-note {
+      background: #fff9c4;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #5d4e1a;
+      line-height: 1.5;
+    }
+    .toggle-group { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+    .toggle-item { display: flex; align-items: center; gap: 4px; font-size: 13px; }
+    .avatar-preview {
+      width: 48px; height: 48px; border-radius: 50%; border: 2px solid #00C853;
+      background: #ccc; display: flex; align-items: center; justify-content: center;
+      font-size: 24px; color: #888; overflow: hidden;
+    }
+    .avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+    .date-inputs { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+    .date-inputs input { width: 52px; padding: 4px; border: 1px solid #d0d7de; border-radius: 4px; }
+    .status-bar { font-size: 12px; color: #57606a; margin-top: 6px; border-top: 1px solid #e9ecf0; padding-top: 8px; }
+    .key-hint { font-size: 11px; background: #f6f8fa; padding: 6px 8px; border-radius: 6px; color: #24292f; }
+    /* 滚动条 */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-thumb { background: #c0c8d4; border-radius: 8px; }
+    @media (max-width: 1100px) {
+      .app { flex-direction: column; height: 100vh; overflow-y: auto; }
+      .panel-left { width: 100%; min-width: unset; height: 160px; border-right: none; border-bottom: 1px solid #d0d7de; flex-direction: row; flex-wrap: wrap; }
+      .panel-center { height: 60vh; }
+      .panel-right { width: 100%; min-width: unset; border-left: none; border-top: 1px solid #d0d7de; max-height: 50vh; }
+    }
+  </style>
+</head>
+<body>
+<div class="app" id="app">
+  <!-- 左侧素材 -->
+  <div class="panel-left">
+    <h3>📦 内置素材</h3>
+    <div class="material-group" id="materialGroup"></div>
+  </div>
+
+  <!-- 中间画布 -->
+  <div class="panel-center" id="panelCenter">
+    <div class="canvas-wrapper" id="canvasWrapper">
+      <canvas id="mainCanvas" width="800" height="600"></canvas>
+    </div>
+    <div class="canvas-float">
+      <button id="zoomOutBtn">−</button>
+      <span class="zoom-level" id="zoomLevel">100%</span>
+      <button id="zoomInBtn">+</button>
+      <button id="fitBtn">⤢</button>
+    </div>
+  </div>
+
+  <!-- 右侧操作区 -->
+  <div class="panel-right" id="panelRight">
+    <div class="section">
+      <div class="flex-row"><button class="btn" id="uploadBgBtn">📤 上传底图</button><input type="file" id="bgFileInput" accept="image/*" style="display:none"></div>
+      <div class="flex-row"><button class="btn" id="eraserBtn">🧽 抹平工具</button><button class="btn" id="undoBtn">↩ 撤销</button><button class="btn btn-danger" id="resetBtn">重置</button></div>
+      <div class="flex-row"><button class="btn btn-primary" id="exportBtn">⬇ 导出 JPG</button></div>
+    </div>
+    <div class="section">
+      <div class="label">⚙️ 默认缩放比例</div>
+      <div class="flex-row">
+        <button class="btn btn-sm" id="scaleDecBtn">−</button>
+        <input class="input-small" type="number" id="defaultScaleInput" value="100" min="20" max="300"> %
+        <button class="btn btn-sm" id="scaleIncBtn">+</button>
+      </div>
+      <div class="info-note">⚠️ 使用说明：① 先拖一个素材试试大小 ② 调整比例 ③ 新素材生效 ④ 已有素材可单独缩放</div>
+    </div>
+    <div class="section">
+      <div class="label">👤 自定义信息</div>
+      <div class="toggle-group">
+        <label class="toggle-item"><input type="checkbox" id="showAvatar"> 头像</label>
+        <label class="toggle-item"><input type="checkbox" id="showUsername"> 用户名</label>
+        <label class="toggle-item"><input type="checkbox" id="showDatetime" checked disabled> 日期时间</label>
+      </div>
+      <div class="flex-row" id="avatarControls" style="display:none">
+        <button class="btn btn-sm" id="uploadAvatarBtn">上传头像</button>
+        <button class="btn btn-sm btn-danger" id="deleteAvatarBtn">删除</button>
+        <div class="avatar-preview" id="avatarPreview">👤</div>
+        <input type="file" id="avatarFileInput" accept="image/*" style="display:none">
+      </div>
+      <div class="flex-col" id="usernameControls" style="display:none">
+        <input class="input-text" type="text" id="usernameInput" value="用户名61515321" placeholder="输入用户名">
+      </div>
+      <div class="flex-col">
+        <div class="date-inputs">
+          <span>日期</span>
+          <input type="number" id="yearInput" value="2025" min="2000" max="2100" style="width:60px">年
+          <input type="number" id="monthInput" value="6" min="1" max="12" style="width:44px">月
+          <input type="number" id="dayInput" value="4" min="1" max="31" style="width:44px">日
+        </div>
+        <div class="date-inputs">
+          <span>时间</span>
+          <input type="time" id="startTimeInput" value="16:08"> 至
+          <input type="time" id="endTimeInput" value="16:43">
+        </div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="key-hint">⌨️ 方向键1px · Shift+方向键10px · +/-缩放 · Delete删除</div>
+      <div class="status-bar" id="statusBar">就绪</div>
+    </div>
+  </div>
+</div>
+<script>
+  (function() {
+    // ----- 素材列表 (硬编码，对应materials目录) -----
+    const materialFiles = [
+      'b0.jpg','b1.jpg','b2.jpg','b3.jpg','b4.jpg','b5.jpg','b6.jpg','b7.jpg','b8.jpg','b9.jpg',
+      'bgl.jpg','bm.jpg','b2m.jpg','bqk.jpg','bmi.jpg',
+      '0.jpg','1.jpg','2.jpg','3.jpg','4.jpg','5.jpg','6.jpg','7.jpg','8.jpg','9.jpg',
+      'ceng.jpg','ge.jpg','hm.jpg','mi.jpg','ps1.jpg','ps2.jpg','qk.jpg','qks.jpg','tang.jpg','wa.jpg','m.jpg','2m.jpg'
+    ];
+    // 分组显示标签
+    const group1 = ['b0','b1','b2','b3','b4','b5','b6','b7','b8','b9','bgl','bm','b2m','bqk','bmi'];
+    const group2 = ['0','1','2','3','4','5','6','7','8','9','ceng','ge','hm','mi','ps1','ps2','qk','qks','tang','wa','m','2m'];
+
+    // ----- 全局状态 -----
+    const state = {
+      bgImage: null,          // 底图 Image 对象
+      bgDataURL: null,
+      canvasWidth: 800,
+      canvasHeight: 600,
+      materials: [],          // { id, name, img, x, y, scale, width, height }
+      eraserRects: [],        // 抹平矩形 [{x,y,w,h}]
+      selectedId: null,
+      defaultScale: 100,      // %
+      zoom: 1,               // 画布显示缩放
+      isEraserMode: false,
+      isDragging: false,
+      dragTarget: null,
+      dragOffsetX: 0, dragOffsetY: 0,
+      // 自定义信息
+      avatarImage: null,      // Image 或 null
+      avatarScale: 1,
+      username: '用户名61515321',
+      usernameScale: 1,
+      datetimeScale: 1,
+      showAvatar: false,
+      showUsername: false,
+      // 位置偏移 (整体组)
+      infoGroupX: 20,
+      infoGroupY: 20,
+      // 拖拽状态
+      nextId: 1,
+    };
+
+    // DOM 引用
+    const canvas = document.getElementById('mainCanvas');
+    const ctx = canvas.getContext('2d');
+    const materialGroup = document.getElementById('materialGroup');
+    const statusBar = document.getElementById('statusBar');
+    const defaultScaleInput = document.getElementById('defaultScaleInput');
+    const zoomLevel = document.getElementById('zoomLevel');
+    const wrapper = document.getElementById('canvasWrapper');
+
+    // ----- 辅助函数 -----
+    function loadImage(src) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = src;
+      });
+    }
+
+    // 渲染素材列表
+    function renderMaterials() {
+      materialGroup.innerHTML = '';
+      // 第一组
+      const g1 = document.createElement('div');
+      g1.className = 'group-title'; g1.textContent = '第一组 (b系列)';
+      materialGroup.appendChild(g1);
+      const grid1 = document.createElement('div'); grid1.className = 'material-grid';
+      group1.forEach(name => {
+        const item = createMaterialItem(name);
+        grid1.appendChild(item);
+      });
+      materialGroup.appendChild(grid1);
+      // 第二组
+      const g2 = document.createElement('div');
+      g2.className = 'group-title'; g2.textContent = '第二组 (数字/单位)';
+      materialGroup.appendChild(g2);
+      const grid2 = document.createElement('div'); grid2.className = 'material-grid';
+      group2.forEach(name => {
+        const item = createMaterialItem(name);
+        grid2.appendChild(item);
+      });
+      materialGroup.appendChild(grid2);
+    }
+
+    function createMaterialItem(name) {
+      const div = document.createElement('div');
+      div.className = 'mat-item';
+      const img = document.createElement('img');
+      img.src = `./materials/${name}.jpg`;
+      img.alt = name;
+      img.onerror = () => { img.src = ''; img.style.display='none'; };
+      const span = document.createElement('span');
+      span.textContent = name;
+      div.appendChild(img); div.appendChild(span);
+      div.addEventListener('click', () => addMaterialToCanvas(name));
+      return div;
+    }
+
+    // ----- 添加素材到画布 -----
+    function addMaterialToCanvas(name) {
+      if (!state.bgImage) { statusBar.textContent = '⚠️ 请先上传底图'; return; }
+      const img = new Image();
+      img.src = `./materials/${name}.jpg`;
+      img.onload = function() {
+        const baseW = img.width, baseH = img.height;
+        const scale = state.defaultScale / 100;
+        const w = baseW * scale, h = baseH * scale;
+        const mat = {
+          id: state.nextId++,
+          name: name,
+          img: img,
+          x: (state.canvasWidth - w) / 2 + (Math.random()*20-10),
+          y: (state.canvasHeight - h) / 2 + (Math.random()*20-10),
+          scale: scale,
+          width: w,
+          height: h,
+          baseW: baseW,
+          baseH: baseH,
+        };
+        state.materials.push(mat);
+        selectItem(mat.id);
+        render();
+        statusBar.textContent = `✅ 添加素材: ${name}`;
+      };
+      img.onerror = () => { statusBar.textContent = `❌ 素材加载失败: ${name}`; };
+    }
+
+    // ----- 渲染核心 -----
+    function render() {
+      ctx.clearRect(0, 0, state.canvasWidth, state.canvasHeight);
+      // 底图
+      if (state.bgImage) {
+        ctx.drawImage(state.bgImage, 0, 0, state.canvasWidth, state.canvasHeight);
+      } else {
+        ctx.fillStyle = '#f0f2f5';
+        ctx.fillRect(0, 0, state.canvasWidth, state.canvasHeight);
+        ctx.fillStyle = '#8b949e';
+        ctx.font = '20px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('上传底图以开始', state.canvasWidth/2, state.canvasHeight/2);
+      }
+      // 抹平矩形
+      state.eraserRects.forEach(r => {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(r.x, r.y, r.w, r.h);
+      });
+      // 素材
+      state.materials.forEach(mat => {
+        ctx.save();
+        ctx.translate(mat.x + mat.width/2, mat.y + mat.height/2);
+        ctx.scale(mat.scale / (mat.baseW? (mat.width/mat.baseW) : 1), mat.scale / (mat.baseW? (mat.width/mat.baseW) : 1));
+        const drawW = mat.baseW || mat.width;
+        const drawH = mat.baseH || mat.height;
+        ctx.drawImage(mat.img, -drawW/2, -drawH/2, drawW, drawH);
+        ctx.restore();
+        // 选中边框
+        if (state.selectedId === mat.id) {
+          ctx.strokeStyle = '#1f6feb';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([6, 4]);
+          ctx.strokeRect(mat.x-2, mat.y-2, mat.width+4, mat.height+4);
+          ctx.setLineDash([]);
+          // 角标
+          const corners = [[mat.x, mat.y], [mat.x+mat.width, mat.y], [mat.x, mat.y+mat.height], [mat.x+mat.width, mat.y+mat.height]];
+          corners.forEach(([cx, cy]) => {
+            ctx.fillStyle = '#1f6feb';
+            ctx.fillRect(cx-3, cy-3, 6, 6);
+          });
+          // 缩放手柄
+          ctx.beginPath();
+          ctx.arc(mat.x+mat.width, mat.y+mat.height, 7, 0, 2*Math.PI);
+          ctx.fillStyle = '#00C853';
+          ctx.fill();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+      });
+
+      // ----- 自定义信息 (头像/用户名/日期) -----
+      drawCustomInfo();
+
+      // 画布缩放
+      applyCanvasZoom();
+    }
+
+    function drawCustomInfo() {
+      const gx = state.infoGroupX, gy = state.infoGroupY;
+      let avatarSize = 96 * state.avatarScale;
+      let usernameFontSize = 43 * state.usernameScale;
+      let datetimeFontSize = 39 * state.datetimeScale;
+
+      // 头像
+      if (state.showAvatar) {
+        const centerX = gx + avatarSize/2;
+        const centerY = gy + avatarSize/2;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, avatarSize/2, 0, 2*Math.PI);
+        ctx.closePath();
+        ctx.clip();
+        if (state.avatarImage) {
+          ctx.drawImage(state.avatarImage, gx, gy, avatarSize, avatarSize);
+        } else {
+          ctx.fillStyle = '#cccccc';
+          ctx.fillRect(gx, gy, avatarSize, avatarSize);
+          ctx.fillStyle = '#888';
+          ctx.font = `${avatarSize*0.5}px sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('👤', gx+avatarSize/2, gy+avatarSize/2);
+        }
+        ctx.restore();
+        // 边框
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, avatarSize/2, 0, 2*Math.PI);
+        ctx.strokeStyle = '#00C853';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+
+      // 用户名 (在头像右侧)
+      if (state.showUsername) {
+        const nameX = state.showAvatar ? gx + avatarSize + 8 : gx;
+        const nameY = gy + (state.showAvatar ? avatarSize/2 - usernameFontSize/2 : 0);
+        ctx.fillStyle = '#000000';
+        ctx.font = `500 ${usernameFontSize}px system-ui, sans-serif`;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(state.username, nameX, nameY + usernameFontSize/2);
+      }
+
+      // 日期时间 (在用户名下方)
+      const dateY = (state.showUsername ? gy + (state.showAvatar ? avatarSize/2 + usernameFontSize/2 + 4 : 0) : gy + 10);
+      const dateX = state.showAvatar ? gx : gx;
+      const year = document.getElementById('yearInput').value || '2025';
+      const month = document.getElementById('monthInput').value || '6';
+      const day = document.getElementById('dayInput').value || '4';
+      const start = document.getElementById('startTimeInput').value || '16:08';
+      const end = document.getElementById('endTimeInput').value || '16:43';
+      const dateStr = `${year}/${month.padStart(2,'0')}/${day.padStart(2,'0')} ${start} - ${end}`;
+      ctx.fillStyle = '#888888';
+      ctx.font = `${datetimeFontSize}px system-ui, sans-serif`;
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'top';
+      ctx.fillText(dateStr, dateX, dateY);
+    }
+
+    function applyCanvasZoom() {
+      const z = state.zoom || 1;
+      const w = state.canvasWidth * z;
+      const h = state.canvasHeight * z;
+      canvas.style.width = w + 'px';
+      canvas.style.height = h + 'px';
+      zoomLevel.textContent = Math.round(z*100)+'%';
+    }
+
+    // ----- 选中 & 选择 -----
+    function selectItem(id) {
+      state.selectedId = id;
+      render();
+    }
+
+    // 获取选中的素材
+    function getSelectedMat() {
+      return state.materials.find(m => m.id === state.selectedId) || null;
+    }
+
+    // ----- 删除素材 -----
+    function deleteSelected() {
+      if (state.selectedId === null) return;
+      state.materials = state.materials.filter(m => m.id !== state.selectedId);
+      state.selectedId = null;
+      render();
+      statusBar.textContent = '🗑️ 已删除素材';
+    }
+
+    // ----- 画布事件：鼠标/触摸 -----
+    function getCanvasCoords(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const x = (clientX - rect.left) / state.zoom;
+      const y = (clientY - rect.top) / state.zoom;
+      return { x, y };
+    }
+
+    let isPointerDown = false;
+    let pointerStartX = 0, pointerStartY = 0;
+    let eraserStartX = 0, eraserStartY = 0;
+    let isEraserDragging = false;
+
+    function onPointerDown(e) {
+      e.preventDefault();
+      const { x, y } = getCanvasCoords(e);
+      if (state.isEraserMode) {
+        eraserStartX = x; eraserStartY = y;
+        isEraserDragging = true;
+        return;
+      }
+      // 检查是否点击到素材
+      const clicked = findMaterialAt(x, y);
+      if (clicked) {
+        selectItem(clicked.id);
+        state.isDragging = true;
+        state.dragTarget = clicked;
+        state.dragOffsetX = x - clicked.x;
+        state.dragOffsetY = y - clicked.y;
+        statusBar.textContent = `拖动: ${clicked.name}`;
+      } else {
+        // 点击空白取消选中
+        state.selectedId = null;
+        render();
+      }
+    }
+
+    function onPointerMove(e) {
+      e.preventDefault();
+      const { x, y } = getCanvasCoords(e);
+      if (state.isEraserMode && isEraserDragging) {
+        // 绘制橡皮框选预览
+        render();
+        const rx = Math.min(eraserStartX, x);
+        const ry = Math.min(eraserStartY, y);
+        const rw = Math.abs(x - eraserStartX);
+        const rh = Math.abs(y - eraserStartY);
+        ctx.fillStyle = 'rgba(33, 150, 243, 0.2)';
+        ctx.strokeStyle = '#2196F3';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4,4]);
+        ctx.fillRect(rx, ry, rw, rh);
+        ctx.strokeRect(rx, ry, rw, rh);
+        ctx.setLineDash([]);
+        return;
+      }
+      if (state.isDragging && state.dragTarget) {
+        state.dragTarget.x = x - state.dragOffsetX;
+        state.dragTarget.y = y - state.dragOffsetY;
+        render();
+        statusBar.textContent = `位置: (${Math.round(state.dragTarget.x)}, ${Math.round(state.dragTarget.y)})`;
+      }
+    }
+
+    function onPointerUp(e) {
+      e.preventDefault();
+      if (state.isEraserMode && isEraserDragging) {
+        const { x, y } = getCanvasCoords(e);
+        const rx = Math.min(eraserStartX, x);
+        const ry = Math.min(eraserStartY, y);
+        const rw = Math.abs(x - eraserStartX);
+        const rh = Math.abs(y - eraserStartY);
+        if (rw > 4 && rh > 4) {
+          state.eraserRects.push({ x: rx, y: ry, w: rw, h: rh });
+          statusBar.textContent = `🧽 抹平区域 (${Math.round(rw)}x${Math.round(rh)})`;
+        }
+        isEraserDragging = false;
+        render();
+        return;
+      }
+      if (state.isDragging) {
+        state.isDragging = false;
+        state.dragTarget = null;
+        render();
+      }
+    }
+
+    function findMaterialAt(x, y) {
+      // 从上层到下层 (后添加在上层)
+      for (let i = state.materials.length-1; i >= 0; i--) {
+        const m = state.materials[i];
+        if (x >= m.x && x <= m.x + m.width && y >= m.y && y <= m.y + m.height) {
+          return m;
+        }
+      }
+      return null;
+    }
+
+    // ----- 注册事件 -----
+    function initEvents() {
+      canvas.addEventListener('mousedown', onPointerDown);
+      canvas.addEventListener('mousemove', onPointerMove);
+      canvas.addEventListener('mouseup', onPointerUp);
+      canvas.addEventListener('mouseleave', onPointerUp);
+      canvas.addEventListener('touchstart', onPointerDown, { passive: false });
+      canvas.addEventListener('touchmove', onPointerMove, { passive: false });
+      canvas.addEventListener('touchend', onPointerUp, { passive: false });
+      canvas.addEventListener('touchcancel', onPointerUp, { passive: false });
+
+      // 键盘
+      document.addEventListener('keydown', (e) => {
+        const key = e.key;
+        const sel = getSelectedMat();
+        if (!sel) return;
+        if (key === 'Delete' || key === 'Backspace') {
+          deleteSelected();
+          e.preventDefault();
+        }
+        if (key === 'ArrowLeft') { sel.x -= e.shiftKey ? 10 : 1; render(); e.preventDefault(); }
+        if (key === 'ArrowRight') { sel.x += e.shiftKey ? 10 : 1; render(); e.preventDefault(); }
+        if (key === 'ArrowUp') { sel.y -= e.shiftKey ? 10 : 1; render(); e.preventDefault(); }
+        if (key === 'ArrowDown') { sel.y += e.shiftKey ? 10 : 1; render(); e.preventDefault(); }
+        if (key === '+' || key === '=') {
+          const newScale = Math.min(sel.scale * 1.1, 3.0);
+          sel.scale = newScale;
+          sel.width = sel.baseW * newScale;
+          sel.height = sel.baseH * newScale;
+          render(); e.preventDefault();
+        }
+        if (key === '-' || key === '_') {
+          const newScale = Math.max(sel.scale * 0.9, 0.2);
+          sel.scale = newScale;
+          sel.width = sel.baseW * newScale;
+          sel.height = sel.baseH * newScale;
+          render(); e.preventDefault();
+        }
+      });
+    }
+
+    // ----- UI 按钮事件 -----
+    function initUI() {
+      // 上传底图
+      document.getElementById('uploadBgBtn').addEventListener('click', () => document.getElementById('bgFileInput').click());
+      document.getElementById('bgFileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+          const img = new Image();
+          img.onload = function() {
+            state.bgImage = img;
+            state.canvasWidth = img.width;
+            state.canvasHeight = img.height;
+            canvas.width = img.width;
+            canvas.height = img.height;
+            state.materials = [];
+            state.eraserRects = [];
+            state.selectedId = null;
+            state.infoGroupX = 20;
+            state.infoGroupY = 20;
+            render();
+            statusBar.textContent = `📷 底图加载: ${img.width}x${img.height}`;
+            // 清除选中
+          };
+          img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+
+      // 抹平工具
+      document.getElementById('eraserBtn').addEventListener('click', function() {
+        state.isEraserMode = !state.isEraserMode;
+        canvas.style.cursor = state.isEraserMode ? 'crosshair' : 'default';
+        statusBar.textContent = state.isEraserMode ? '🧽 抹平模式 (拖拽框选)' : '🖱️ 选择模式';
+        this.textContent = state.isEraserMode ? '🧽 退出抹平' : '🧽 抹平工具';
+      });
+
+      // 撤销 (简单: 移除最后一个抹平或素材)
+      document.getElementById('undoBtn').addEventListener('click', function() {
+        if (state.eraserRects.length > 0) {
+          state.eraserRects.pop();
+          render();
+          statusBar.textContent = '↩ 撤销抹平';
+        } else if (state.materials.length > 0) {
+          const removed = state.materials.pop();
+          if (state.selectedId === removed.id) state.selectedId = null;
+          render();
+          statusBar.textContent = `↩ 撤销素材: ${removed.name}`;
+        } else {
+          statusBar.textContent = '没有可撤销的操作';
+        }
+      });
+
+      // 重置
+      document.getElementById('resetBtn').addEventListener('click', function() {
+        if (!confirm('确定要清空画布吗？此操作不可恢复')) return;
+        state.materials = [];
+        state.eraserRects = [];
+        state.selectedId = null;
+        render();
+        statusBar.textContent = '🔄 已重置画布';
+      });
+
+      // 导出
+      document.getElementById('exportBtn').addEventListener('click', function() {
+        if (!state.bgImage) { statusBar.textContent = '⚠️ 请先上传底图'; return; }
+        const exportCanvas = document.createElement('canvas');
+        exportCanvas.width = state.canvasWidth;
+        exportCanvas.height = state.canvasHeight;
+        const ectx = exportCanvas.getContext('2d');
+        // 底图
+        if (state.bgImage) ectx.drawImage(state.bgImage, 0, 0);
+        // 抹平
+        state.eraserRects.forEach(r => { ectx.fillStyle='#ffffff'; ectx.fillRect(r.x,r.y,r.w,r.h); });
+        // 素材
+        state.materials.forEach(mat => {
+          ectx.save();
+          ectx.translate(mat.x + mat.width/2, mat.y + mat.height/2);
+          ectx.scale(mat.scale / (mat.baseW? (mat.width/mat.baseW) : 1), mat.scale / (mat.baseW? (mat.width/mat.baseW) : 1));
+          ectx.drawImage(mat.img, -mat.baseW/2, -mat.baseH/2, mat.baseW, mat.baseH);
+          ectx.restore();
+        });
+        // 自定义信息 简单重绘
+        state.showAvatar = document.getElementById('showAvatar').checked;
+        state.showUsername = document.getElementById('showUsername').checked;
+        // 临时绘制到导出canvas
+        drawCustomInfoOnCtx(ectx);
+        const link = document.createElement('a');
+        link.download = '拼图完成.jpg';
+        link.href = exportCanvas.toDataURL('image/jpeg', 0.92);
+        link.click();
+        statusBar.textContent = '✅ 导出完成';
+      });
+
+      // 缩放
+      document.getElementById('zoomInBtn').addEventListener('click', ()=> { state.zoom = Math.min(8, state.zoom*1.2); applyCanvasZoom(); });
+      document.getElementById('zoomOutBtn').addEventListener('click', ()=> { state.zoom = Math.max(0.15, state.zoom/1.2); applyCanvasZoom(); });
+      document.getElementById('fitBtn').addEventListener('click', ()=> {
+        const rect = wrapper.getBoundingClientRect();
+        const fitX = (rect.width-20) / state.canvasWidth;
+        const fitY = (rect.height-20) / state.canvasHeight;
+        state.zoom = Math.min(fitX, fitY, 1);
+        applyCanvasZoom();
+      });
+
+      // 默认缩放
+      document.getElementById('scaleIncBtn').addEventListener('click', ()=> { let v=parseInt(defaultScaleInput.value)||100; v=Math.min(300,v+10); defaultScaleInput.value=v; state.defaultScale=v; });
+      document.getElementById('scaleDecBtn').addEventListener('click', ()=> { let v=parseInt(defaultScaleInput.value)||100; v=Math.max(20,v-10); defaultScaleInput.value=v; state.defaultScale=v; });
+      defaultScaleInput.addEventListener('change', function() { let v=parseInt(this.value)||100; v=Math.min(300,Math.max(20,v)); this.value=v; state.defaultScale=v; });
+
+      // 自定义信息开关
+      document.getElementById('showAvatar').addEventListener('change', function() {
+        state.showAvatar = this.checked;
+        document.getElementById('avatarControls').style.display = this.checked ? 'flex' : 'none';
+        render();
+      });
+      document.getElementById('showUsername').addEventListener('change', function() {
+        state.showUsername = this.checked;
+        document.getElementById('usernameControls').style.display = this.checked ? 'flex' : 'none';
+        render();
+      });
+      // 头像上传
+      document.getElementById('uploadAvatarBtn').addEventListener('click', ()=> document.getElementById('avatarFileInput').click());
+      document.getElementById('avatarFileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+          const img = new Image();
+          img.onload = function() {
+            state.avatarImage = img;
+            render();
+          };
+          img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+      document.getElementById('deleteAvatarBtn').addEventListener('click', function() {
+        state.avatarImage = null;
+        render();
+      });
+      // 用户名输入
+      document.getElementById('usernameInput').addEventListener('input', function() {
+        state.username = this.value || '用户名61515321';
+        render();
+      });
+      // 日期时间输入
+      ['yearInput','monthInput','dayInput','startTimeInput','endTimeInput'].forEach(id => {
+        document.getElementById(id).addEventListener('change', render);
+        document.getElementById(id).addEventListener('input', render);
+      });
+
+      // 初始化素材
+      renderMaterials();
+      // 设置默认日期
+      render();
+      initEvents();
+      statusBar.textContent = '✅ 就绪，上传底图开始';
+    }
+
+    function drawCustomInfoOnCtx(ctx) {
+      // 简化导出绘制，复用逻辑 ( 只绘制开启的 )
+      const gx = state.infoGroupX, gy = state.infoGroupY;
+      let avatarSize = 96 * state.avatarScale;
+      let usernameFontSize = 43 * state.usernameScale;
+      let datetimeFontSize = 39 * state.datetimeScale;
+      if (state.showAvatar) {
+        const cx = gx + avatarSize/2, cy = gy + avatarSize/2;
+        ctx.save();
+        ctx.beginPath(); ctx.arc(cx, cy, avatarSize/2, 0, 2*Math.PI); ctx.closePath(); ctx.clip();
+        if (state.avatarImage) ctx.drawImage(state.avatarImage, gx, gy, avatarSize, avatarSize);
+        else { ctx.fillStyle='#cccccc'; ctx.fillRect(gx,gy,avatarSize,avatarSize); }
+        ctx.restore();
+        ctx.beginPath(); ctx.arc(cx, cy, avatarSize/2, 0, 2*Math.PI);
+        ctx.strokeStyle='#00C853'; ctx.lineWidth=2; ctx.stroke();
+      }
+      if (state.showUsername) {
+        const nameX = state.showAvatar ? gx + avatarSize + 8 : gx;
+        const nameY = gy + (state.showAvatar ? avatarSize/2 - usernameFontSize/2 : 0);
+        ctx.fillStyle = '#000000';
+        ctx.font = `500 ${usernameFontSize}px system-ui, sans-serif`;
+        ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        ctx.fillText(state.username, nameX, nameY + usernameFontSize/2);
+      }
+      const dateY = (state.showUsername ? gy + (state.showAvatar ? avatarSize/2 + usernameFontSize/2 + 4 : 0) : gy + 10);
+      const dateX = state.showAvatar ? gx : gx;
+      const year = document.getElementById('yearInput').value || '2025';
+      const month = document.getElementById('monthInput').value || '6';
+      const day = document.getElementById('dayInput').value || '4';
+      const start = document.getElementById('startTimeInput').value || '16:08';
+      const end = document.getElementById('endTimeInput').value || '16:43';
+      const dateStr = `${year}/${month.padStart(2,'0')}/${day.padStart(2,'0')} ${start} - ${end}`;
+      ctx.fillStyle = '#888888';
+      ctx.font = `${datetimeFontSize}px system-ui, sans-serif`;
+      ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+      ctx.fillText(dateStr, dateX, dateY);
+    }
+
+    // 启动
+    window.onload = function() {
+      initUI();
+    };
+  })();
+</script>
+</body>
+</html>
