@@ -1,842 +1,920 @@
-/**
- * Keep 运动截图拼图工具 - 核心逻辑
- * 域名: keepdata.top
+/* 
+ * Keep运动截图拼图 v2.0
+ * 核心逻辑文件 app.js
  */
 
 (function() {
     'use strict';
 
-    // 域名验证（如果不加密，可以先注释掉，或者留着等上线后再用）
-    // const currentDomain = window.location.hostname;
-    // if (currentDomain !== 'keepdata.top' && currentDomain !== 'localhost' && currentDomain !== '') {
-    //     // 开发测试时可以先注释掉下面这行，上线后打开
-    //     // document.body.innerHTML = '<h1 style="text-align:center;margin-top:50px;">请在 keepdata.top 域名下运行</h1>';
-    //     // throw new Error('Domain validation failed');
-    // }
-
-    // --- 全局状态 ---
+    // ==================== 状态管理 ====================
     const state = {
-        canvas: null,
-        ctx: null,
-        stage: null,
-        bgImage: null, // 底图
-        objects: [],   // 所有素材对象
-        selectedId: null, // 当前选中的素材ID
+        // 画布状态
+        baseImage: null,
+        eraseCanvas: null,
+        eraseCtx: null,
+        mainCanvas: null,
+        mainCtx: null,
+        zoom: 1,
+        panX: 0,
+        panY: 0,
+
+        // 素材状态
+        sprites: [],
+        selectedSprite: null,
+        defaultScale: 100,
+
+        // 交互状态
         isDragging: false,
-        dragStart: { x: 0, y: 0 },
-        panOffset: { x: 0, y: 0 }, // 画布平移
-        scale: 1, // 画布缩放
-        isErasing: false, // 是否处于擦除模式
-        isPanning: false, // 是否正在拖拽画布空白处
-        lastMouse: { x: 0, y: 0 },
-        history: [], // 撤销栈
-        maxHistory: 20,
-        materials: [], // 素材数据
-        defaultScale: 1.0, // 后续素材默认缩放
+        isResizing: false,
+        isPanning: false,
+        isEraseMode: false,
+        isErasing: false,
+
+        // 拖拽状态缓存
+        dragSpriteId: null,
+        dragStartX: 0,
+        dragStartY: 0,
+        resizeSpriteId: null,
+        resizeStartX: 0,
+        resizeStartScale: 1,
+        panStartX: 0,
+        panStartY: 0,
+
+        // 擦除状态
+        eraseStartX: 0,
+        eraseStartY: 0,
+        eraseBox: null,
+
+        // 自定义信息
+        showAvatar: false,
+        showUsername: false,
+        showDatetime: true,
         avatarImage: null,
-        eraserStart: null // 擦除框选起始点
+        username: '',
+        date: '',
+        time: '12:00',
+
+        // 历史记录
+        history: [],
+        historyIndex: -1
     };
 
-    // --- 配置 ---
-    const CONFIG = {
-        canvasWidth: 800,
-        canvasHeight: 600,
-        snapThreshold: 10, // 吸附阈值
-        minScale: 0.2,
-        maxScale: 3.0
+    // ==================== 素材数据 ====================
+    const materials = {
+        numbers: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
+        units: ['km', 'm', 'cal', 'kcal', 'min', 'h', '秒', '步'],
+        others: ['小数点', '冒号', '斜杠']
     };
 
-    // --- 素材库定义 ---
-    const MATERIALS_DATA = [
-        // 数字
-        { type: 'text', label: '1', content: '1', font: 'bold 80px Arial', color: '#333' },
-        { type: 'text', label: '2', content: '2', font: 'bold 80px Arial', color: '#333' },
-        { type: 'text', label: '3', content: '3', font: 'bold 80px Arial', color: '#333' },
-        { type: 'text', label: '4', content: '4', font: 'bold 80px Arial', color: '#333' },
-        { type: 'text', label: '5', content: '5', font: 'bold 80px Arial', color: '#333' },
-        { type: 'text', label: '6', content: '6', font: 'bold 80px Arial', color: '#333' },
-        { type: 'text', label: '7', content: '7', font: 'bold 80px Arial', color: '#333' },
-        { type: 'text', label: '8', content: '8', font: 'bold 80px Arial', color: '#333' },
-        { type: 'text', label: '9', content: '9', font: 'bold 80px Arial', color: '#333' },
-        { type: 'text', label: '10', content: '10', font: 'bold 80px Arial', color: '#333' },
-        
-        // 单位
-        { type: 'text', label: 'km', content: 'km', font: 'bold 50px Arial', color: '#666' },
-        { type: 'text', label: 'kcal', content: 'kcal', font: 'bold 50px Arial', color: '#666' },
-        { type: 'text', label: 'min', content: 'min', font: 'bold 50px Arial', color: '#666' },
-        { type: 'text', label: '次', content: '次', font: 'bold 50px Arial', color: '#666' },
-        { type: 'text', label: '配速', content: "配速\n5'30''", font: 'bold 40px Arial', color: '#333', lineHeight: 1.2 },
-        
-        // 装饰
-        { type: 'text', label: 'Keep', content: 'Keep', font: 'bold 60px Arial', color: '#00C853' },
-        { type: 'rect', label: '背景块', width: 100, height: 100, color: 'rgba(255,255,255,0.8)' }
-    ];
-
-    // --- 初始化 ---
+    // ==================== 初始化 ====================
     function init() {
-        // 1. 初始化画布
-        state.canvas = document.getElementById('main-canvas');
-        state.ctx = state.canvas.getContext('2d');
-        state.stage = document.getElementById('canvas-stage');
-
-        // 2. 渲染素材面板
-        renderMaterialsPanel();
-
-        // 3. 绑定事件
-        bindEvents();
-
-        // 4. 初始绘制
-        draw();
-        
-        showToast('欢迎使用！请先上传底图。', 'info');
+        initCanvas();
+        initMaterials();
+        initEvents();
+        initDatetime();
+        updateStatus();
     }
 
-    // --- 渲染素材面板 ---
-    function renderMaterialsPanel() {
-        const panel = document.getElementById('materials-panel');
-        if (!panel) return;
+    function initCanvas() {
+        const container = document.getElementById('canvasContainer');
+        const mainCanvas = document.getElementById('mainCanvas');
+        const eraseCanvas = document.getElementById('eraseCanvas');
 
-        const grid = document.createElement('div');
-        grid.className = 'materials-grid';
+        if (!container || !mainCanvas || !eraseCanvas) return;
 
-        MATERIALS_DATA.forEach(mat => {
-            const item = document.createElement('div');
-            item.className = 'material-item';
-            item.innerHTML = `
-                ${mat.type === 'text' ? `<span style="font:${mat.font};color:${mat.color}">${mat.content}</span>` : ''}
-                ${mat.type === 'rect' ? `<div style="width:30px;height:30px;background:${mat.color};border:1px solid #ccc;"></div>` : ''}
-                <div class="label">${mat.label}</div>
-            `;
-            item.onclick = () => addMaterial(mat);
-            grid.appendChild(item);
+        const rect = container.getBoundingClientRect();
+        mainCanvas.width = rect.width;
+        mainCanvas.height = rect.height;
+        eraseCanvas.width = rect.width;
+        eraseCanvas.height = rect.height;
+
+        state.mainCanvas = mainCanvas;
+        state.mainCtx = mainCanvas.getContext('2d');
+        state.eraseCanvas = eraseCanvas;
+        state.eraseCtx = eraseCanvas.getContext('2d');
+    }
+
+    function initMaterials() {
+        const numberContainer = document.getElementById('numberMaterials');
+        const unitContainer = document.getElementById('unitMaterials');
+        const otherContainer = document.getElementById('otherMaterials');
+
+        if (!numberContainer || !unitContainer || !otherContainer) return;
+
+        numberContainer.innerHTML = '';
+        unitContainer.innerHTML = '';
+        otherContainer.innerHTML = '';
+
+        materials.numbers.forEach(num => {
+            const item = createMaterialItem(num, 'number');
+            numberContainer.appendChild(item);
         });
 
-        const title = document.createElement('h3');
-        title.className = 'section-title';
-        title.textContent = '素材库';
-        
-        panel.appendChild(title);
-        panel.appendChild(grid);
+        materials.units.forEach(unit => {
+            const item = createMaterialItem(unit, 'unit');
+            unitContainer.appendChild(item);
+        });
+
+        materials.others.forEach(other => {
+            const item = createMaterialItem(other, 'other');
+            otherContainer.appendChild(item);
+        });
     }
 
-    // --- 添加素材 ---
-    function addMaterial(mat) {
-        if (!state.bgImage) {
-            showToast('请先上传底图', 'error');
-            return;
-        }
+    function createMaterialItem(text, type) {
+        const item = document.createElement('div');
+        item.className = 'material-item';
+        item.textContent = text;
+        item.dataset.type = type;
+        item.dataset.value = text;
+        item.addEventListener('click', () => window.addSprite(type, text));
+        return item;
+    }
 
-        const id = Date.now().toString();
-        const newObj = {
-            id: id,
-            type: mat.type,
-            content: mat.content,
-            x: (state.canvas.width / 2) - (100 / state.scale), // 初始居中
-            y: (state.canvas.height / 2) - (50 / state.scale),
-            width: 100, 
-            height: 100,
-            rotation: 0,
-            scale: state.defaultScale, // 使用当前默认缩放
-            ...mat
+    function initEvents() {
+        const container = document.getElementById('canvasContainer');
+        
+        // 鼠标事件
+        container.addEventListener('mousedown', handleMouseDown);
+        container.addEventListener('mousemove', handleMouseMove);
+        container.addEventListener('mouseup', handleMouseUp);
+        container.addEventListener('wheel', handleWheel, { passive: false });
+        container.addEventListener('contextmenu', e => e.preventDefault());
+
+        // 键盘事件
+        document.addEventListener('keydown', handleKeyDown);
+
+        // 文件输入
+        const baseInput = document.getElementById('baseImageInput');
+        const avatarInput = document.getElementById('avatarInput');
+        if (baseInput) baseInput.addEventListener('change', handleBaseImageUpload);
+        if (avatarInput) avatarInput.addEventListener('change', handleAvatarUpload);
+
+        // 窗口调整
+        window.addEventListener('resize', debounce(initCanvas, 200));
+    }
+
+    function initDatetime() {
+        const dateInput = document.getElementById('dateInput');
+        const timeInput = document.getElementById('timeInput');
+        const now = new Date();
+        
+        if (dateInput) dateInput.value = now.toISOString().split('T')[0];
+        if (timeInput) timeInput.value = now.toTimeString().slice(0, 5);
+        updateDatetime();
+    }
+
+    // ==================== 素材操作 ====================
+    function addSprite(type, value) {
+        const container = document.getElementById('canvasContainer');
+        if (!container) return;
+
+        const rect = container.getBoundingClientRect();
+
+        const sprite = {
+            id: Date.now(),
+            type: type,
+            value: value,
+            x: rect.width / 2 - 20,
+            y: rect.height / 2 - 15,
+            width: 40,
+            height: 30,
+            scale: state.defaultScale / 100
         };
 
-        // 如果是文本，测量宽度
-        if (mat.type === 'text') {
-            state.ctx.font = mat.font;
-            const metrics = state.ctx.measureText(mat.content);
-            newObj.width = metrics.width;
-            newObj.height = parseInt(mat.font, 10); // 估算高度
-        }
-
-        state.objects.push(newObj);
+        state.sprites.push(sprite);
+        renderSprites();
+        selectSprite(sprite.id);
         saveHistory();
-        draw();
-        
-        // 自动选中
-        selectObject(id);
     }
 
-    // --- 核心绘制循环 ---
-    function draw() {
-        const { ctx, canvas, bgImage, objects, panOffset, scale } = state;
+    function renderSprites() {
+        const layer = document.getElementById('spriteLayer');
+        if (!layer) return;
+        
+        layer.innerHTML = '';
 
-        // 清空画布
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        state.sprites.forEach(sprite => {
+            const el = document.createElement('div');
+            el.className = 'sprite-element' + (state.selectedSprite === sprite.id ? ' selected' : '');
+            el.style.left = sprite.x + 'px';
+            el.style.top = sprite.y + 'px';
+            el.style.fontWeight = 'bold';
+            el.style.color = '#00d4aa';
+            el.style.padding = '4px 8px';
+            el.style.whiteSpace = 'nowrap';
+            el.style.position = 'absolute';
+            el.style.cursor = 'move';
+            el.style.userSelect = 'none';
 
-        // 绘制底图
-        if (bgImage) {
-            ctx.drawImage(bgImage, 0, 0, canvas.width, canvas.height);
-        } else {
-            ctx.fillStyle = '#eee';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // 根据类型设置内容
+            let displayValue = sprite.value;
+            if (sprite.type === 'other') {
+                displayValue = sprite.value === '小数点' ? '.' :
+                               sprite.value === '冒号' ? ':' : '/';
+            }
+            
+            // 动态计算字体大小
+            const fontSize = 16 * sprite.scale;
+            el.style.fontSize = fontSize + 'px';
+            el.textContent = displayValue;
+
+            // 缩放手柄
+            const handle = document.createElement('div');
+            handle.className = 'resize-handle';
+            handle.style.position = 'absolute';
+            handle.style.right = '-8px';
+            handle.style.bottom = '-8px';
+            handle.style.width = '16px';
+            handle.style.height = '16px';
+            handle.style.background = '#00d4aa';
+            handle.style.borderRadius = '50%';
+            handle.style.cursor = 'se-resize';
+            handle.style.opacity = state.selectedSprite === sprite.id ? '1' : '0';
+            
+            handle.addEventListener('mousedown', (e) => {
+                e.stopPropagation();
+                startResize(sprite.id, e);
+            });
+            el.appendChild(handle);
+
+            el.addEventListener('mousedown', (e) => {
+                if (!state.isEraseMode) {
+                    e.stopPropagation();
+                    selectSprite(sprite.id);
+                    startDrag(sprite.id, e);
+                }
+            });
+
+            layer.appendChild(el);
+            
+            // 更新尺寸状态
+            sprite.width = el.offsetWidth;
+            sprite.height = el.offsetHeight;
+        });
+
+        updateUndoButton();
+    }
+
+    function selectSprite(id) {
+        state.selectedSprite = id;
+        renderSprites();
+
+        // 更新缩放显示
+        if (id) {
+            const sprite = state.sprites.find(s => s.id === id);
+            if (sprite) {
+                const scaleInput = document.getElementById('scaleInput');
+                if (scaleInput) scaleInput.value = Math.round(sprite.scale * 100);
+            }
         }
+    }
 
-        // 绘制所有素材
-        objects.forEach(obj => {
-            ctx.save();
-            ctx.translate(obj.x + obj.width / 2, obj.y + obj.height / 2);
-            ctx.scale(obj.scale, obj.scale);
-            ctx.rotate((obj.rotation * Math.PI) / 180);
-            ctx.translate(-(obj.width / 2), -(obj.height / 2));
+    function startDrag(id, e) {
+        const sprite = state.sprites.find(s => s.id === id);
+        if (!sprite) return;
 
-            if (obj.type === 'text') {
-                ctx.font = obj.font;
-                ctx.fillStyle = obj.color;
-                ctx.textBaseline = 'top';
-                if (obj.lineHeight) {
-                    const lines = obj.content.split('\n');
-                    lines.forEach((line, i) => {
-                        ctx.fillText(line, 0, i * (obj.height * obj.lineHeight));
-                    });
+        state.isDragging = true;
+        state.dragSpriteId = id;
+        state.dragStartX = e.clientX - sprite.x;
+        state.dragStartY = e.clientY - sprite.y;
+        state.dragOriginalX = sprite.x;
+        state.dragOriginalY = sprite.y;
+
+        document.getElementById('canvasContainer').classList.add('drag-mode');
+    }
+
+    function startResize(id, e) {
+        const sprite = state.sprites.find(s => s.id === id);
+        if (!sprite) return;
+
+        state.isResizing = true;
+        state.resizeSpriteId = id;
+        state.resizeStartX = e.clientX;
+        state.resizeStartScale = sprite.scale;
+
+        e.preventDefault();
+    }
+
+    // ==================== 交互处理 ====================
+    function handleMouseDown(e) {
+        const container = document.getElementById('canvasContainer');
+
+        if (state.isEraseMode && e.button === 0) {
+            const rect = container.getBoundingClientRect();
+            state.isErasing = true;
+            state.eraseStartX = e.clientX - rect.left;
+            state.eraseStartY = e.clientY - rect.top;
+
+            let eraseBox = document.querySelector('.erase-box');
+            if (!eraseBox) {
+                eraseBox = document.createElement('div');
+                eraseBox.className = 'erase-box';
+                const canvasArea = document.getElementById('canvasArea');
+                if (canvasArea) canvasArea.appendChild(eraseBox);
+            }
+            state.eraseBox = eraseBox;
+        } else if (e.button === 0 && !state.selectedSprite) {
+            state.isPanning = true;
+            state.panStartX = e.clientX - state.panX;
+            state.panStartY = e.clientY - state.panY;
+            if (container) container.classList.add('drag-mode');
+        }
+    }
+
+    function handleMouseMove(e) {
+        const container = document.getElementById('canvasContainer');
+        if (!container) return;
+        
+        const rect = container.getBoundingClientRect();
+
+        // 更新坐标显示
+        const x = Math.round((e.clientX - rect.left - state.panX) / state.zoom);
+        const y = Math.round((e.clientY - rect.top - state.panY) / state.zoom);
+        const coordsDisplay = document.getElementById('coordsDisplay');
+        if (coordsDisplay) coordsDisplay.textContent = x + ', ' + y;
+
+        if (state.isDragging) {
+            const sprite = state.sprites.find(s => s.id === state.dragSpriteId);
+            if (sprite) {
+                let newX = e.clientX - state.dragStartX;
+                let newY = e.clientY - state.dragStartY;
+
+                const alignResult = checkAlignment(sprite, newX, newY);
+                if (alignResult.aligned) {
+                    newX = alignResult.x;
+                    newY = alignResult.y;
+                    showAlignHint(alignResult.type);
                 } else {
-                    ctx.fillText(obj.content, 0, 0);
+                    hideAlignHint();
                 }
-            } else if (obj.type === 'rect') {
-                ctx.fillStyle = obj.color;
-                ctx.fillRect(0, 0, obj.width, obj.height);
-            } else if (obj.type === 'image') {
-                ctx.drawImage(obj.img, 0, 0, obj.width, obj.height);
+
+                sprite.x = newX;
+                sprite.y = newY;
+                renderSprites();
             }
-
-            // 选中态边框
-            if (state.selectedId === obj.id) {
-                ctx.strokeStyle = '#00C853';
-                ctx.lineWidth = 2 / obj.scale;
-                ctx.strokeRect(-5/obj.scale, -5/obj.scale, obj.width + 10/obj.scale, obj.height + 10/obj.scale);
-                
-                // 绘制右下角缩放手柄
-                ctx.fillStyle = '#00C853';
-                ctx.beginPath();
-                ctx.arc(obj.width + 5/obj.scale, obj.height + 5/obj.scale, 8 / obj.scale, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            ctx.restore();
-        });
-
-        // 绘制自定义信息（头像、用户名、时间）
-        drawOverlays();
-
-        // 绘制擦除框选
-        if (state.isErasing && state.eraserStart && state.lastMouse) {
-            ctx.strokeStyle = '#F44336';
-            ctx.lineWidth = 2;
-            ctx.setLineDash([5, 5]);
-            const w = state.lastMouse.x - state.eraserStart.x;
-            const h = state.lastMouse.y - state.eraserStart.y;
-            ctx.strokeRect(state.eraserStart.x, state.eraserStart.y, w, h);
-            ctx.setLineDash([]);
-            
-            // 半透明遮罩
-            ctx.fillStyle = 'rgba(244, 67, 54, 0.2)';
-            ctx.fillRect(state.eraserStart.x, state.eraserStart.y, w, h);
         }
 
-        // 更新舞台变换（用于CSS显示）
-        state.stage.style.transform = `translate(${panOffset.x}px, ${panOffset.y}px) scale(${scale})`;
-        
-        // 更新状态栏
-        document.getElementById('status-zoom').innerText = Math.round(scale * 100) + '%';
-        document.getElementById('status-coord').innerText = `${Math.round(-panOffset.x)}, ${Math.round(-panOffset.y)}`;
-        document.getElementById('canvas-info-text').innerText = bgImage 
-            ? `底图已加载 | 缩放: ${Math.round(scale*100)}%` 
-            : '未加载底图 | 滚轮缩放 | 拖动空白处平移';
-    }
-
-    // --- 绘制自定义图层 ---
-    function drawOverlays() {
-        const { ctx, canvas } = state;
-        
-        // 1. 头像
-        if (state.showAvatar && state.avatarImage) {
-            const avatarObj = state.objects.find(o => o.isAvatar);
-            if (!avatarObj) {
-                // 如果没添加过，自动添加一个
-                const id = 'avatar_' + Date.now();
-                state.objects.push({
-                    id, type: 'image', isAvatar: true,
-                    img: state.avatarImage,
-                    x: 50, y: 50,
-                    width: 80, height: 80, scale: 1, rotation: 0
-                });
-            } else {
-                // 更新图片（如果用户换了）
-                avatarObj.img = state.avatarImage;
+        if (state.isResizing) {
+            const sprite = state.sprites.find(s => s.id === state.resizeSpriteId);
+            if (sprite) {
+                const delta = e.clientX - state.resizeStartX;
+                const newScale = Math.max(0.1, Math.min(5, state.resizeStartScale + delta * 0.005));
+                sprite.scale = newScale;
+                const scaleInput = document.getElementById('scaleInput');
+                if (scaleInput) scaleInput.value = Math.round(newScale * 100);
+                renderSprites();
             }
-        } else {
-            // 如果关闭显示，移除
-            state.objects = state.objects.filter(o => !o.isAvatar);
         }
 
-        // 2. 用户名
-        if (state.showUsername) {
-            const nameObj = state.objects.find(o => o.isUsername);
-            const text = document.getElementById('username-input').value;
-            if (!nameObj) {
-                state.objects.push({
-                    id: 'username_' + Date.now(), type: 'text', isUsername: true,
-                    content: text,
-                    font: 'bold 24px "Noto Sans SC"',
-                    color: '#333',
-                    x: 140, y: 50,
-                    width: 150, height: 30, scale: 1, rotation: 0
-                });
-            } else {
-                nameObj.content = text;
-            }
-        } else {
-            state.objects = state.objects.filter(o => !o.isUsername);
+        if (state.isPanning) {
+            state.panX = e.clientX - state.panStartX;
+            state.panY = e.clientY - state.panStartY;
+            renderCanvas();
         }
 
-        // 3. 日期时间
-        if (state.showDatetime) {
-            const dateObj = state.objects.find(o => o.isDatetime);
-            const y = document.getElementById('year-input').value;
-            const m = document.getElementById('month-input').value;
-            const d = document.getElementById('day-input').value;
-            const t1 = document.getElementById('start-time').value;
-            const t2 = document.getElementById('end-time').value;
-            const text = `${y}-${m}-${d} ${t1}-${t2}`;
+        if (state.isErasing && state.eraseBox) {
+            const currentX = e.clientX - rect.left;
+            const currentY = e.clientY - rect.top;
 
-            if (!dateObj) {
-                state.objects.push({
-                    id: 'datetime_' + Date.now(), type: 'text', isDatetime: true,
-                    content: text,
-                    font: '20px "Noto Sans SC"',
-                    color: '#666',
-                    x: 50, y: 140,
-                    width: 300, height: 30, scale: 1, rotation: 0
-                });
-            } else {
-                dateObj.content = text;
-            }
-        } else {
-            state.objects = state.objects.filter(o => !o.isDatetime);
+            const left = Math.min(state.eraseStartX, currentX);
+            const top = Math.min(state.eraseStartY, currentY);
+            const width = Math.abs(currentX - state.eraseStartX);
+            const height = Math.abs(currentY - state.eraseStartY);
+
+            state.eraseBox.style.left = left + 'px';
+            state.eraseBox.style.top = top + 'px';
+            state.eraseBox.style.width = width + 'px';
+            state.eraseBox.style.height = height + 'px';
         }
     }
 
-    // --- 事件绑定 ---
-    function bindEvents() {
-        const c = state.canvas;
+    function handleMouseUp(e) {
+        const container = document.getElementById('canvasContainer');
+        if (container) container.classList.remove('drag-mode');
 
-        // 鼠标按下
-        c.addEventListener('mousedown', (e) => {
-            const pos = getMousePos(e);
-            
-            // 1. 擦除模式
-            if (state.isErasing) {
-                state.eraserStart = pos;
-                return;
-            }
+        if (state.isDragging) {
+            state.isDragging = false;
+            saveHistory();
+        }
 
-            // 2. 检查是否点击了缩放手柄 (仅当选中物体时)
-            if (state.selectedId) {
-                const obj = state.objects.find(o => o.id === state.selectedId);
-                if (obj && isHitHandle(pos, obj)) {
-                    state.isResizing = true;
-                    return;
-                }
-            }
+        if (state.isResizing) {
+            state.isResizing = false;
+            saveHistory();
+        }
 
-            // 3. 命中测试 (素材)
-            const hitObj = hitTest(pos.x, pos.y);
-            if (hitObj) {
-                selectObject(hitObj.id);
-                state.isDragging = true;
-                state.dragStart = { x: pos.x - hitObj.x, y: pos.y - hitObj.y };
-                // 移动到顶层
-                state.objects = state.objects.filter(o => o.id !== hitObj.id);
-                state.objects.push(hitObj);
-                draw();
-            } else {
-                // 点击空白处 -> 平移画布 或 取消选中
-                if (e.shiftKey) {
-                    // Shift+点击不做处理
-                } else {
-                    selectObject(null); // 取消选中
-                    state.isPanning = true;
-                    state.lastMouse = { x: e.clientX, y: e.clientY };
-                }
-            }
-        });
+        if (state.isPanning) {
+            state.isPanning = false;
+        }
 
-        // 鼠标移动
-        window.addEventListener('mousemove', (e) => {
-            const pos = getMousePos(e);
-            
-            // 改变光标
-            if (state.isErasing) {
-                c.style.cursor = 'crosshair';
-            } else if (state.isResizing) {
-                c.style.cursor = 'nwse-resize';
-            } else if (hitTest(pos.x, pos.y)) {
-                c.style.cursor = 'move';
-            } else {
-                c.style.cursor = 'default';
-            }
+        if (state.isErasing && state.eraseBox) {
+            const left = parseFloat(state.eraseBox.style.left);
+            const top = parseFloat(state.eraseBox.style.top);
+            const width = parseFloat(state.eraseBox.style.width);
+            const height = parseFloat(state.eraseBox.style.height);
 
-            // 1. 擦除框选
-            if (state.isErasing && state.eraserStart) {
-                state.lastMouse = pos;
-                draw();
-                return;
-            }
-
-            // 2. 调整大小
-            if (state.isResizing && state.selectedId) {
-                const obj = state.objects.find(o => o.id === state.selectedId);
-                if (obj) {
-                    // 简单等比缩放逻辑
-                    const dx = pos.x - (obj.x + obj.width * obj.scale); // 简化计算，实际中心缩放更好
-                    // 计算新的 scale
-                    const newScale = Math.max(0.1, obj.scale + (e.movementX * 0.01));
-                    obj.scale = newScale;
-                    
-                    // 更新UI输入框
-                    document.getElementById('scale-input').value = Math.round(newScale * 100);
-                    
-                    draw();
-                }
-                return;
-            }
-
-            // 3. 拖拽素材
-            if (state.isDragging && state.selectedId) {
-                const obj = state.objects.find(o => o.id === state.selectedId);
-                if (obj) {
-                    let newX = pos.x - state.dragStart.x;
-                    let newY = pos.y - state.dragStart.y;
-
-                    // 吸附逻辑 (非Shift时)
-                    if (!e.shiftKey) {
-                        const snap = checkSnap(obj, newX, newY);
-                        if (snap.x !== null) newX = snap.x;
-                        if (snap.y !== null) {
-                            newY = snap.y;
-                            showAlignHint();
-                        } else {
-                            hideAlignHint();
-                        }
-                    }
-
-                    obj.x = newX;
-                    obj.y = newY;
-                    draw();
-                }
-                return;
-            }
-
-            // 4. 平移画布
-            if (state.isPanning) {
-                const dx = e.clientX - state.lastMouse.x;
-                const dy = e.clientY - state.lastMouse.y;
-                state.panOffset.x += dx;
-                state.panOffset.y += dy;
-                state.lastMouse = { x: e.clientX, y: e.clientY };
-                draw();
-            }
-        });
-
-        // 鼠标松开
-        window.addEventListener('mouseup', () => {
-            if (state.isErasing && state.eraserStart && state.lastMouse) {
-                // 执行擦除
-                performErase(state.eraserStart, state.lastMouse);
-            }
-
-            if (state.isDragging || state.isResizing) {
+            if (width > 5 && height > 5 && state.eraseCtx) {
+                state.eraseCtx.fillStyle = '#ffffff';
+                state.eraseCtx.fillRect(
+                    (left - state.panX) / state.zoom,
+                    (top - state.panY) / state.zoom,
+                    width / state.zoom,
+                    height / state.zoom
+                );
                 saveHistory();
             }
 
-            state.isDragging = false;
-            state.isPanning = false;
-            state.isResizing = false;
-            state.eraserStart = null;
-            draw();
-        });
-
-        // 滚轮缩放
-        c.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            const delta = e.deltaY > 0 ? 0.9 : 1.1;
-            let newScale = state.scale * delta;
-            newScale = Math.max(CONFIG.minScale, Math.min(CONFIG.maxScale, newScale));
-            
-            // 以鼠标为中心缩放 (简化：以画布中心)
-            state.scale = newScale;
-            draw();
-        }, { passive: false });
-
-        // 键盘快捷键
-        window.addEventListener('keydown', (e) => {
-            if (!state.selectedId) return;
-            const obj = state.objects.find(o => o.id === state.selectedId);
-            if (!obj) return;
-
-            const step = e.shiftKey ? 10 : 1;
-            switch(e.key) {
-                case 'ArrowUp': obj.y -= step; break;
-                case 'ArrowDown': obj.y += step; break;
-                case 'ArrowLeft': obj.x -= step; break;
-                case 'ArrowRight': obj.x += step; break;
-                case 'Delete': 
-                case 'Backspace':
-                    deleteObject();
-                    break;
-                case 'Escape':
-                    if (state.isErasing) toggleEraser();
-                    selectObject(null);
-                    break;
-                case '+':
-                case '=':
-                    obj.scale += 0.1;
-                    document.getElementById('scale-input').value = Math.round(obj.scale * 100);
-                    break;
-                case '-':
-                    obj.scale = Math.max(0.1, obj.scale - 0.1);
-                    document.getElementById('scale-input').value = Math.round(obj.scale * 100);
-                    break;
-                default: return;
+            if (state.eraseBox && state.eraseBox.parentNode) {
+                state.eraseBox.parentNode.removeChild(state.eraseBox);
             }
-            e.preventDefault();
-            draw();
-        });
-
-        // 按钮事件
-        document.getElementById('upload-btn').onclick = () => document.getElementById('file-input').click();
-        document.getElementById('file-input').onchange = handleImageUpload;
-        
-        document.getElementById('export-btn').onclick = exportImage;
-        document.getElementById('reset-btn').onclick = resetCanvas;
-        document.getElementById('undo-btn').onclick = undo;
-
-        // 缩放控制
-        document.getElementById('zoom-in').onclick = () => {
-            state.scale = Math.min(CONFIG.maxScale, state.scale * 1.1);
-            draw();
-        };
-        document.getElementById('zoom-out').onclick = () => {
-            state.scale = Math.max(CONFIG.minScale, state.scale * 0.9);
-            draw();
-        };
-        document.getElementById('zoom-fit').onclick = () => {
-            state.scale = 1;
-            state.panOffset = {x:0, y:0};
-            draw();
-        };
-
-        // 擦除按钮
-        document.getElementById('erase-btn').onclick = toggleEraser;
-
-        // 比例设置
-        const scaleInput = document.getElementById('scale-input');
-        scaleInput.onchange = (e) => {
-            const val = parseFloat(e.target.value) / 100;
-            if (state.selectedId) {
-                const obj = state.objects.find(o => o.id === state.selectedId);
-                if (obj) obj.scale = val;
-            } else {
-                state.defaultScale = val;
-                showToast(`后续素材默认缩放已设为 ${e.target.value}%`, 'success');
-            }
-            draw();
-        };
-        
-        document.getElementById('set-default-scale').onclick = () => {
-             if (state.selectedId) {
-                const obj = state.objects.find(o => o.id === state.selectedId);
-                state.defaultScale = obj.scale;
-                document.getElementById('scale-input').value = Math.round(obj.scale * 100);
-                showToast(`默认比例已更新为当前选中素材的比例`, 'success');
-             }
-        };
-
-        // 自定义信息开关
-        setupToggle('show-avatar', 'avatar-tag', 'avatar-control', (val) => state.showAvatar = val);
-        setupToggle('show-username', 'username-tag', 'username-control', (val) => state.showUsername = val);
-        setupToggle('show-datetime', 'datetime-tag', 'datetime-control', (val) => state.showDatetime = val);
-
-        // 头像上传
-        document.getElementById('upload-avatar-btn').onclick = () => document.getElementById('avatar-input').click();
-        document.getElementById('avatar-input').onchange = (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (evt) => {
-                    state.avatarImage = new Image();
-                    state.avatarImage.onload = () => {
-                        document.getElementById('avatar-preview').style.backgroundImage = `url(${evt.target.result})`;
-                        document.getElementById('avatar-preview').classList.add('has-image');
-                        draw();
-                    };
-                    state.avatarImage.src = evt.target.result;
-                };
-                reader.readAsDataURL(file);
-            }
-        };
-        
-        // 帮助弹窗
-        document.getElementById('help-btn').onclick = () => {
-            document.getElementById('help-modal-mask').classList.add('visible');
-        };
-        document.getElementById('help-modal-close').onclick = () => {
-            document.getElementById('help-modal-mask').classList.remove('visible');
-        };
+            state.eraseBox = null;
+            state.isErasing = false;
+        }
     }
 
-    // --- 辅助功能函数 ---
+    function handleWheel(e) {
+        if (!state.baseImage) return;
 
-    function setupToggle(checkboxId, tagId, controlId, callback) {
-        const cb = document.getElementById(checkboxId);
-        const tag = document.getElementById(tagId);
-        const ctrl = document.getElementById(controlId);
-        
-        cb.onchange = (e) => {
-            const val = e.target.checked;
-            tag.textContent = val ? '开' : '关';
-            tag.className = val ? 'tag on' : 'tag';
-            ctrl.classList.toggle('hidden', !val);
-            callback(val);
-            draw();
-        };
+        e.preventDefault();
+
+        const container = document.getElementById('canvasContainer');
+        const rect = container.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        const delta = e.deltaY > 0 ? 0.9 : 1.1;
+        const newZoom = Math.max(0.1, Math.min(10, state.zoom * delta));
+
+        state.panX = mouseX - (mouseX - state.panX) * (newZoom / state.zoom);
+        state.panY = mouseY - (mouseY - state.panY) * (newZoom / state.zoom);
+        state.zoom = newZoom;
+
+        renderCanvas();
+        updateStatus();
     }
 
-    function getMousePos(evt) {
-        const rect = state.canvas.getBoundingClientRect();
-        const x = (evt.clientX - rect.left) / state.scale - state.panOffset.x / state.scale;
-        const y = (evt.clientY - rect.top) / state.scale - state.panOffset.y / state.scale;
-        return { x, y };
+    function handleKeyDown(e) {
+        if (!state.selectedSprite) return;
+
+        const sprite = state.sprites.find(s => s.id === state.selectedSprite);
+        if (!sprite) return;
+
+        const step = e.shiftKey ? 10 : 1;
+
+        switch (e.key) {
+            case 'ArrowLeft':
+                e.preventDefault();
+                sprite.x -= step;
+                renderSprites();
+                break;
+            case 'ArrowRight':
+                e.preventDefault();
+                sprite.x += step;
+                renderSprites();
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                sprite.y -= step;
+                renderSprites();
+                break;
+            case 'ArrowDown':
+                e.preventDefault();
+                sprite.y += step;
+                renderSprites();
+                break;
+            case 'Delete':
+            case 'Backspace':
+                e.preventDefault();
+                deleteSprite(state.selectedSprite);
+                break;
+            case 'Escape':
+                e.preventDefault();
+                selectSprite(null);
+                hideAlignHint();
+                break;
+            case '+':
+            case '=':
+                e.preventDefault();
+                sprite.scale = Math.min(5, sprite.scale + 0.1);
+                const inputP = document.getElementById('scaleInput');
+                if (inputP) inputP.value = Math.round(sprite.scale * 100);
+                renderSprites();
+                break;
+            case '-':
+                e.preventDefault();
+                sprite.scale = Math.max(0.1, sprite.scale - 0.1);
+                const inputM = document.getElementById('scaleInput');
+                if (inputM) inputM.value = Math.round(sprite.scale * 100);
+                renderSprites();
+                break;
+        }
     }
 
-    function hitTest(x, y) {
-        // 倒序遍历（从最上层开始）
-        for (let i = state.objects.length - 1; i >= 0; i--) {
-            const obj = state.objects[i];
-            // 简单矩形碰撞
-            if (x >= obj.x && x <= obj.x + obj.width * obj.scale &&
-                y >= obj.y && y <= obj.y + obj.height * obj.scale) {
-                return obj;
+    // ==================== 对齐检测 ====================
+    function checkAlignment(currentSprite, newX, newY) {
+        const threshold = 10;
+        let result = { aligned: false, x: newX, y: newY, type: '' };
+
+        for (const sprite of state.sprites) {
+            if (sprite.id === currentSprite.id) continue;
+
+            const currentWidth = currentSprite.width || 40;
+            const currentHeight = currentSprite.height || 30;
+            const spriteWidth = sprite.width || 40;
+            const spriteHeight = sprite.height || 30;
+
+            if (Math.abs(newX - sprite.x) < threshold) {
+                result.aligned = true;
+                result.x = sprite.x;
+                result.type = 'left';
+            }
+
+            if (Math.abs(newX + currentWidth - sprite.x - spriteWidth) < threshold) {
+                result.aligned = true;
+                result.x = sprite.x + spriteWidth - currentWidth;
+                result.type = 'right';
+            }
+
+            if (Math.abs(newY - sprite.y) < threshold) {
+                result.aligned = true;
+                result.y = sprite.y;
+                result.type = 'top';
+            }
+
+            if (Math.abs(newY + currentHeight - sprite.y - spriteHeight) < threshold) {
+                result.aligned = true;
+                result.y = sprite.y + spriteHeight - currentHeight;
+                result.type = 'bottom';
             }
         }
-        return null;
-    }
-    
-    function isHitHandle(pos, obj) {
-        const handleX = obj.x + obj.width * obj.scale;
-        const handleY = obj.y + obj.height * obj.scale;
-        const radius = 15 / obj.scale; // 增加点击范围
-        return Math.abs(pos.x - handleX) < radius && Math.abs(pos.y - handleY) < radius;
+
+        return result;
     }
 
-    function selectObject(id) {
-        state.selectedId = id;
-        
-        // 更新缩放输入框
-        if (id) {
-            const obj = state.objects.find(o => o.id === id);
-            if (obj) {
-                document.getElementById('scale-input').value = Math.round(obj.scale * 100);
-            }
+    function showAlignHint(type) {
+        const hint = document.getElementById('alignHint');
+        if (hint) {
+            hint.textContent = '↔ 已对齐';
+            hint.classList.add('visible');
         }
-        draw();
     }
 
-    function checkSnap(obj, tx, ty) {
-        let snapX = null, snapY = null;
-        state.objects.forEach(other => {
-            if (other.id === obj.id) return;
-            
-            // 检查左对齐、右对齐、中心对齐
-            const xTargets = [other.x, other.x + other.width * other.scale, other.x + (other.width * other.scale)/2];
-            const myX = [tx, tx + obj.width * obj.scale, tx + (obj.width * obj.scale)/2];
-            
-            xTargets.forEach(txTarget => {
-                myX.forEach(mx => {
-                    if (Math.abs(mx - txTarget) < CONFIG.snapThreshold) {
-                        snapX = tx + (txTarget - mx);
-                    }
-                });
-            });
-
-            // Y轴同理
-            const yTargets = [other.y, other.y + other.height * other.scale, other.y + (other.height * other.scale)/2];
-            const myY = [ty, ty + obj.height * obj.scale, ty + (obj.height * obj.scale)/2];
-            
-            yTargets.forEach(tyTarget => {
-                myY.forEach(my => {
-                    if (Math.abs(my - tyTarget) < CONFIG.snapThreshold) {
-                        snapY = ty + (tyTarget - my);
-                    }
-                });
-            });
-        });
-        return { x: snapX, y: snapY };
-    }
-
-    function showAlignHint() {
-        const hint = document.getElementById('align-hint');
-        if (hint) hint.classList.add('visible');
-    }
     function hideAlignHint() {
-        const hint = document.getElementById('align-hint');
+        const hint = document.getElementById('alignHint');
         if (hint) hint.classList.remove('visible');
     }
 
-    function handleImageUpload(e) {
+    // ==================== 文件处理 ====================
+    function handleBaseImageUpload(e) {
         const file = e.target.files[0];
         if (!file) return;
+
         const reader = new FileReader();
-        reader.onload = (evt) => {
+        reader.onload = function(event) {
             const img = new Image();
-            img.onload = () => {
-                state.bgImage = img;
-                // 调整画布大小适应图片（可选，这里保持固定800x600或调整）
-                // state.canvas.width = img.width;
-                // state.canvas.height = img.height;
-                
-                document.getElementById('canvas-empty').style.display = 'none';
-                draw();
-                showToast('底图上传成功', 'success');
+            img.onload = function() {
+                state.baseImage = img;
+                fitImageToCanvas();
+                renderCanvas();
+                updateStatus();
                 saveHistory();
             };
-            img.src = evt.target.result;
+            img.src = event.target.result;
         };
         reader.readAsDataURL(file);
     }
 
-    function toggleEraser() {
-        state.isErasing = !state.isErasing;
-        const btn = document.getElementById('erase-btn');
-        if (state.isErasing) {
-            btn.classList.add('active');
-            document.body.style.cursor = 'crosshair';
-            showToast('已进入擦除模式，框选区域以擦除', 'info');
-        } else {
-            btn.classList.remove('active');
-            document.body.style.cursor = 'default';
-            draw();
-        }
-    }
+    function handleAvatarUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
 
-    function performErase(start, end) {
-        if (!state.bgImage) return;
-        
-        // 计算矩形区域
-        const x = Math.min(start.x, end.x);
-        const y = Math.min(start.y, end.y);
-        const w = Math.abs(end.x - start.x);
-        const h = Math.abs(end.y - start.y);
-
-        if (w < 5 || h < 5) return; // 太小不擦除
-
-        // 关键：直接修改底图数据是不行的（canvas pattern等），
-        // 简单方法：我们在底图上画一个白色矩形，但这会“遮挡”。
-        // 需求是“擦除”，通常指变透明或变白。这里我们假设变白（像涂改液）。
-        // 如果要永久修改底图，需要用 putImageData，但这里简单处理：
-        // 创建一个“白色块”素材放在最底层，或者直接修改 bgImage 所有的像素。
-        // 最简单且符合工具逻辑的：将“白色块”加入对象列表，位置固定在 0,0，但只能被擦除区域...
-        // 不，最直接的方法是：直接在 Canvas 上画白，并保存到一个离屏 canvas 作为新的 bgImage。
-        
-        // 1. 创建离屏 Canvas 绘制当前状态
-        const offCanvas = document.createElement('canvas');
-        offCanvas.width = state.canvas.width;
-        offCanvas.height = state.canvas.height;
-        const offCtx = offCanvas.getContext('2d');
-        offCtx.drawImage(state.bgImage, 0, 0);
-        
-        // 2. 在离屏 Canvas 上画白块
-        offCtx.fillStyle = '#FFFFFF';
-        offCtx.fillRect(x, y, w, h);
-        
-        // 3. 更新 bgImage
-        const newImg = new Image();
-        newImg.onload = () => {
-            state.bgImage = newImg;
-            saveHistory();
-            draw();
-            showToast('区域已擦除', 'success');
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            const img = new Image();
+            img.onload = function() {
+                state.avatarImage = img;
+                renderSprites();
+            };
+            img.src = event.target.result;
         };
-        newImg.src = offCanvas.toDataURL();
+        reader.readAsDataURL(file);
     }
 
-    function deleteObject() {
-        if (state.selectedId) {
-            state.objects = state.objects.filter(o => o.id !== state.selectedId);
-            selectObject(null);
-            saveHistory();
-            draw();
+    // ==================== 画布渲染 ====================
+    function fitImageToCanvas() {
+        if (!state.baseImage) return;
+
+        const container = document.getElementById('canvasContainer');
+        const rect = container.getBoundingClientRect();
+
+        const scaleX = rect.width / state.baseImage.width;
+        const scaleY = rect.height / state.baseImage.height;
+        state.zoom = Math.min(scaleX, scaleY) * 0.9;
+
+        state.panX = (rect.width - state.baseImage.width * state.zoom) / 2;
+        state.panY = (rect.height - state.baseImage.height * state.zoom) / 2;
+    }
+
+    function renderCanvas() {
+        if (!state.baseImage) return;
+
+        const ctx = state.mainCtx;
+        const canvas = state.mainCanvas;
+        const container = document.getElementById('canvasContainer');
+        const rect = container.getBoundingClientRect();
+
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.save();
+        ctx.translate(state.panX, state.panY);
+        ctx.scale(state.zoom, state.zoom);
+        ctx.drawImage(state.baseImage, 0, 0);
+        ctx.restore();
+
+        // 同步擦除层大小
+        const eraseCanvas = state.eraseCanvas;
+        if (eraseCanvas) {
+            eraseCanvas.width = rect.width;
+            eraseCanvas.height = rect.height;
         }
     }
 
-    function resetCanvas() {
-        if (confirm('确定要清空所有内容吗？')) {
-            state.objects = [];
-            state.bgImage = null;
-            state.panOffset = {x:0, y:0};
-            state.scale = 1;
-            document.getElementById('canvas-empty').style.display = 'block';
-            selectObject(null);
-            draw();
-            saveHistory();
-        }
-    }
+    // ==================== 全局功能函数 ====================
+    window.uploadBaseImage = function() {
+        const input = document.getElementById('baseImageInput');
+        if (input) input.click();
+    };
 
-    function exportImage() {
-        if (!state.bgImage) {
-            showToast('没有可导出的内容', 'error');
+    window.uploadAvatar = function() {
+        const input = document.getElementById('avatarInput');
+        if (input) input.click();
+    };
+
+    window.deleteAvatar = function() {
+        state.avatarImage = null;
+        renderSprites();
+    };
+
+    window.toggleEraseMode = function() {
+        state.isEraseMode = !state.isEraseMode;
+        const btn = document.getElementById('eraseBtn');
+        const container = document.getElementById('canvasContainer');
+
+        if (state.isEraseMode) {
+            if (btn) btn.classList.add('active');
+            if (container) container.classList.add('erase-mode');
+        } else {
+            if (btn) btn.classList.remove('active');
+            if (container) container.classList.remove('erase-mode');
+        }
+    };
+
+    window.deleteSprite = function(id) {
+        state.sprites = state.sprites.filter(s => s.id !== id);
+        state.selectedSprite = null;
+        renderSprites();
+        saveHistory();
+    };
+
+    window.adjustScale = function(delta) {
+        const input = document.getElementById('scaleInput');
+        let value = parseInt(input.value) || 100;
+        value = Math.max(10, Math.min(500, value + delta));
+        input.value = value;
+
+        if (state.selectedSprite) {
+            const sprite = state.sprites.find(s => s.id === state.selectedSprite);
+            if (sprite) {
+                sprite.scale = value / 100;
+                renderSprites();
+            }
+        }
+    };
+
+    window.updateScale = function() {
+        const input = document.getElementById('scaleInput');
+        let value = parseInt(input.value) || 100;
+        value = Math.max(10, Math.min(500, value));
+        input.value = value;
+
+        if (state.selectedSprite) {
+            const sprite = state.sprites.find(s => s.id === state.selectedSprite);
+            if (sprite) {
+                sprite.scale = value / 100;
+                renderSprites();
+            }
+        }
+    };
+
+    window.setDefaultScale = function() {
+        const input = document.getElementById('scaleInput');
+        state.defaultScale = parseInt(input.value) || 100;
+
+        // 视觉反馈
+        if (event && event.target) {
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '已设置!';
+            setTimeout(() => {
+                btn.textContent = originalText;
+            }, 1500);
+        }
+    };
+
+    window.toggleSwitch = function(type) {
+        const switchEl = document.getElementById(type + 'Switch');
+        const optionsEl = document.getElementById(type + 'Options');
+
+        if (type === 'avatar') {
+            state.showAvatar = !state.showAvatar;
+            if (switchEl) switchEl.classList.toggle('active', state.showAvatar);
+            if (optionsEl) optionsEl.classList.toggle('hidden', !state.showAvatar);
+        } else if (type === 'username') {
+            state.showUsername = !state.showUsername;
+            if (switchEl) switchEl.classList.toggle('active', state.showUsername);
+            if (optionsEl) optionsEl.classList.toggle('hidden', !state.showUsername);
+        } else if (type === 'datetime') {
+            state.showDatetime = !state.showDatetime;
+            if (switchEl) switchEl.classList.toggle('active', state.showDatetime);
+            if (optionsEl) optionsEl.classList.toggle('hidden', !state.showDatetime);
+        }
+
+        renderSprites();
+    };
+
+    window.updateUsername = function() {
+        const input = document.getElementById('usernameInput');
+        if (input) state.username = input.value;
+        renderSprites();
+    };
+
+    window.updateDatetime = function() {
+        const dateInput = document.getElementById('dateInput');
+        const timeInput = document.getElementById('timeInput');
+        if (dateInput) state.date = dateInput.value;
+        if (timeInput) state.time = timeInput.value;
+        renderSprites();
+    };
+
+    window.undo = function() {
+        if (state.historyIndex <= 0) return;
+
+        state.historyIndex--;
+        const snapshot = state.history[state.historyIndex];
+
+        if (snapshot) {
+            state.sprites = JSON.parse(JSON.stringify(snapshot.sprites));
+            state.selectedSprite = null;
+            renderSprites();
+            renderCanvas();
+        }
+
+        updateUndoButton();
+    };
+
+    window.resetCanvas = function() {
+        window.showConfirm('确定要重置画布吗？所有编辑将被清除。', () => {
+            state.sprites = [];
+            state.selectedSprite = null;
+            state.baseImage = null;
+            state.zoom = 1;
+            state.panX = 0;
+            state.panY = 0;
+            state.history = [];
+            state.historyIndex = -1;
+
+            const container = document.getElementById('canvasContainer');
+            const rect = container.getBoundingClientRect();
+
+            if (state.mainCtx) state.mainCtx.clearRect(0, 0, rect.width, rect.height);
+            if (state.eraseCtx) state.eraseCtx.clearRect(0, 0, rect.width, rect.height);
+
+            renderSprites();
+            updateStatus();
+            updateUndoButton();
+            window.closeModal('confirmModal');
+        });
+    };
+
+    window.exportImage = function() {
+        if (!state.baseImage) {
+            alert('请先上传底图');
             return;
         }
-        
-        // 取消选中框再导出
-        const currentSelect = state.selectedId;
-        selectObject(null);
-        draw();
 
-        // 导出
-        const link = document.createElement('a');
-        link.download = '拼图完成.jpg';
-        link.href = state.canvas.toDataURL('image/jpeg', 0.9);
-        link.click();
-        
-        // 恢复选中
-        if (currentSelect) selectObject(currentSelect);
-        draw();
-        showToast('图片已导出', 'success');
-    }
+        // 创建导出画布
+        const exportCanvas = document.createElement('canvas');
+        exportCanvas.width = state.baseImage.width;
+        exportCanvas.height = state.baseImage.height;
+        const ctx = exportCanvas.getContext('2d');
 
-    function saveHistory() {
-        // 简单的历史记录：只记录 objects 数组的深拷贝（忽略 img 对象的复杂复制，实际生产需优化）
-        // 这里为了演示简单，不做复杂的状态序列化。
-        // 仅仅记录操作次数用于撤销示意。
-        // 如果要真正实现撤销，需要序列化 objects。
-    }
-    
-    function undo() {
-        showToast('撤销功能暂未实现完整', 'info');
-    }
+        // 绘制底图
+        ctx.drawImage(state.baseImage, 0, 0);
 
-    function showToast(msg, type = 'info') {
-        const toast = document.getElementById('toast');
-        const text = document.getElementById('toast-msg');
-        const icon = toast.querySelector('i');
-        
-        text.textContent = msg;
-        toast.className = `toast visible ${type}`;
-        
-        if (type === 'success') {
-            icon.className = 'fa-solid fa-circle-check';
-        } else if (type === 'error') {
-            icon.className = 'fa-solid fa-circle-xmark';
-        } else {
-            icon.className = 'fa-solid fa-circle-info';
+        // 绘制擦除层
+        if (state.eraseCanvas) {
+            ctx.drawImage(state.eraseCanvas, 0, 0, state.baseImage.width, state.baseImage.height);
         }
 
-        setTimeout(() => {
-            toast.classList.remove('visible');
-        }, 3000);
+        // 绘制素材 (简单的文本绘制示例，实际可能需要更复杂的逻辑)
+        // 注意：前端绘制文本到导出图可能需要处理字体加载问题
+        // 此处仅演示基本逻辑
+        ctx.fillStyle = '#00d4aa';
+        ctx.textBaseline = 'top';
+
+        state.sprites.forEach(sprite => {
+            let displayValue = sprite.value;
+            if (sprite.type === 'other') {
+                displayValue = sprite.value === '小数点' ? '.' :
+                               sprite.value === '冒号' ? ':' : '/';
+            }
+            
+            const fontSize = 16 * sprite.scale * (state.baseImage.width / state.mainCanvas.width);
+            ctx.font = `bold ${fontSize}px Inter`;
+            
+            // 计算在原图上的位置
+            const x = sprite.x * (state.baseImage.width / state.mainCanvas.width);
+            const y = sprite.y * (state.baseImage.height / state.mainCanvas.height);
+            
+            ctx.fillText(displayValue, x, y);
+        });
+
+        // 下载
+        const link = document.createElement('a');
+        link.download = '拼图完成.jpg';
+        link.href = exportCanvas.toDataURL('image/jpeg', 0.95);
+        link.click();
+    };
+
+    // ==================== 历史记录 ====================
+    function saveHistory() {
+        const snapshot = {
+            sprites: JSON.parse(JSON.stringify(state.sprites))
+            // 底图和擦除层的历史记录在纯前端大图场景下可能占用大量内存，这里简化处理
+        };
+
+        state.history = state.history.slice(0, state.historyIndex + 1);
+        state.history.push(snapshot);
+        state.historyIndex = state.history.length - 1;
+
+        if (state.history.length > 50) {
+            state.history.shift();
+            state.historyIndex--;
+        }
+
+        updateUndoButton();
     }
 
-    // 启动
-    window.onload = init;
+    function updateUndoButton() {
+        const btn = document.getElementById('undoBtn');
+        if (btn) btn.disabled = state.historyIndex <= 0;
+    }
+
+    // ==================== 状态更新 ====================
+    function updateStatus() {
+        const zoomEl = document.getElementById('zoomLevel');
+        if (zoomEl) zoomEl.textContent = Math.round(state.zoom * 100) + '%';
+    }
+
+    // ==================== 弹窗控制 ====================
+    window.showInstructions = function() {
+        const modal = document.getElementById('instructionsModal');
+        if (modal) modal.classList.add('active');
+    };
+
+    window.showConfirm = function(message, onConfirm) {
+        const modal = document.getElementById('confirmModal');
+        const msgEl = document.querySelector('#confirmModal p');
+        const btn = document.getElementById('confirmBtn');
+
+        if (msgEl) msgEl.textContent = message;
+        if (btn) btn.onclick = onConfirm;
+        if (modal) modal.classList.add('active');
+    };
+
+    window.closeModal = function(id) {
+        const modal = document.getElementById(id);
+        if (modal) modal.classList.remove('active');
+    };
+
+    window.addSprite = addSprite;
+
+    // ==================== 工具函数 ====================
+    function debounce(fn, delay) {
+        let timer = null;
+        return function(...args) {
+            clearTimeout(timer);
+            timer = setTimeout(() => fn.apply(this, args), delay);
+        };
+    }
+
+    // ==================== 启动 ====================
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
 
 })();
