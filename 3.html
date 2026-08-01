@@ -1394,10 +1394,15 @@ function onPointerUp(e) {
       pushHistory();
       applyErase(state.eraseRect);
       updateStatus('已擦除区域');
+      // 修复：擦除成功后自动退出擦除模式
+      exitEraseMode();
+      showToast('区域已擦除，已自动退出擦除模式', 'success');
+    } else {
+      // 框选太小，取消
+      state.eraseRect = null;
+      state.dragMode = null;
+      render();
     }
-    state.eraseRect = null;
-    state.dragMode = null;
-    render();
   } else if (state.dragMode === 'pan') {
     if (!state.hasPanned) {
       state.selected = null;
