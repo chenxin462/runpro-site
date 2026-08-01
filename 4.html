@@ -1,1810 +1,392 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Keep运动截图拼图 v1.8</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<style>
-  :root {
-    --bg: #F5F5F7;
-    --card: #FFFFFF;
-    --card-hover: #FAFAFA;
-    --border: #E0E0E0;
-    --primary: #00C853;
-    --primary-hover: #00A844;
-    --secondary: #FF9800;
-    --success: #00C853;
-    --text: #1A1A1A;
-    --text-muted: #666666;
-    --danger: #F44336;
-    --wechat: #07C160;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Noto Sans SC', system-ui, sans-serif;
-    overflow: hidden;
-    height: 100vh;
-  }
-  .font-display { font-family: 'Oswald', sans-serif; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keep 运动截图拼图工具 - 52Run.cn</title>
+    <style>
+        /* 颜色变量 - 清新运动绿风格 */
+        :root {
+            --primary-green: #00b96b; /* 主色调：运动绿 */
+            --dark-green: #009657; /* 深绿：用于Hover和强调 */
+            --light-green-bg: #f0fbf6; /* 极浅绿：区块背景 */
+            --text-main: #1a1a1a; /* 主文字：深黑 */
+            --text-sub: #666666; /* 辅助文字：中灰 */
+            --bg-white: #ffffff;
+            --border-color: #e0e0e0;
+        }
 
-  /* 顶部栏 */
-  .app-header {
-    height: 52px;
-    background: linear-gradient(90deg, #FFFFFF 0%, #FAFAFA 100%);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    padding: 0 16px;
-    gap: 12px;
-    position: relative;
-    z-index: 100;
-  }
-  .app-header::after {
-    content: '';
-    position: absolute;
-    left: 0; right: 0; bottom: -1px; height: 1px;
-    background: linear-gradient(90deg, transparent, var(--primary), transparent);
-    opacity: 0.3;
-  }
-  .logo {
-    font-family: 'Oswald', sans-serif;
-    font-weight: 700;
-    font-size: 18px;
-    color: var(--primary);
-    letter-spacing: 1px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .logo::before {
-    content: '';
-    width: 4px;
-    height: 18px;
-    background: linear-gradient(180deg, var(--primary), #81C784);
-    border-radius: 2px;
-  }
-  .version-tag {
-    font-size: 10px;
-    color: var(--text-muted);
-    padding: 1px 6px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-family: 'Oswald', sans-serif;
-  }
-  .wechat-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    background: linear-gradient(135deg, var(--wechat) 0%, #06AD56 100%);
-    color: #FFFFFF;
-    padding: 4px 10px;
-    border-radius: 14px;
-    font-size: 11px;
-    font-weight: 500;
-    box-shadow: 0 2px 6px rgba(7, 193, 96, 0.25);
-    margin-left: 8px;
-  }
-  .wechat-badge i { font-size: 12px; }
-  .project-select {
-    padding: 5px 12px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: var(--card);
-    color: var(--text);
-    font-size: 13px;
-    font-family: inherit;
-    cursor: pointer;
-    min-width: 100px;
-  }
-  .project-select:focus { outline: none; border-color: var(--primary); }
-  .help-btn {
-    background: var(--card);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 5px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 12px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    transition: all 0.2s;
-  }
-  .help-btn:hover {
-    background: var(--primary);
-    border-color: var(--primary);
-    color: white;
-  }
-  .status-bar {
-    margin-left: auto;
-    font-size: 11px;
-    color: var(--text-muted);
-    display: flex;
-    gap: 12px;
-  }
-  .status-msg { color: var(--primary); }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-white);
+        }
 
-  /* 主布局 */
-  .main-layout {
-    display: grid;
-    grid-template-columns: 200px 1fr 280px;
-    height: calc(100vh - 52px);
-  }
+        /* 导航栏 - 白底绿字 */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 5%;
+            background: var(--bg-white);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
 
-  /* 面板 */
-  .panel {
-    background: var(--card);
-    overflow-y: auto;
-    overflow-x: hidden;
-  }
-  .panel::-webkit-scrollbar { width: 5px; }
-  .panel::-webkit-scrollbar-track { background: transparent; }
-  .panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-  .panel::-webkit-scrollbar-thumb:hover { background: #C0C0C0; }
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary-green);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-  /* 左侧素材面板 */
-  .materials-panel {
-    border-right: 1px solid var(--border);
-    padding: 12px;
-  }
-  .section-title {
-    font-family: 'Oswald', sans-serif;
-    font-size: 11px;
-    letter-spacing: 1px;
-    color: var(--text-muted);
-    margin: 0 0 8px;
-    text-transform: uppercase;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .section-title::before {
-    content: '';
-    width: 3px;
-    height: 12px;
-    background: var(--primary);
-    border-radius: 1px;
-  }
-  .materials-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 4px;
-    margin-bottom: 10px;
-  }
-  .material-item {
-    aspect-ratio: 1;
-    background: #FFFFFF;
-    border-radius: 4px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.12s;
-    border: 1px solid var(--border);
-    overflow: hidden;
-    padding: 2px;
-    position: relative;
-  }
-  .material-item:hover {
-    border-color: var(--primary);
-    transform: translateY(-1px);
-    box-shadow: 0 3px 8px rgba(0, 200, 83, 0.15);
-  }
-  .material-item:active { transform: scale(0.94); }
-  .material-item img {
-    max-width: 40px;
-    max-height: 32px;
-    object-fit: contain;
-    pointer-events: none;
-  }
-  .material-item .mat-loading { color: #999; font-size: 12px; }
-  .material-item .label {
-    font-size: 8px;
-    color: #888;
-    margin-top: 1px;
-    white-space: nowrap;
-    font-family: 'Oswald', sans-serif;
-    pointer-events: none;
-  }
-  .material-item .delete-x {
-    position: absolute;
-    top: 2px;
-    right: 2px;
-    width: 14px;
-    height: 14px;
-    background: rgba(244, 67, 54, 0.9);
-    color: white;
-    border-radius: 50%;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    font-size: 8px;
-    cursor: pointer;
-    z-index: 5;
-  }
-  .material-item:hover .delete-x { display: flex; }
-  
-  .divider {
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--border), transparent);
-    margin: 10px 0;
-  }
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
 
-  /* 轨迹上传区 */
-  .track-upload {
-    border: 2px dashed var(--border);
-    border-radius: 8px;
-    padding: 16px;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.15s;
-    background: #FAFAFA;
-  }
-  .track-upload:hover {
-    border-color: var(--primary);
-    background: var(--card);
-  }
-  .track-upload i { font-size: 24px; color: var(--text-muted); margin-bottom: 6px; }
-  .track-upload p { font-size: 11px; color: var(--text-muted); margin: 0; }
-  .track-upload .hint { font-size: 9px; color: #999; margin-top: 2px; }
-  .track-preview {
-    position: relative;
-    margin-top: 8px;
-  }
-  .track-preview img {
-    width: 100%;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-  }
-  .track-preview .clear-track {
-    position: absolute;
-    top: 4px;
-    right: 4px;
-    background: rgba(244, 67, 54, 0.9);
-    color: white;
-    border: none;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 10px;
-  }
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-sub);
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
 
-  /* 画布区域 */
-  .canvas-panel {
-    position: relative;
-    background: #E8E8E8;
-    overflow: hidden;
-  }
-  .canvas-panel::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image:
-      linear-gradient(rgba(0,0,0,0.02) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,0,0,0.02) 1px, transparent 1px);
-    background-size: 20px 20px;
-    pointer-events: none;
-    z-index: 0;
-  }
-  .canvas-stage {
-    position: absolute;
-    top: 0;
-    left: 0;
-    transform-origin: 0 0;
-    box-shadow: 0 6px 24px rgba(0,0,0,0.12);
-    z-index: 1;
-  }
-  #main-canvas { display: block; background: #FFFFFF; }
-  
-  .canvas-empty {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    color: var(--text-muted);
-    pointer-events: none;
-    z-index: 5;
-  }
-  .canvas-empty i { font-size: 56px; color: var(--border); margin-bottom: 12px; }
-  .canvas-empty .hint { font-size: 13px; }
-  .canvas-empty .accent { color: var(--primary); font-weight: 600; }
+        .nav-links a:hover {
+            color: var(--primary-green);
+        }
 
-  .canvas-overlay { position: absolute; z-index: 10; }
-  .canvas-overlay.top-center {
-    top: 12px;
-    left: 50%;
-    transform: translateX(-50%);
-    pointer-events: none;
-  }
-  .canvas-overlay.bottom-center {
-    bottom: 12px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 4px;
-    background: rgba(255,255,255,0.95);
-    backdrop-filter: blur(8px);
-    padding: 4px 8px;
-    border-radius: 6px;
-    border: 1px solid var(--border);
-  }
-  .align-hint {
-    background: var(--primary);
-    color: white;
-    padding: 4px 12px;
-    border-radius: 16px;
-    font-size: 11px;
-    font-weight: 600;
-    opacity: 0;
-    transition: opacity 0.12s;
-    box-shadow: 0 3px 12px rgba(0, 200, 83, 0.35);
-  }
-  .align-hint.visible { opacity: 1; }
-  .zoom-btn {
-    background: var(--card);
-    border: 1px solid var(--border);
-    width: 28px;
-    height: 28px;
-    border-radius: 4px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text);
-    transition: all 0.12s;
-  }
-  .zoom-btn:hover { border-color: var(--primary); color: var(--primary); }
-  .zoom-display {
-    font-family: 'Oswald', sans-serif;
-    font-size: 12px;
-    color: var(--text);
-    min-width: 36px;
-    text-align: center;
-  }
+        /* Hero 区域 - 浅绿渐变背景 */
+        .hero {
+            background: linear-gradient(135deg, #f8fff9 0%, #e8f9ef 100%);
+            padding: 80px 20px 60px;
+            text-align: center;
+        }
 
-  /* 右侧控制面板 */
-  .control-panel {
-    border-left: 1px solid var(--border);
-    padding: 12px;
-  }
-  .control-section { margin-bottom: 14px; }
-  
-  .btn {
-    background: #F5F5F5;
-    color: var(--text);
-    border: 1px solid var(--border);
-    padding: 7px 10px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 12px;
-    font-family: inherit;
-    transition: all 0.12s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    font-weight: 500;
-  }
-  .btn:hover { background: #EBEBEB; border-color: var(--primary); color: var(--primary); }
-  .btn-primary { background: var(--primary); color: white; border-color: var(--primary); }
-  .btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); color: white; }
-  .btn-success { background: var(--success); color: white; border-color: var(--success); }
-  .btn-success:hover { background: #00E676; border-color: #00E676; color: white; }
-  .btn-danger { background: transparent; color: var(--danger); border-color: rgba(244, 67, 54, 0.3); }
-  .btn-danger:hover { background: rgba(244, 67, 54, 0.08); border-color: var(--danger); }
-  .btn-block { width: 100%; }
-  .btn-row { display: flex; gap: 5px; margin-bottom: 5px; }
-  .btn-row .btn { flex: 1; }
+        .hero h1 {
+            font-size: 2.5rem;
+            margin: 0 0 15px;
+            font-weight: 800;
+            color: var(--text-main);
+        }
 
-  /* 自定义信息 */
-  .info-item {
-    background: #FAFAFA;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 8px 10px;
-    margin-bottom: 6px;
-  }
-  .info-item-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 6px;
-  }
-  .info-item-title {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text);
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-  .info-item-toggle {
-    width: 36px;
-    height: 20px;
-    background: #E0E0E0;
-    border-radius: 10px;
-    position: relative;
-    cursor: pointer;
-    transition: background 0.15s;
-  }
-  .info-item-toggle.active { background: var(--primary); }
-  .info-item-toggle::after {
-    content: '';
-    position: absolute;
-    width: 16px;
-    height: 16px;
-    background: white;
-    border-radius: 50%;
-    top: 2px;
-    left: 2px;
-    transition: transform 0.15s;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
-  }
-  .info-item-toggle.active::after { transform: translateX(16px); }
-  
-  .avatar-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .avatar-preview {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    background: #E0E0E0;
-    border: 2px solid var(--success);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 16px;
-    overflow: hidden;
-    flex-shrink: 0;
-  }
-  .avatar-preview img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  .avatar-actions {
-    display: flex;
-    gap: 4px;
-  }
-  .avatar-actions .btn {
-    font-size: 10px;
-    padding: 4px 8px;
-  }
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-sub);
+            max-width: 700px;
+            margin: 0 auto;
+        }
 
-  .input-row {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    margin-bottom: 4px;
-  }
-  .input-row label {
-    font-size: 10px;
-    color: var(--text-muted);
-    min-width: 32px;
-  }
-  .input-row input {
-    flex: 1;
-    background: var(--card);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 5px 6px;
-    border-radius: 4px;
-    font-size: 11px;
-    font-family: inherit;
-    min-width: 0;
-  }
-  .input-row input:focus { outline: none; border-color: var(--primary); }
-  .input-row input[type="time"] { font-family: 'Oswald', sans-serif; }
-  .separator {
-    color: var(--text-muted);
-    font-size: 11px;
-  }
+        /* 核心卡片区域 */
+        .choice-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+            max-width: 1000px;
+            margin: -50px auto 0; /* 向上偏移制造悬浮感 */
+            padding: 0 20px;
+            position: relative;
+            z-index: 10;
+        }
 
-  .tip-box {
-    background: #E8F5E9;
-    border-left: 3px solid var(--primary);
-    padding: 8px 10px;
-    border-radius: 4px;
-    margin-top: 10px;
-  }
-  .tip-box p {
-    font-size: 10px;
-    color: #2E7D32;
-    margin: 0;
-    line-height: 1.6;
-  }
+        .choice-card {
+            background: var(--bg-white);
+            flex: 1;
+            min-width: 300px;
+            max-width: 450px;
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 185, 107, 0.1); /* 绿色阴影 */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            border: 1px solid #eee;
+        }
 
-  /* 样图参考 */
-  .sample-preview {
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    overflow: hidden;
-    background: #F5F5F5;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .sample-preview:hover {
-    border-color: var(--primary);
-    box-shadow: 0 3px 12px rgba(0,0,0,0.1);
-  }
-  .sample-preview img {
-    width: 100%;
-    display: block;
-  }
-  .sample-preview .placeholder {
-    padding: 24px;
-    text-align: center;
-    color: var(--text-muted);
-    font-size: 11px;
-  }
+        .choice-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(0, 185, 107, 0.15);
+            border-color: var(--primary-green);
+        }
 
-  /* 快捷键提示 */
-  .shortcuts-bar {
-    position: fixed;
-    bottom: 0;
-    left: 200px;
-    right: 280px;
-    background: rgba(255,255,255,0.98);
-    border-top: 1px solid var(--border);
-    padding: 6px 16px;
-    font-size: 10px;
-    color: var(--text-muted);
-    display: flex;
-    justify-content: center;
-    gap: 16px;
-    z-index: 50;
-  }
-  .shortcuts-bar kbd {
-    background: #F0F0F0;
-    border: 1px solid var(--border);
-    padding: 1px 4px;
-    border-radius: 2px;
-    font-family: 'Oswald', monospace;
-    font-size: 9px;
-    color: var(--text);
-  }
+        .card-icon {
+            font-size: 3.5rem;
+            margin-bottom: 20px;
+            display: inline-block;
+        }
 
-  /* Toast */
-  .toast {
-    position: fixed;
-    top: 68px;
-    left: 50%;
-    transform: translateX(-50%) translateY(-80px);
-    background: var(--card);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 10px 18px;
-    border-radius: 6px;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.1);
-    z-index: 1000;
-    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 12px;
-  }
-  .toast.visible { transform: translateX(-50%) translateY(0); }
-  .toast.success { border-color: var(--success); }
-  .toast.success i { color: var(--success); }
-  .toast.error { border-color: var(--danger); }
-  .toast.error i { color: var(--danger); }
+        .card-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--text-main);
+        }
 
-  /* 弹窗 */
-  .modal-mask {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    backdrop-filter: blur(4px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 999;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s;
-  }
-  .modal-mask.visible { opacity: 1; pointer-events: auto; }
-  .modal {
-    background: var(--card);
-    border: 1px solid var(--border);
-    padding: 20px;
-    border-radius: 10px;
-    max-width: 500px;
-    width: 90%;
-    max-height: 85vh;
-    overflow-y: auto;
-    box-shadow: 0 16px 40px rgba(0,0,0,0.12);
-    transform: scale(0.92);
-    transition: transform 0.2s;
-  }
-  .modal-mask.visible .modal { transform: scale(1); }
-  .modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 16px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--border);
-  }
-  .modal-header h3 {
-    font-size: 16px;
-    font-family: 'Oswald', sans-serif;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin: 0;
-  }
-  .modal-header h3 i { color: var(--primary); }
-  .modal-close {
-    background: none;
-    border: none;
-    font-size: 18px;
-    color: var(--text-muted);
-    cursor: pointer;
-    padding: 4px;
-  }
-  .modal-close:hover { color: var(--danger); }
+        .card-desc {
+            color: var(--text-sub);
+            margin-bottom: 30px;
+            font-size: 1rem;
+        }
 
-  .help-step {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 14px;
-    padding-bottom: 14px;
-    border-bottom: 1px dashed var(--border);
-  }
-  .help-step:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-  .help-step-num {
-    flex-shrink: 0;
-    width: 26px;
-    height: 26px;
-    background: var(--primary);
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 700;
-    font-family: 'Oswald', sans-serif;
-    font-size: 13px;
-  }
-  .help-step-content h4 {
-    margin: 0 0 4px;
-    font-size: 13px;
-    color: var(--text);
-  }
-  .help-step-content p {
-    margin: 0;
-    font-size: 11px;
-    color: var(--text-muted);
-    line-height: 1.6;
-  }
-  .help-step-content ul {
-    margin: 4px 0 0;
-    padding-left: 16px;
-    font-size: 11px;
-    color: var(--text-muted);
-    line-height: 1.5;
-  }
+        .card-btn {
+            display: inline-block;
+            padding: 10px 30px;
+            background-color: var(--primary-green);
+            color: white;
+            border-radius: 50px; /* 圆角胶囊按钮 */
+            font-weight: bold;
+            font-size: 0.95rem;
+            transition: background 0.3s;
+        }
 
-  .shortcuts-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4px;
-    font-size: 10px;
-    color: var(--text-muted);
-    margin-top: 10px;
-    padding: 10px;
-    background: #FAFAFA;
-    border-radius: 6px;
-  }
-  .shortcuts-grid kbd {
-    background: #F0F0F0;
-    border: 1px solid var(--border);
-    padding: 1px 4px;
-    border-radius: 2px;
-    font-family: 'Oswald', monospace;
-    font-size: 9px;
-    color: var(--secondary);
-  }
+        .choice-card:hover .card-btn {
+            background-color: var(--dark-green);
+        }
 
-  .modal-tip {
-    background: #E8F5E9;
-    border-radius: 4px;
-    padding: 10px;
-    margin-top: 12px;
-    font-size: 10px;
-    color: #2E7D32;
-    line-height: 1.7;
-  }
+        /* 功能优势区域 */
+        .section {
+            padding: 80px 20px;
+            background-color: var(--bg-white);
+        }
 
-  .hidden { display: none !important; }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
 
-  @media (max-width: 1100px) {
-    .main-layout { grid-template-columns: 1fr; }
-    .materials-panel, .control-panel { display: none; }
-    .shortcuts-bar { left: 0; right: 0; }
-  }
-</style>
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-header h2 {
+            font-size: 2rem;
+            color: var(--text-main);
+            margin: 0 0 10px;
+            font-weight: 700;
+        }
+
+        .section-header h2::after {
+            content: '';
+            display: block;
+            width: 50px;
+            height: 4px;
+            background: var(--primary-green);
+            margin: 15px auto 0;
+            border-radius: 2px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 30px;
+            text-align: center;
+        }
+
+        .feature-item {
+            background: var(--light-green-bg); /* 极浅绿背景 */
+            padding: 30px 20px;
+            border-radius: 12px;
+            transition: transform 0.3s;
+        }
+
+        .feature-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .feature-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+
+        .feature-text {
+            color: var(--text-sub);
+            font-size: 0.9rem;
+        }
+
+        /* 页脚 */
+        footer {
+            background-color: #1a1a1a; /* 深色底对比绿色 */
+            color: #888;
+            padding: 60px 20px 30px;
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        .footer-contact-box {
+            max-width: 600px;
+            margin: 0 auto 40px;
+            padding: 30px;
+            border: 1px solid #333;
+            border-radius: 12px;
+        }
+
+        .footer-contact-box h3 {
+            color: white;
+            margin: 0 0 15px;
+            font-size: 1.4rem;
+        }
+
+        .footer-contact-box p {
+            margin: 0 0 20px;
+        }
+
+        .wechat-tag {
+            background: var(--primary-green);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .wechat-tag a {
+            color: white;
+            text-decoration: underline;
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
+
+        .footer-links {
+            margin-bottom: 30px;
+        }
+
+        .footer-links a {
+            color: #aaa;
+            margin: 0 10px;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary-green);
+        }
+
+        .copyright {
+            color: #555;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links { display: none; }
+            .hero h1 { font-size: 2rem; }
+            .choice-container { margin-top: 20px; }
+        }
+    </style>
 </head>
 <body>
 
-<!-- 顶部栏 -->
-<header class="app-header">
-  <div class="logo">Keep运动截图拼图</div>
-  <span class="version-tag">v1.8</span>
-  
-  <select class="project-select" id="project-select">
-    <option value="">选择项目</option>
-    <option value="run">跑步</option>
-    <option value="walk">步行</option>
-    <option value="ride">骑行</option>
-    <option value="swim">游泳</option>
-    <option value="fitness">健身</option>
-  </select>
-  
-  <div class="wechat-badge">
-    <i class="fa-brands fa-weixin"></i>
-    <span>微信咨询：278715464</span>
-  </div>
-  
-  <button class="help-btn" id="help-btn">
-    <i class="fa-solid fa-circle-question"></i> 使用说明
-  </button>
-  
-  <div class="status-bar">
-    <span class="status-msg" id="status-msg">就绪</span>
-  </div>
-</header>
+    <!-- 顶部导航 -->
+    <header>
+        <a href="#" class="logo">🏃 52Run.cn</a>
+        <nav class="nav-links">
+            <a href="#home">首页</a>
+            <a href="#features">功能优势</a>
+            <a href="#cases">案例展示</a>
+            <a href="#process">使用流程</a>
+            <a href="#faq">常见问题</a>
+            <a href="#contact">联系我们</a>
+        </nav>
+    </header>
 
-<!-- 主布局 -->
-<div class="main-layout">
-  
-  <!-- 左侧：素材库 -->
-  <aside class="panel materials-panel">
-    <h3 class="section-title">素材库 · 点击添加</h3>
-    <div class="materials-grid" id="materials-grid"></div>
-    
-    <div class="divider"></div>
-    
-    <!-- 轨迹上传（仅跑步） -->
-    <div id="track-section" class="hidden">
-      <h3 class="section-title">跑步轨迹</h3>
-      <div class="track-upload" id="track-upload">
-        <i class="fa-solid fa-map"></i>
-        <p>上传跑步轨迹</p>
-        <p class="hint">仅限跑步 · JPG/PNG</p>
-      </div>
-      <input type="file" id="track-input" accept="image/jpeg,image/png" class="hidden">
-      <div class="track-preview hidden" id="track-preview">
-        <img id="track-img" src="" alt="轨迹">
-        <button class="clear-track" id="clear-track"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-    </div>
-    
-    <div class="divider"></div>
-    
-    <p style="font-size: 10px; color: var(--text-muted); text-align: center; line-height: 1.5;">
-      方向键微调位置<br>
-      Delete 删除选中
-    </p>
-  </aside>
+    <!-- Hero 区域 -->
+    <section id="home" class="hero">
+        <h1>Keep 运动截图拼图工具</h1>
+        <p>选择适合你的制作方式，轻松生成专业打卡图</p>
+    </section>
 
-  <!-- 中间：画布 -->
-  <section class="canvas-panel" id="canvas-panel">
-    <div class="canvas-stage" id="canvas-stage">
-      <canvas id="main-canvas" width="750" height="1334"></canvas>
-    </div>
-    
-    <div class="canvas-empty" id="canvas-empty">
-      <i class="fa-solid fa-image"></i>
-      <div class="hint">
-        <div>请<span class="accent">选择项目</span>开始</div>
-      </div>
-    </div>
-    
-    <div class="canvas-overlay top-center">
-      <div class="align-hint" id="align-hint">↔ 已对齐</div>
-    </div>
-    
-    <div class="canvas-overlay bottom-center">
-      <button class="zoom-btn" id="zoom-out" title="缩小">−</button>
-      <span class="zoom-display" id="zoom-display">100%</span>
-      <button class="zoom-btn" id="zoom-in" title="放大">+</button>
-      <button class="zoom-btn" id="zoom-fit" title="适应">⤢</button>
-    </div>
-  </section>
+    <!-- 核心功能入口 -->
+    <div class="choice-container">
+        <a href="1.html" class="choice-card">
+            <span class="card-icon">🏆</span>
+            <div class="card-title">精选模板拼图</div>
+            <div class="card-desc">使用我们预设的完美样式，选择项目后直接生成，省时省力。</div>
+            <div class="card-btn">立即使用</div>
+        </a>
 
-  <!-- 右侧：控制面板 -->
-  <aside class="panel control-panel">
-    
-    <!-- 操作按钮 -->
-    <div class="control-section">
-      <div class="btn-row">
-        <button class="btn" id="undo-btn"><i class="fa-solid fa-rotate-left"></i> 撤销</button>
-        <button class="btn btn-danger" id="reset-btn"><i class="fa-solid fa-trash"></i> 重置</button>
-      </div>
-      <button class="btn btn-success btn-block" id="export-btn"><i class="fa-solid fa-download"></i> 导出 JPG</button>
-      <button class="btn btn-danger btn-block" id="clear-all-btn" style="margin-top: 4px;"><i class="fa-solid fa-trash-can"></i> 清空所有数据</button>
+        <a href="2.html" class="choice-card">
+            <span class="card-icon">🖼️</span>
+            <div class="card-title">自定义自由拼图</div>
+            <div class="card-desc">上传你自己的运动截图，支持区域擦除、自由调整素材大小，高度 DIY。</div>
+            <div class="card-btn">开始制作</div>
+        </a>
     </div>
 
-    <!-- 自定义信息 -->
-    <div class="control-section">
-      <h3 class="section-title">自定义信息（独立拖拽）</h3>
-      
-      <!-- 头像 -->
-      <div class="info-item">
-        <div class="info-item-header">
-          <span class="info-item-title"><i class="fa-solid fa-user"></i> 头像</span>
-          <div class="info-item-toggle active" id="avatar-toggle"></div>
+    <!-- 功能优势区域 -->
+    <section id="features" class="section">
+        <div class="container">
+            <div class="section-header">
+                <h2>选择拼图工具的理由</h2>
+                <p>不仅是拼图，更是运动生活的完美记录</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-item">
+                    <div class="feature-icon">🏆</div>
+                    <div class="feature-title">精美预设模板</div>
+                    <div class="feature-text">专为 Keep 用户设计的多款精美模板，只需选择数据即可自动生成。</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🎨</div>
+                    <div class="feature-title">高度自由定制</div>
+                    <div class="feature-text">支持自由上传截图，内置画笔擦除与缩放功能，打造独一无二的海报。</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">⚡</div>
+                    <div class="feature-title">极速生成体验</div>
+                    <div class="feature-text">无需繁琐操作，浏览器端本地处理，上传即生成，享受极速体验。</div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🔒</div>
+                    <div class="feature-title">数据隐私安全</div>
+                    <div class="feature-text">所有图片处理均在本地完成，不会上传服务器存储，确保隐私安全。</div>
+                </div>
+            </div>
         </div>
-        <div class="avatar-row" id="avatar-row">
-          <div class="avatar-preview" id="avatar-preview"><i class="fa-solid fa-user"></i></div>
-          <div class="avatar-actions">
-            <button class="btn" id="upload-avatar-btn">上传</button>
-            <button class="btn btn-danger" id="delete-avatar-btn">删除</button>
-          </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer id="contact">
+        <div class="footer-contact-box">
+            <h3>准备好制作你的运动打卡图了吗？</h3>
+            <p>微信添加好友，备注“拼图”，获取更多模板或反馈问题</p>
+            <div class="wechat-tag">
+                微信：278715464
+                <a href="weixin://addfriend/278715464">立即添加</a>
+            </div>
         </div>
-        <input type="file" id="avatar-input" accept="image/jpeg,image/png" class="hidden">
-      </div>
-      
-      <!-- 用户名 -->
-      <div class="info-item">
-        <div class="info-item-header">
-          <span class="info-item-title"><i class="fa-solid fa-pen"></i> 用户名</span>
-          <div class="info-item-toggle active" id="username-toggle"></div>
+
+        <div class="footer-links">
+            <a href="#home">首页</a>
+            <a href="#features">功能优势</a>
+            <a href="#cases">案例展示</a>
+            <a href="#process">使用流程</a>
+            <a href="#faq">常见问题</a>
+            <a href="#contact">联系我们</a>
         </div>
-        <div class="input-row">
-          <input type="text" id="username-input" value="用户名" placeholder="输入用户名">
+
+        <div class="copyright">
+            © 2025 52Run.cn · 专注跑步数据可视化与科学复盘 · 微信：278715464
         </div>
-      </div>
-      
-      <!-- 日期时间 -->
-      <div class="info-item">
-        <div class="info-item-header">
-          <span class="info-item-title"><i class="fa-solid fa-calendar"></i> 日期时间</span>
-          <div class="info-item-toggle active" id="datetime-toggle"></div>
-        </div>
-        <div class="input-row">
-          <input type="number" id="year-input" value="2025" min="2000" max="2099" style="width: 50px;">
-          <span class="separator">/</span>
-          <input type="number" id="month-input" value="6" min="1" max="12" style="width: 36px;">
-          <span class="separator">/</span>
-          <input type="number" id="day-input" value="4" min="1" max="31" style="width: 36px;">
-        </div>
-        <div class="input-row">
-          <input type="time" id="start-time" value="16:08">
-          <span class="separator">-</span>
-          <input type="time" id="end-time" value="16:43">
-        </div>
-      </div>
-      
-      <div class="tip-box">
-        <p>头像/用户名/日期三个元素各自独立，可在画布上分别拖拽移动</p>
-        <p>点击选中后方向键微调，Delete 删除，Esc 取消选中</p>
-      </div>
-    </div>
+    </footer>
 
-    <!-- 样图参考 -->
-    <div class="control-section">
-      <h3 class="section-title">样图参考 · 点击放大</h3>
-      <div class="sample-preview" id="sample-preview">
-        <div class="placeholder" id="sample-placeholder">请选择项目</div>
-        <img id="sample-img" src="" alt="样图" class="hidden">
-      </div>
-    </div>
-  </aside>
-</div>
-
-<!-- 底部快捷键栏 -->
-<div class="shortcuts-bar">
-  <span><kbd>←↑↓→</kbd> 移动1px</span>
-  <span><kbd>Shift</kbd>+方向键 移动10px</span>
-  <span><kbd>Space</kbd>+拖拽 平移</span>
-  <span><kbd>+/−</kbd> 缩放轨迹</span>
-  <span><kbd>Del</kbd> 删除</span>
-  <span><kbd>Esc</kbd> 取消</span>
-</div>
-
-<!-- Toast -->
-<div class="toast" id="toast">
-  <i class="fa-solid fa-circle-info"></i>
-  <span id="toast-msg">提示</span>
-</div>
-
-<!-- 使用说明弹窗 -->
-<div class="modal-mask" id="help-modal">
-  <div class="modal">
-    <div class="modal-header">
-      <h3><i class="fa-solid fa-circle-question"></i> Keep运动截图拼图 · 使用说明</h3>
-      <button class="modal-close" id="modal-close"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-    
-    <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
-      像拼乐高一样，把数字和单位拖到底图上，轻松做出专业运动打卡截图
-    </p>
-    
-    <div class="help-step">
-      <div class="help-step-num">1</div>
-      <div class="help-step-content">
-        <h4>选择项目</h4>
-        <ul>
-          <li>顶部下拉菜单选运动</li>
-          <li>画布自动加载底图</li>
-          <li>右侧显示样图对照</li>
-        </ul>
-      </div>
-    </div>
-    
-    <div class="help-step">
-      <div class="help-step-num">2</div>
-      <div class="help-step-content">
-        <h4>填信息 + 拼素材</h4>
-        <ul>
-          <li>上传头像、填用户名日期</li>
-          <li>点击左侧素材添加到画布</li>
-          <li>拖拽到样图对应位置</li>
-          <li>悬停后点右上角X删除单个</li>
-        </ul>
-      </div>
-    </div>
-    
-    <div class="help-step">
-      <div class="help-step-num">3</div>
-      <div class="help-step-content">
-        <h4>调整 + 导出</h4>
-        <ul>
-          <li>方向键微调位置</li>
-          <li>滚轮缩放轨迹图</li>
-          <li>点「导出 JPG」保存</li>
-          <li>点「清空所有数据」一键重置</li>
-        </ul>
-      </div>
-    </div>
-    
-    <h4 style="font-size: 12px; margin: 12px 0 6px; color: var(--text);"><i class="fa-solid fa-keyboard" style="color: var(--secondary);"></i> 快捷键</h4>
-    <div class="shortcuts-grid">
-      <span><kbd>←↑↓→</kbd> 移动1px</span>
-      <span><kbd>Shift</kbd>+方向键 移动10px</span>
-      <span><kbd>Space</kbd>+拖拽 平移画布</span>
-      <span><kbd>Delete</kbd> 删除选中</span>
-      <span><kbd>Esc</kbd> 取消选中</span>
-      <span><kbd>+/-</kbd> 缩放轨迹图</span>
-      <span><kbd>[</kbd> <kbd>]</kbd> 精细缩放</span>
-    </div>
-    
-    <div class="modal-tip">
-      头像/用户名/日期可独立拖拽 · 跑步项目可上传轨迹图 · 拖拽空白处平移画布
-    </div>
-  </div>
-</div>
-
-<!-- 样图大图弹窗 -->
-<div class="modal-mask" id="sample-modal">
-  <div class="modal" style="max-width: 400px; text-align: center;">
-    <img id="sample-large-img" src="" alt="样图大图" style="width: 100%; border-radius: 6px;">
-    <p style="font-size: 10px; color: var(--text-muted); margin-top: 10px;">点击任意位置关闭</p>
-  </div>
-</div>
-
-<script>
-// ============== 项目配置 ==============
-const PROJECTS = {
-  run: {
-    name: '跑步',
-    baseImage: './materials/bases/run.jpg',
-    sampleImage: './materials/samples/run_sample.jpg',
-    materials: ['b0','b1','b2','b3','b4','b5','b6','b7','b8','b9','bgl','bm','b2m','bqk','bmi','m','2m','km','min','kcal']
-  },
-  walk: {
-    name: '步行',
-    baseImage: './materials/bases/walk.jpg',
-    sampleImage: './materials/samples/walk_sample.jpg',
-    materials: ['0','1','2','3','4','5','6','7','8','9','mi','m','2m','qk','ceng','ge']
-  },
-  ride: {
-    name: '骑行',
-    baseImage: './materials/bases/ride.jpg',
-    sampleImage: './materials/samples/ride_sample.jpg',
-    materials: ['0','1','2','3','4','5','6','7','8','9','km','qks','hm','wa']
-  },
-  swim: {
-    name: '游泳',
-    baseImage: './materials/bases/swim.jpg',
-    sampleImage: './materials/samples/swim_sample.jpg',
-    materials: ['0','1','2','3','4','5','6','7','8','9','mi','m','2m','ps1','ps2']
-  },
-  fitness: {
-    name: '健身',
-    baseImage: './materials/bases/fitness.jpg',
-    sampleImage: './materials/samples/fitness_sample.jpg',
-    materials: ['0','1','2','3','4','5','6','7','8','9','tang','ge','qk','wa']
-  }
-};
-
-// ============== 状态管理 ==============
-const state = {
-  currentProject: null,
-  baseImage: null,
-  trackImage: null,
-  avatarImage: null,
-  canvasWidth: 750,
-  canvasHeight: 1334,
-  canvasZoom: 1,
-  canvasOffsetX: 0,
-  canvasOffsetY: 0,
-  materials: [],
-  customInfo: {
-    avatar: { visible: true, x: 100, y: 200, scale: 1, id: 'avatar', type: 'avatar' },
-    username: { visible: true, text: '用户名', x: 180, y: 185, scale: 1, id: 'username', type: 'username' },
-    datetime: { visible: true, year: 2025, month: 6, day: 4, startTime: '16:08', endTime: '16:43', x: 180, y: 230, scale: 1, id: 'datetime', type: 'datetime' }
-  },
-  selected: null,
-  history: [],
-  alignGuides: [],
-  isDragging: false,
-  dragMode: null,
-  dragStart: { x: 0, y: 0 },
-  elementStart: { x: 0, y: 0, scale: 1 },
-  spaceKey: false
-};
-
-const canvas = document.getElementById('main-canvas');
-const ctx = canvas.getContext('2d');
-const materialImages = {};
-
-// ============== 初始化 ==============
-function init() {
-  setupEvents();
-  renderCanvas();
-  updateStatus('就绪');
-}
-
-// ============== 素材加载 ==============
-function loadMaterialImage(key) {
-  return new Promise((resolve) => {
-    if (materialImages[key]) { resolve(materialImages[key]); return; }
-    const img = new Image();
-    img.onload = () => { materialImages[key] = img; resolve(img); };
-    img.onerror = () => { resolve(null); };
-    img.src = `./materials/${key}.jpg`;
-  });
-}
-
-function renderMaterialsGrid(keys) {
-  const grid = document.getElementById('materials-grid');
-  grid.innerHTML = '';
-  keys.forEach(key => {
-    const item = document.createElement('div');
-    item.className = 'material-item';
-    item.dataset.key = key;
-    item.innerHTML = `
-      <div class="mat-loading"><i class="fa-solid fa-spinner fa-spin"></i></div>
-      <div class="label">${key}</div>
-    `;
-    item.addEventListener('click', () => addMaterial(key));
-    grid.appendChild(item);
-    
-    loadMaterialImage(key).then(img => {
-      if (img) {
-        item.innerHTML = `<img src="${img.src}" alt="${key}"><div class="label">${key}</div><span class="delete-x"><i class="fa-solid fa-xmark"></i></span>`;
-        const delBtn = item.querySelector('.delete-x');
-        delBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          // 删除该素材的实例（如果只有一个）
-          const mats = state.materials.filter(m => m.materialKey === key);
-          if (mats.length > 0) {
-            const idx = state.materials.indexOf(mats[mats.length - 1]);
-            if (idx >= 0) state.materials.splice(idx, 1);
-            pushHistory();
-            renderCanvas();
-            showToast('已删除素材', 'success');
-          }
-        });
-      }
-    });
-  });
-}
-
-// ============== 项目切换 ==============
-function loadProject(projectKey) {
-  const project = PROJECTS[projectKey];
-  if (!project) return;
-  
-  state.currentProject = projectKey;
-  
-  // 加载底图
-  const baseImg = new Image();
-  baseImg.onload = () => {
-    state.baseImage = baseImg;
-    state.canvasWidth = baseImg.width;
-    state.canvasHeight = baseImg.height;
-    canvas.width = baseImg.width;
-    canvas.height = baseImg.height;
-    document.getElementById('canvas-empty').classList.add('hidden');
-    fitCanvasToWindow();
-    renderCanvas();
-    showToast('底图已加载', 'success');
-  };
-  baseImg.onerror = () => {
-    showToast('底图加载失败，使用默认画布', 'error');
-    state.baseImage = null;
-    renderCanvas();
-  };
-  baseImg.src = project.baseImage;
-  
-  // 加载样图
-  const sampleImg = document.getElementById('sample-img');
-  sampleImg.src = project.sampleImage;
-  sampleImg.classList.remove('hidden');
-  document.getElementById('sample-placeholder').classList.add('hidden');
-  
-  // 显示/隐藏轨迹上传（仅跑步）
-  document.getElementById('track-section').classList.toggle('hidden', projectKey !== 'run');
-  
-  // 渲染素材库
-  renderMaterialsGrid(project.materials);
-  
-  // 重置状态
-  state.materials = [];
-  state.trackImage = null;
-  state.selected = null;
-  state.history = [];
-  resetCustomInfoPositions();
-  
-  updateStatus(`${project.name}模式`);
-}
-
-function resetCustomInfoPositions() {
-  state.customInfo.avatar.x = 100;
-  state.customInfo.avatar.y = 200;
-  state.customInfo.username.x = 180;
-  state.customInfo.username.y = 185;
-  state.customInfo.datetime.x = 180;
-  state.customInfo.datetime.y = 230;
-}
-
-// ============== 画布变换 ==============
-function updateCanvasTransform() {
-  const stage = document.getElementById('canvas-stage');
-  stage.style.transform = `translate(${state.canvasOffsetX}px, ${state.canvasOffsetY}px) scale(${state.canvasZoom})`;
-  document.getElementById('zoom-display').textContent = Math.round(state.canvasZoom * 100) + '%';
-}
-
-function setCanvasZoom(zoom, centerX, centerY) {
-  const newZoom = Math.max(0.1, Math.min(5, zoom));
-  if (centerX !== undefined && centerY !== undefined) {
-    const rect = document.getElementById('canvas-panel').getBoundingClientRect();
-    const cx = (centerX - rect.left - state.canvasOffsetX) / state.canvasZoom;
-    const cy = (centerY - rect.top - state.canvasOffsetY) / state.canvasZoom;
-    state.canvasOffsetX = centerX - rect.left - cx * newZoom;
-    state.canvasOffsetY = centerY - rect.top - cy * newZoom;
-  }
-  state.canvasZoom = newZoom;
-  updateCanvasTransform();
-}
-
-function fitCanvasToWindow() {
-  const container = document.getElementById('canvas-panel');
-  const padding = 40;
-  const maxW = container.clientWidth - padding;
-  const maxH = container.clientHeight - padding;
-  const zoom = Math.min(maxW / state.canvasWidth, maxH / state.canvasHeight);
-  state.canvasZoom = zoom;
-  state.canvasOffsetX = (container.clientWidth - state.canvasWidth * zoom) / 2;
-  state.canvasOffsetY = (container.clientHeight - state.canvasHeight * zoom) / 2;
-  updateCanvasTransform();
-}
-
-// ============== 坐标转换 ==============
-function getCanvasCoords(e) {
-  const rect = canvas.getBoundingClientRect();
-  const scaleX = canvas.width / rect.width;
-  const scaleY = canvas.height / rect.height;
-  let clientX, clientY;
-  if (e.touches && e.touches.length > 0) { clientX = e.touches[0].clientX; clientY = e.touches[0].clientY; }
-  else if (e.changedTouches && e.changedTouches.length > 0) { clientX = e.changedTouches[0].clientX; clientY = e.changedTouches[0].clientY; }
-  else { clientX = e.clientX; clientY = e.clientY; }
-  return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
-}
-
-// ============== 渲染 ==============
-function renderCanvas() {
-  ctx.clearRect(0, 0, state.canvasWidth, state.canvasHeight);
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fillRect(0, 0, state.canvasWidth, state.canvasHeight);
-  
-  // 底图
-  if (state.baseImage) ctx.drawImage(state.baseImage, 0, 0);
-  
-  // 轨迹图
-  if (state.trackImage && state.currentProject === 'run') {
-    const tw = state.trackImage.width * 0.4;
-    const th = state.trackImage.height * 0.4;
-    ctx.drawImage(state.trackImage, state.canvasWidth - tw - 20, state.canvasHeight - th - 150, tw, th);
-  }
-  
-  // 素材
-  state.materials.forEach(m => drawElement(m));
-  
-  // 自定义信息
-  if (state.customInfo.avatar.visible) drawElement(state.customInfo.avatar);
-  if (state.customInfo.username.visible) drawElement(state.customInfo.username);
-  if (state.customInfo.datetime.visible) drawElement(state.customInfo.datetime);
-  
-  // 选中框
-  if (state.selected) drawSelection(state.selected);
-}
-
-function drawElement(el) {
-  if (el.type === 'material') {
-    const img = materialImages[el.materialKey];
-    if (!img) return;
-    const w = img.naturalWidth * el.scale;
-    const h = img.naturalHeight * el.scale;
-    ctx.drawImage(img, el.x - w/2, el.y - h/2, w, h);
-  } else if (el.type === 'avatar') {
-    drawAvatar(el);
-  } else if (el.type === 'username') {
-    ctx.font = `500 ${28 * el.scale}px 'Noto Sans SC', sans-serif`;
-    ctx.fillStyle = '#000000';
-    ctx.textBaseline = 'middle';
-    ctx.textAlign = 'left';
-    ctx.fillText(el.text, el.x, el.y);
-  } else if (el.type === 'datetime') {
-    const text = `${el.year}/${String(el.month).padStart(2,'0')}/${String(el.day).padStart(2,'0')} ${el.startTime} - ${el.endTime}`;
-    ctx.font = `${22 * el.scale}px 'Noto Sans SC', sans-serif`;
-    ctx.fillStyle = '#666666';
-    ctx.textBaseline = 'middle';
-    ctx.textAlign = 'left';
-    ctx.fillText(text, el.x, el.y);
-  }
-}
-
-function drawAvatar(el) {
-  const size = 64 * el.scale;
-  const x = el.x - size/2;
-  const y = el.y - size/2;
-  ctx.save();
-  ctx.beginPath();
-  ctx.arc(el.x, el.y, size/2, 0, Math.PI * 2);
-  ctx.closePath();
-  ctx.clip();
-  if (state.avatarImage) {
-    const img = state.avatarImage;
-    const minDim = Math.min(img.width, img.height);
-    const sx = (img.width - minDim) / 2;
-    const sy = (img.height - minDim) / 2;
-    ctx.drawImage(img, sx, sy, minDim, minDim, x, y, size, size);
-  } else {
-    ctx.fillStyle = '#CCCCCC';
-    ctx.fillRect(x, y, size, size);
-  }
-  ctx.restore();
-  ctx.strokeStyle = '#00C853';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.arc(el.x, el.y, size/2, 0, Math.PI * 2);
-  ctx.stroke();
-}
-
-function drawSelection(el) {
-  const b = getElementBounds(el);
-  ctx.strokeStyle = '#2196F3';
-  ctx.lineWidth = 2;
-  ctx.setLineDash([5, 3]);
-  ctx.strokeRect(b.x - 2, b.y - 2, b.w + 4, b.h + 4);
-  ctx.setLineDash([]);
-  ctx.fillStyle = '#00C853';
-  ctx.beginPath();
-  ctx.arc(b.x + b.w, b.y + b.h, 6, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = '#FFFFFF';
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-}
-
-function getElementBounds(el) {
-  let w, h;
-  if (el.type === 'material') {
-    const img = materialImages[el.materialKey];
-    if (!img) return { x: el.x, y: el.y, w: 0, h: 0 };
-    w = img.naturalWidth * el.scale;
-    h = img.naturalHeight * el.scale;
-  } else if (el.type === 'avatar') {
-    w = 64 * el.scale;
-    h = 64 * el.scale;
-  } else if (el.type === 'username') {
-    ctx.font = `500 ${28 * el.scale}px 'Noto Sans SC', sans-serif`;
-    w = ctx.measureText(el.text || '用户名').width;
-    h = 28 * el.scale * 1.2;
-  } else if (el.type === 'datetime') {
-    const text = `${el.year}/${String(el.month).padStart(2,'0')}/${String(el.day).padStart(2,'0')} ${el.startTime} - ${el.endTime}`;
-    ctx.font = `${22 * el.scale}px 'Noto Sans SC', sans-serif`;
-    w = ctx.measureText(text).width;
-    h = 22 * el.scale * 1.2;
-  }
-  return { x: el.x - w/2, y: el.y - h/2, w, h };
-}
-
-// ============== 素材操作 ==============
-async function addMaterial(key) {
-  if (!state.currentProject) {
-    showToast('请先选择项目', 'error');
-    return;
-  }
-  
-  const img = await loadMaterialImage(key);
-  if (!img) {
-    showToast('素材加载失败', 'error');
-    return;
-  }
-  
-  const centerX = state.canvasWidth / 2;
-  const centerY = state.canvasHeight / 2;
-  
-  const mat = {
-    id: 'mat_' + Date.now(),
-    type: 'material',
-    materialKey: key,
-    x: centerX,
-    y: centerY,
-    scale: 0.5
-  };
-  
-  state.materials.push(mat);
-  state.selected = mat;
-  pushHistory();
-  renderCanvas();
-  showToast('已添加素材', 'success');
-}
-
-// ============== 事件处理 ==============
-function setupEvents() {
-  // 项目选择
-  document.getElementById('project-select').addEventListener('change', e => {
-    if (e.target.value) loadProject(e.target.value);
-  });
-  
-  // 缩放按钮
-  document.getElementById('zoom-in').addEventListener('click', () => {
-    setCanvasZoom(state.canvasZoom * 1.2);
-  });
-  document.getElementById('zoom-out').addEventListener('click', () => {
-    setCanvasZoom(state.canvasZoom / 1.2);
-  });
-  document.getElementById('zoom-fit').addEventListener('click', fitCanvasToWindow);
-  
-  // 滚轮缩放
-  document.getElementById('canvas-panel').addEventListener('wheel', e => {
-    if (!state.baseImage) return;
-    e.preventDefault();
-    const delta = e.deltaY < 0 ? 1.1 : 0.9;
-    setCanvasZoom(state.canvasZoom * delta, e.clientX, e.clientY);
-  }, { passive: false });
-  
-  // 画布交互
-  canvas.addEventListener('mousedown', onPointerDown);
-  canvas.addEventListener('mousemove', onPointerMove);
-  canvas.addEventListener('mouseup', onPointerUp);
-  canvas.addEventListener('mouseleave', onPointerUp);
-  
-  // 键盘
-  document.addEventListener('keydown', onKeyDown);
-  document.addEventListener('keyup', e => { state.spaceKey = e.code === 'Space' ? false : state.spaceKey; });
-  
-  // 操作按钮
-  document.getElementById('undo-btn').addEventListener('click', undo);
-  document.getElementById('reset-btn').addEventListener('click', confirmReset);
-  document.getElementById('export-btn').addEventListener('click', exportJPG);
-  document.getElementById('clear-all-btn').addEventListener('click', clearAll);
-  
-  // 开关切换
-  document.getElementById('avatar-toggle').addEventListener('click', () => {
-    state.customInfo.avatar.visible = !state.customInfo.avatar.visible;
-    document.getElementById('avatar-toggle').classList.toggle('active', state.customInfo.avatar.visible);
-    document.getElementById('avatar-row').classList.toggle('hidden', !state.customInfo.avatar.visible);
-    pushHistory();
-    renderCanvas();
-  });
-  document.getElementById('username-toggle').addEventListener('click', () => {
-    state.customInfo.username.visible = !state.customInfo.username.visible;
-    document.getElementById('username-toggle').classList.toggle('active', state.customInfo.username.visible);
-    pushHistory();
-    renderCanvas();
-  });
-  document.getElementById('datetime-toggle').addEventListener('click', () => {
-    state.customInfo.datetime.visible = !state.customInfo.datetime.visible;
-    document.getElementById('datetime-toggle').classList.toggle('active', state.customInfo.datetime.visible);
-    pushHistory();
-    renderCanvas();
-  });
-  
-  // 头像上传
-  document.getElementById('upload-avatar-btn').addEventListener('click', () => {
-    document.getElementById('avatar-input').click();
-  });
-  document.getElementById('avatar-input').addEventListener('change', e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const img = new Image();
-      img.onload = () => {
-        state.avatarImage = img;
-        document.getElementById('avatar-preview').innerHTML = `<img src="${ev.target.result}">`;
-        pushHistory();
-        renderCanvas();
-        showToast('头像已更新', 'success');
-      };
-      img.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
-  });
-  document.getElementById('delete-avatar-btn').addEventListener('click', () => {
-    state.avatarImage = null;
-    document.getElementById('avatar-preview').innerHTML = '<i class="fa-solid fa-user"></i>';
-    pushHistory();
-    renderCanvas();
-    showToast('头像已删除', 'success');
-  });
-  
-  // 用户名输入
-  document.getElementById('username-input').addEventListener('input', e => {
-    state.customInfo.username.text = e.target.value || '用户名';
-    renderCanvas();
-  });
-  
-  // 日期时间输入
-  ['year-input', 'month-input', 'day-input', 'start-time', 'end-time'].forEach(id => {
-    document.getElementById(id).addEventListener('input', () => {
-      const d = state.customInfo.datetime;
-      d.year = parseInt(document.getElementById('year-input').value) || 2025;
-      d.month = parseInt(document.getElementById('month-input').value) || 1;
-      d.day = parseInt(document.getElementById('day-input').value) || 1;
-      d.startTime = document.getElementById('start-time').value || '00:00';
-      d.endTime = document.getElementById('end-time').value || '00:00';
-      renderCanvas();
-    });
-  });
-  
-  // 轨迹上传
-  document.getElementById('track-upload').addEventListener('click', () => {
-    document.getElementById('track-input').click();
-  });
-  document.getElementById('track-input').addEventListener('change', e => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      const img = new Image();
-      img.onload = () => {
-        state.trackImage = img;
-        document.getElementById('track-img').src = ev.target.result;
-        document.getElementById('track-preview').classList.remove('hidden');
-        pushHistory();
-        renderCanvas();
-        showToast('轨迹图已加载', 'success');
-      };
-      img.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
-  });
-  document.getElementById('clear-track').addEventListener('click', () => {
-    state.trackImage = null;
-    document.getElementById('track-preview').classList.add('hidden');
-    pushHistory();
-    renderCanvas();
-    showToast('轨迹图已清除', 'success');
-  });
-  
-  // 帮助弹窗
-  document.getElementById('help-btn').addEventListener('click', () => {
-    document.getElementById('help-modal').classList.add('visible');
-  });
-  document.getElementById('modal-close').addEventListener('click', () => {
-    document.getElementById('help-modal').classList.remove('visible');
-  });
-  document.getElementById('help-modal').addEventListener('click', e => {
-    if (e.target.id === 'help-modal') e.target.classList.remove('visible');
-  });
-  
-  // 样图预览
-  document.getElementById('sample-preview').addEventListener('click', () => {
-    if (state.currentProject) {
-      document.getElementById('sample-large-img').src = PROJECTS[state.currentProject].sampleImage;
-      document.getElementById('sample-modal').classList.add('visible');
-    }
-  });
-  document.getElementById('sample-modal').addEventListener('click', () => {
-    document.getElementById('sample-modal').classList.remove('visible');
-  });
-  
-  // 窗口调整
-  window.addEventListener('resize', () => { if (state.baseImage) fitCanvasToWindow(); });
-}
-
-function onPointerDown(e) {
-  const pos = getCanvasCoords(e);
-  state.isDragging = true;
-  state.dragStart = pos;
-  
-  // 检测点击元素
-  const hit = hitTest(pos.x, pos.y);
-  if (hit) {
-    state.selected = hit;
-    state.dragMode = 'move';
-    state.elementStart = { x: hit.x, y: hit.y, scale: hit.scale || 1 };
-  } else {
-    state.selected = null;
-    state.dragMode = 'pan';
-    state.elementStart = { x: state.canvasOffsetX, y: state.canvasOffsetY };
-  }
-  renderCanvas();
-}
-
-function onPointerMove(e) {
-  if (!state.isDragging) return;
-  
-  const pos = getCanvasCoords(e);
-  
-  if (state.dragMode === 'move' && state.selected) {
-    const dx = pos.x - state.dragStart.x;
-    const dy = pos.y - state.dragStart.y;
-    state.selected.x = state.elementStart.x + dx;
-    state.selected.y = state.elementStart.y + dy;
-    renderCanvas();
-  } else if (state.dragMode === 'pan') {
-    const dx = e.clientX - state.dragStart.x;
-    const dy = e.clientY - state.dragStart.y;
-    state.canvasOffsetX = state.elementStart.x + dx / state.canvasZoom;
-    state.canvasOffsetY = state.elementStart.y + dy / state.canvasZoom;
-    updateCanvasTransform();
-  }
-}
-
-function onPointerUp() {
-  if (state.isDragging && state.dragMode === 'move' && state.selected) {
-    pushHistory();
-  }
-  state.isDragging = false;
-  state.dragMode = null;
-}
-
-function onKeyDown(e) {
-  if (e.target.tagName === 'INPUT') return;
-  
-  if (e.code === 'Space') {
-    state.spaceKey = true;
-    e.preventDefault();
-    return;
-  }
-  
-  if (e.key === 'Escape') {
-    state.selected = null;
-    renderCanvas();
-    return;
-  }
-  
-  if (!state.selected) return;
-  
-  const step = e.shiftKey ? 10 : 1;
-  switch (e.key) {
-    case 'ArrowLeft': state.selected.x -= step; e.preventDefault(); break;
-    case 'ArrowRight': state.selected.x += step; e.preventDefault(); break;
-    case 'ArrowUp': state.selected.y -= step; e.preventDefault(); break;
-    case 'ArrowDown': state.selected.y += step; e.preventDefault(); break;
-    case 'Delete':
-    case 'Backspace':
-      deleteElement(state.selected);
-      e.preventDefault();
-      return;
-    case '+':
-    case '=':
-      state.selected.scale = Math.min(3, (state.selected.scale || 1) + 0.1);
-      e.preventDefault();
-      break;
-    case '-':
-      state.selected.scale = Math.max(0.1, (state.selected.scale || 1) - 0.1);
-      e.preventDefault();
-      break;
-    case '[':
-      state.selected.scale = Math.max(0.1, (state.selected.scale || 1) - 0.02);
-      e.preventDefault();
-      break;
-    case ']':
-      state.selected.scale = Math.min(3, (state.selected.scale || 1) + 0.02);
-      e.preventDefault();
-      break;
-    default: return;
-  }
-  pushHistory();
-  renderCanvas();
-}
-
-function hitTest(x, y) {
-  // 检测自定义信息元素
-  const customElements = [
-    state.customInfo.avatar,
-    state.customInfo.username,
-    state.customInfo.datetime
-  ].filter(el => el.visible);
-  
-  for (const el of [...customElements, ...state.materials.slice().reverse()]) {
-    const b = getElementBounds(el);
-    if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) {
-      return el;
-    }
-  }
-  return null;
-}
-
-function deleteElement(el) {
-  pushHistory();
-  if (el.type === 'material') {
-    const idx = state.materials.indexOf(el);
-    if (idx >= 0) state.materials.splice(idx, 1);
-  }
-  state.selected = null;
-  renderCanvas();
-  showToast('已删除', 'success');
-}
-
-// ============== 历史记录 ==============
-function pushHistory() {
-  state.history.push({
-    materials: state.materials.map(m => ({...m})),
-    customInfo: JSON.parse(JSON.stringify(state.customInfo)),
-    trackImage: state.trackImage
-  });
-  if (state.history.length > 30) state.history.shift();
-}
-
-function undo() {
-  if (state.history.length === 0) {
-    showToast('没有可撤销的操作', 'error');
-    return;
-  }
-  const snap = state.history.pop();
-  state.materials = snap.materials;
-  state.customInfo = snap.customInfo;
-  state.trackImage = snap.trackImage;
-  state.selected = null;
-  syncUIFromState();
-  renderCanvas();
-  showToast('已撤销', 'success');
-}
-
-function syncUIFromState() {
-  document.getElementById('avatar-toggle').classList.toggle('active', state.customInfo.avatar.visible);
-  document.getElementById('avatar-row').classList.toggle('hidden', !state.customInfo.avatar.visible);
-  document.getElementById('username-toggle').classList.toggle('active', state.customInfo.username.visible);
-  document.getElementById('datetime-toggle').classList.toggle('active', state.customInfo.datetime.visible);
-  document.getElementById('username-input').value = state.customInfo.username.text;
-  document.getElementById('year-input').value = state.customInfo.datetime.year;
-  document.getElementById('month-input').value = state.customInfo.datetime.month;
-  document.getElementById('day-input').value = state.customInfo.datetime.day;
-  document.getElementById('start-time').value = state.customInfo.datetime.startTime;
-  document.getElementById('end-time').value = state.customInfo.datetime.endTime;
-  
-  if (state.trackImage) {
-    const tmpCanvas = document.createElement('canvas');
-    tmpCanvas.width = state.trackImage.width;
-    tmpCanvas.height = state.trackImage.height;
-    tmpCanvas.getContext('2d').drawImage(state.trackImage, 0, 0);
-    document.getElementById('track-img').src = tmpCanvas.toDataURL();
-    document.getElementById('track-preview').classList.remove('hidden');
-  } else {
-    document.getElementById('track-preview').classList.add('hidden');
-  }
-}
-
-// ============== 重置与清空 ==============
-function confirmReset() {
-  if (state.materials.length === 0) {
-    showToast('没有素材可重置', 'error');
-    return;
-  }
-  state.materials = [];
-  state.selected = null;
-  resetCustomInfoPositions();
-  pushHistory();
-  renderCanvas();
-  showToast('已重置素材', 'success');
-}
-
-function clearAll() {
-  state.materials = [];
-  state.trackImage = null;
-  state.avatarImage = null;
-  state.selected = null;
-  resetCustomInfoPositions();
-  state.customInfo.avatar.visible = true;
-  state.customInfo.username.visible = true;
-  state.customInfo.datetime.visible = true;
-  state.history = [];
-  syncUIFromState();
-  document.getElementById('avatar-preview').innerHTML = '<i class="fa-solid fa-user"></i>';
-  renderCanvas();
-  showToast('已清空所有数据', 'success');
-}
-
-// ============== 导出 ==============
-function exportJPG() {
-  if (!state.baseImage) {
-    showToast('请先选择项目加载底图', 'error');
-    return;
-  }
-  
-  const exportCanvas = document.createElement('canvas');
-  exportCanvas.width = state.canvasWidth;
-  exportCanvas.height = state.canvasHeight;
-  const ectx = exportCanvas.getContext('2d');
-  
-  ectx.fillStyle = '#FFFFFF';
-  ectx.fillRect(0, 0, state.canvasWidth, state.canvasHeight);
-  
-  if (state.baseImage) ectx.drawImage(state.baseImage, 0, 0);
-  if (state.trackImage && state.currentProject === 'run') {
-    const tw = state.trackImage.width * 0.4;
-    const th = state.trackImage.height * 0.4;
-    ectx.drawImage(state.trackImage, state.canvasWidth - tw - 20, state.canvasHeight - th - 150, tw, th);
-  }
-  
-  const originalCtx = ctx;
-  state.ctx = ectx;
-  state.materials.forEach(m => drawElement(m));
-  if (state.customInfo.avatar.visible) drawElement(state.customInfo.avatar);
-  if (state.customInfo.username.visible) drawElement(state.customInfo.username);
-  if (state.customInfo.datetime.visible) drawElement(state.customInfo.datetime);
-  state.ctx = originalCtx;
-  
-  exportCanvas.toBlob(blob => {
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = '拼图完成.jpg';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(a.href);
-    showToast('已导出 拼图完成.jpg', 'success');
-  }, 'image/jpeg', 0.92);
-}
-
-// ============== UI 辅助 ==============
-function updateStatus(msg) {
-  document.getElementById('status-msg').textContent = msg;
-}
-
-let toastTimer = null;
-function showToast(msg, type = 'info') {
-  const toast = document.getElementById('toast');
-  document.getElementById('toast-msg').textContent = msg;
-  toast.className = 'toast ' + type + ' visible';
-  const icon = toast.querySelector('i');
-  icon.className = type === 'success' ? 'fa-solid fa-circle-check' :
-                   type === 'error' ? 'fa-solid fa-circle-exclamation' : 'fa-solid fa-circle-info';
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.remove('visible'), 2000);
-}
-
-// 启动
-init();
-</script>
 </body>
 </html>
