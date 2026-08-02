@@ -1,0 +1,2487 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>52Run.cn —— 跑步数据可视化与科学复盘工具</title>
+<meta name="description" content="52Run.cn 专注跑步运动数据深度分析，提供 GPS 轨迹解析、配速曲线、心率区间、跑量趋势等多维可视化与复盘服务。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --primary-green: #00e676;
+  --deep-green: #0a2e1a;
+  --darker-green: #062113;
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --text-main: #ffffff;
+  --text-dim: rgba(255, 255, 255, 0.75);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI','Microsoft YaHei',sans-serif;}
+body{
+  background: var(--deep-green);
+  color: var(--text-main);
+  line-height:1.6;
+  overflow-x:hidden;
+  position:relative;
+}
+
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(0,230,118,0.1), transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(0,230,118,0.08), transparent 40%),
+    linear-gradient(135deg, rgba(10,46,26,0.55), rgba(6,33,19,0.75)),
+    url('https://images.unsplash.com/photo-1476480862126-209bfaa8edc8?w=1920&q=80') center/cover no-repeat fixed;
+  z-index:-1;
+  background-color: var(--deep-green);
+}
+
+/* ===== 动态效果 CSS 开始 ===== */
+#bg-scene {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  will-change: transform;
+  transition: transform 0.6s cubic-bezier(.2,.7,.2,1);
+}
+
+.bg-node {
+  position: absolute;
+  background: rgba(0, 230, 118, 0.6);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(0, 230, 118, 0.4);
+  animation: nodeTwinkle var(--dur, 4s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+@keyframes nodeTwinkle {
+  0%, 100% { opacity: 0.2; transform: scale(0.8); }
+  50% { opacity: 0.8; transform: scale(1.4); }
+}
+
+.scan-line {
+  position: absolute;
+  width: 300px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(0,230,118,0), #00e676, rgba(0,230,118,0));
+  filter: drop-shadow(0 0 4px #00e676);
+  animation: scanMove var(--dur, 2.5s) linear forwards;
+}
+@keyframes scanMove {
+  0% { transform: translateX(100vw); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateX(-300px); opacity: 0; }
+}
+
+.cursor-particle {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  background: var(--primary-green);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  box-shadow: 0 0 10px var(--primary-green);
+  transition: transform 0.6s ease-out, opacity 0.6s ease-out;
+}
+
+.sun-glow {
+  position: absolute;
+  top: -15%;
+  right: -10%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(255, 165, 0, 0.15) 0%, rgba(255, 200, 0, 0.05) 40%, transparent 70%);
+  border-radius: 50%;
+  filter: blur(40px);
+  animation: sunBreathe 6s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes sunBreathe {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.15); opacity: 0.9; }
+}
+
+.text-trace {
+  fill: none;
+  stroke: rgba(0, 230, 118, 0.7);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 10px rgba(0, 230, 118, 0.8));
+  stroke-dasharray: 5000;
+  stroke-dashoffset: 5000;
+  animation: textTraceDraw var(--dur, 4s) ease-in-out forwards;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes textTraceDraw {
+  0% { stroke-dashoffset: 5000; opacity: 0; }
+  15% { opacity: 1; }
+  65% { stroke-dashoffset: 0; opacity: 1; }
+  85% { opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 0; }
+}
+
+.speed-legend {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(6, 33, 19, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 230, 118, 0.2);
+  border-radius: 20px;
+  padding: 6px 16px;
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.speed-legend.show { opacity: 1; }
+.speed-legend-bar {
+  width: 120px;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #1a237e, #00bcd4, #00e676, #ffeb3b, #ff9800, #f44336);
+}
+.speed-legend span { font-size: 10px; font-weight: 600; }
+
+.track-seg {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 4px currentColor);
+  stroke-dasharray: 6000;
+  stroke-dashoffset: 6000;
+  animation: segDraw var(--dur, 8s) ease-in-out forwards;
+  animation-delay: var(--seg-delay, 0s);
+}
+@keyframes segDraw {
+  0% { stroke-dashoffset: 6000; opacity: 0; }
+  5% { opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 1; }
+}
+
+.track-group {
+  opacity: 0;
+  animation: trackGroupFade var(--dur, 8s) ease-in-out forwards;
+}
+@keyframes trackGroupFade {
+  0% { opacity: 0; }
+  5% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.track-lane {
+  fill: none;
+  stroke: rgba(0, 230, 118, 0.25);
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
+  animation: trackFade var(--dur, 8s) ease-in-out forwards;
+}
+@keyframes trackFade {
+  0%, 10% { opacity: 0; }
+  30% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.track-center {
+  filter: drop-shadow(0 0 6px rgba(0, 230, 118, 0.8));
+  animation: centerPulse var(--dur, 8s) ease-in-out forwards;
+}
+@keyframes centerPulse {
+  0%, 20% { opacity: 0; transform: scale(0.5); }
+  40% { opacity: 1; transform: scale(1); }
+  70% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.8); }
+}
+
+.track-label {
+  font-family: 'Oswald', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  text-anchor: middle;
+  letter-spacing: 1px;
+  animation: labelFade var(--dur, 8s) ease-in-out forwards;
+}
+@keyframes labelFade {
+  0%, 30% { opacity: 0; }
+  50% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.trace-start {
+  animation: markerAppear var(--dur, 8s) ease-in-out forwards;
+}
+.trace-start-dot {
+  filter: drop-shadow(0 0 10px #00e676);
+}
+@keyframes markerAppear {
+  0%, 5% { opacity: 0; transform: scale(0); }
+  15% { opacity: 1; transform: scale(1.3); }
+  25%, 75% { opacity: 1; transform: scale(1); }
+  90%, 100% { opacity: 0; transform: scale(0.5); }
+}
+
+.trace-end {
+  animation: markerAppearEnd var(--dur, 8s) ease-in-out forwards;
+}
+.trace-end-dot {
+  filter: drop-shadow(0 0 10px #ff1744);
+}
+@keyframes markerAppearEnd {
+  0%, 55% { opacity: 0; transform: scale(0); }
+  65% { opacity: 1; transform: scale(1.3); }
+  75%, 85% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.5); }
+}
+
+.trace-start-ring {
+  fill: none;
+  stroke: #00e676;
+  stroke-width: 2.5;
+  opacity: 0;
+  animation: startRingPulse var(--dur, 8s) ease-in-out forwards;
+}
+@keyframes startRingPulse {
+  0%, 10% { opacity: 0; r: 8; }
+  20% { opacity: 0.8; r: 22; }
+  35% { opacity: 0; r: 36; }
+  36%, 100% { opacity: 0; }
+}
+
+.trace-end-ring {
+  fill: none;
+  stroke: #ff1744;
+  stroke-width: 2.5;
+  opacity: 0;
+  animation: endRingPulse var(--dur, 8s) ease-in-out forwards;
+}
+@keyframes endRingPulse {
+  0%, 60% { opacity: 0; r: 8; }
+  70% { opacity: 0.8; r: 22; }
+  85% { opacity: 0; r: 36; }
+  86%, 100% { opacity: 0; }
+}
+
+.heart-group {
+  opacity: 0;
+  animation: heartGroupFade var(--dur, 10s) ease-in-out forwards;
+}
+@keyframes heartGroupFade {
+  0% { opacity: 0; }
+  5% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.heart-seg {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 5px currentColor);
+  stroke-dasharray: 6000;
+  stroke-dashoffset: 6000;
+  animation: segDraw var(--dur, 10s) ease-in-out forwards;
+  animation-delay: var(--seg-delay, 0s);
+}
+
+.heart-fill {
+  opacity: 0;
+  animation: heartFillFade var(--dur, 10s) ease-in-out forwards;
+}
+@keyframes heartFillFade {
+  0%, 40% { opacity: 0; }
+  65% { opacity: 1; }
+  85% { opacity: 0.6; }
+  100% { opacity: 0; }
+}
+
+.heart-label {
+  font-family: 'Oswald', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  text-anchor: middle;
+  letter-spacing: 1px;
+  animation: heartLabelFade var(--dur, 10s) ease-in-out forwards;
+}
+@keyframes heartLabelFade {
+  0%, 50% { opacity: 0; }
+  70% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.speed-tag {
+  font-family: 'Oswald', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  opacity: 0;
+  animation: speedTagFade var(--dur, 8s) ease-in-out forwards;
+}
+@keyframes speedTagFade {
+  0%, 40% { opacity: 0; }
+  55% { opacity: 0.9; }
+  80% { opacity: 0.9; }
+  100% { opacity: 0; }
+}
+
+/* === 北京马拉松地标淡入 === */
+@keyframes bjDotFadeIn {
+  0%, 8% { opacity: 0; transform: scale(0.6); }
+  20% { opacity: 1; transform: scale(1); }
+  85% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.8); }
+}
+
+/* === 北京马拉松标题快速淡入 === */
+@keyframes bjTitleFade {
+  0% { opacity: 0; transform: translateY(8px); }
+  5% { opacity: 1; transform: translateY(0); } /* 第一秒内立即显示 */
+  85% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-6px); }
+}
+
+/* === 光球脉动 === */
+@keyframes orbPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+@keyframes orbRingExpand {
+  0% { r: 5; opacity: 0.9; }
+  100% { r: 22; opacity: 0; }
+}
+
+/* ===== 动态效果 CSS 结束 ===== */
+
+header, section, footer, .back-top {
+  position: relative;
+  z-index: 2;
+}
+
+header{
+  position:sticky;top:0;z-index:100;
+  background:rgba(6,33,19,0.7); 
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  display:flex;justify-content:space-between;align-items:center;
+  padding:1rem 5%;
+  transition:.3s;
+  border-bottom:1px solid var(--glass-border);
+}
+header.scrolled{padding:.5rem 5%;box-shadow:0 4px 30px rgba(0,0,0,.4); background:rgba(6,33,19,0.85);}
+.logo{font-size:1.8rem;font-weight:bold;color:var(--primary-green);letter-spacing:2px; text-shadow: 0 0 10px rgba(0,230,118,0.5);}
+.logo span{color:#fff;}
+nav a{color:var(--text-dim);text-decoration:none;margin-left:1.8rem;font-size:.95rem;transition:color .3s; position:relative;}
+nav a:hover{color:var(--primary-green);}
+nav a::after {
+  content:''; position:absolute; bottom:-5px; left:0; width:0; height:2px; background:var(--primary-green); transition: width .3s;
+}
+nav a:hover::after { width: 100%; }
+
+section{padding:5rem 5%;position:relative;}
+section h2{
+  text-align:center;font-size:2.2rem;margin-bottom:.5rem;color:var(--text-main);
+  font-family: 'Oswald', sans-serif; font-weight: 700;
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.5); 
+}
+section .subtitle{text-align:center;color:var(--text-dim);margin-bottom:3rem;font-size:1rem;}
+
+.glass-card {
+  background: rgba(6, 33, 19, 0.65); 
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  transition: all 0.3s ease;
+}
+.glass-card:hover {
+  background: rgba(0, 230, 118, 0.08);
+  border-color: rgba(0, 230, 118, 0.4);
+  box-shadow: 0 8px 30px rgba(0, 230, 118, 0.1);
+  transform: translateY(-5px);
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.98);
+  border-radius: 16px;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  border: 1px solid rgba(0, 230, 118, 0.1);
+}
+.card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 40px rgba(0,230,118,0.25);
+  border-color: rgba(0,230,118,0.4);
+}
+.card h3, .card h4 { color: #0a2e1a; margin:.8rem 0 .5rem; font-size:1.2rem; }
+.card p { color: #444; font-size:.9rem; line-height:1.6; }
+
+.card .step-num {
+  background: linear-gradient(135deg, #00e676, #00a85c);
+  color: #fff;
+  border: none;
+  box-shadow: 0 4px 10px rgba(0,230,118,0.3);
+}
+.card .stat-num { color: #00a85c; text-shadow: none; font-variant-numeric: tabular-nums; }
+.card .stat-label { color: #666; }
+.card .tag {
+  background: rgba(0,230,118,0.15);
+  color: #00a85c;
+  border: 1px solid rgba(0,230,118,0.3);
+}
+
+.tag{
+  display:inline-block;
+  background:rgba(0,230,118,.15);
+  color:var(--primary-green);
+  padding:.3rem .8rem;
+  border-radius:20px;
+  font-size:.75rem;
+  font-weight:600;
+  margin-top:.8rem;
+  border: 1px solid rgba(0,230,118,0.3);
+}
+
+.step-num{
+  width:52px;height:52px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(0,230,118,0.2),rgba(0,168,92,0.1));
+  border: 1px solid rgba(0,230,118,0.4);
+  color:var(--primary-green);font-size:1.4rem;font-weight:bold;
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 1rem;
+  box-shadow: 0 0 15px rgba(0,230,118,0.2);
+}
+
+.hero{
+  padding:6rem 5% 5rem;
+  text-align:center;
+  position:relative;
+}
+.hero-badge{
+  display:inline-block;
+  background:rgba(0,230,118,.15);
+  color:var(--primary-green);
+  padding:.5rem 1.2rem;border-radius:30px;
+  font-size:.85rem;font-weight:600;
+  margin-bottom:1.5rem;
+  border:1px solid rgba(0,230,118,.3);
+  backdrop-filter: blur(5px);
+}
+.hero h1{
+  font-size:3.2rem; 
+  margin-bottom:1.5rem;
+  line-height:1.3;
+  min-height: 2em; 
+}
+
+.fusion-text {
+  font-family: 'Oswald', 'Microsoft YaHei', sans-serif;
+  font-size: 3.2rem; 
+  font-weight: 700;  
+  transform: skewX(-6deg); 
+  display: inline-block;
+  letter-spacing: 0.03em; 
+  line-height: 1.3;
+  background: linear-gradient(90deg, #ffffff 0%, #00e676 50%, #ffffff 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  animation: auroraFlow 3s linear infinite;
+  filter: blur(12px);
+  opacity: 0;
+  transition: filter 1.5s ease, opacity 1.5s ease;
+  text-shadow: 0 4px 20px rgba(0,230,118,0.3); 
+}
+.fusion-text.active { filter: blur(0); opacity: 1; }
+@keyframes auroraFlow {
+  0% { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+.hero p{
+  max-width:700px;margin:0 auto 2rem; 
+  color:var(--text-dim);font-size:1.1rem;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.4); 
+}
+.btn{
+  display:inline-block;padding:.9rem 2.5rem;border-radius:50px;
+  font-weight:bold;text-decoration:none;font-size:1rem;cursor:pointer;
+  transition:all .3s;
+}
+.btn-primary{
+  background:linear-gradient(135deg,#00e676,#00a85c);
+  color:#0a2e1a;box-shadow:0 4px 20px rgba(0,230,118,.4);
+}
+.btn-primary:hover{
+  transform:translateY(-3px);box-shadow:0 6px 30px rgba(0,230,118,.6);
+}
+
+.stats-grid{ display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem; }
+.stat-item{
+  padding:2rem 1rem;text-align:center;
+}
+.stat-num{
+  font-size:3rem;font-weight:bold;color:var(--primary-green); 
+  font-family: 'Oswald', sans-serif;
+  text-shadow: 0 0 15px rgba(0,230,118,0.4);
+  font-variant-numeric: tabular-nums;
+}
+.stat-label{color:var(--text-dim);margin-top:.3rem;font-size:.9rem; letter-spacing: 0.05em;}
+
+.grid-4{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.5rem;}
+
+.case-card{ overflow:hidden; }
+.case-card:hover{ transform:translateY(-6px); }
+.case-img{
+  height:160px; 
+  background: linear-gradient(135deg, #062113, #0a2e1a);
+  display:flex;align-items:center;justify-content:center;
+  color:rgba(0,230,118,0.4);font-size:3rem;
+  border-bottom: 1px solid var(--glass-border);
+}
+.case-body{padding:1.5rem;}
+.case-body h4{color:var(--text-main);margin-bottom:.5rem; font-size:1.1rem;}
+.case-body p{color:var(--text-dim);font-size:.85rem;}
+.case-tag{ margin-top:.8rem; }
+
+.flow-grid{ display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;position:relative; }
+.flow-item{
+  text-align:center;position:relative; padding: 2rem 1rem;
+}
+.flow-item::after{
+  content:'';position:absolute;top:48px;right:-50%;width:100%;height:1px;
+  background:linear-gradient(90deg,var(--primary-green),transparent);z-index:0; opacity: 0.5;
+}
+.flow-item:last-child::after{display:none;}
+.flow-item h4 { color: var(--text-main); margin-bottom: 0.5rem; }
+.flow-item p { color: var(--text-dim); font-size:.9rem; }
+
+.scene-card{ padding:2rem 1.5rem;text-align:center; }
+.scene-card:hover{transform:translateY(-6px);}
+.scene-icon{
+  width:64px;height:64px;border-radius:50%;margin:0 auto 1rem;
+  background:linear-gradient(135deg,rgba(0,230,118,.2),rgba(0,168,92,.1));
+  border: 1px solid rgba(0,230,118,0.3);
+  display:flex;align-items:center;justify-content:center;font-size:1.8rem;
+}
+.scene-card h4{color:var(--text-main);margin-bottom:.4rem;}
+.scene-card p{color:var(--text-dim);font-size:.85rem;}
+
+.notice-grid{ display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.5rem; }
+.notice-card{ padding:1.8rem; position:relative; overflow:hidden; }
+.notice-card::before{
+  content:'';position:absolute;top:0;left:0;width:3px;height:100%;
+  background:var(--primary-green); box-shadow: 0 0 10px var(--primary-green);
+}
+.notice-card h4{color:var(--text-main);margin-bottom:.6rem;padding-left:.8rem; font-size:1.1rem;}
+.notice-card p{color:var(--text-dim);font-size:.9rem;padding-left:.8rem;}
+
+.guarantee-bar{ display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.5rem; }
+.guarantee-item{ padding:2rem 1rem;text-align:center; }
+.guarantee-item:hover{transform:translateY(-5px);}
+.guarantee-icon{
+  width:60px;height:60px;border-radius:50%;margin:0 auto 1rem;
+  background:linear-gradient(135deg,rgba(0,230,118,.15),rgba(0,168,92,.05));
+  border: 1px solid rgba(0,230,118,0.2);
+  display:flex;align-items:center;justify-content:center;font-size:1.5rem;
+}
+.guarantee-item h4{color:var(--text-main);margin-bottom:.3rem;}
+.guarantee-item p{color:var(--text-dim);font-size:.85rem;}
+
+.contact{
+  text-align:center;
+  background:linear-gradient(180deg,transparent,rgba(6,33,19,0.6)); 
+  padding:5rem 5%;
+}
+.contact h2{color:var(--text-main);margin-bottom:1rem;}
+.contact p{color:var(--text-dim);margin-bottom:2rem;}
+.wechat-box{
+  display:inline-block;
+  background:rgba(6, 33, 19, 0.8); 
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius:16px;padding:2.5rem 3.5rem;
+  box-shadow:0 8px 30px rgba(0,0,0,.3);
+}
+.wechat-label{color:var(--text-dim);font-size:.9rem;margin-bottom:.5rem;}
+.wechat-number{
+  font-size:2.5rem;font-weight:bold;color:var(--primary-green);
+  letter-spacing:2px; font-family: 'Oswald', sans-serif;
+  text-shadow: 0 0 15px rgba(0,230,118,0.4);
+}
+.wechat-btn{
+  display:inline-block;margin-top:1.5rem;
+  background:linear-gradient(135deg,#00e676,#00a85c);
+  color:#0a2e1a;padding:.8rem 2.5rem;border-radius:50px;font-weight:bold;
+  text-decoration:none;transition:all .3s;
+}
+.wechat-btn:hover{transform:translateY(-3px);box-shadow:0 8px 25px rgba(0,230,118,.5);}
+
+.faq-list{max-width:800px;margin:0 auto;}
+.faq-item{
+  margin-bottom:1rem; overflow:hidden;
+}
+.faq-q{
+  padding:1.5rem 1.5rem;cursor:pointer;display:flex;justify-content:space-between;
+  align-items:center;font-weight:bold;color:var(--text-main);font-size:1rem;
+}
+.faq-q .arrow{transition:transform .3s;color:var(--primary-green);font-size:.9rem;}
+.faq-item.open .faq-q .arrow{transform:rotate(180deg);}
+.faq-item.open { background: rgba(6, 33, 19, 0.8); border-color: rgba(0, 230, 118, 0.3); }
+.faq-a{
+  max-height:0;overflow:hidden;padding:0 1.5rem;color:var(--text-dim);font-size:.9rem;transition:.35s;
+}
+.faq-item.open .faq-a{padding:0 1.5rem 1.5rem;max-height:200px;}
+
+footer{
+  background:rgba(5,20,12,.9);padding:2.5rem 5%;text-align:center;color:var(--text-dim);font-size:.82rem;
+  border-top: 1px solid var(--glass-border);
+}
+.footer-links{display:flex;flex-wrap:wrap;justify-content:center;gap:1.5rem;margin-bottom:1rem;}
+.footer-links a{color:var(--text-dim);text-decoration:none;font-size:.85rem;transition:color .3s;}
+.footer-links a:hover{color:var(--primary-green);}
+
+.back-top{
+  position:fixed;right:20px;bottom:20px;
+  width:48px;height:48px;border-radius:50%;
+  background:linear-gradient(135deg,#00e676,#00a85c);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;opacity:0;visibility:hidden;transition:.3s;z-index:1000;
+  font-size:1.3rem;color:#0a2e1a;box-shadow:0 4px 15px rgba(0,230,118,.4);
+}
+.back-top.show{opacity:1;visibility:visible;}
+.back-top:hover{transform:translateY(-4px);}
+
+/* GPS轨迹开关样式 */
+.gps-toggle {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  z-index: 1000;
+  background: rgba(6, 33, 19, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 230, 118, 0.3);
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+.gps-toggle:hover {
+  background: rgba(0, 230, 118, 0.15);
+  border-color: rgba(0, 230, 118, 0.5);
+  transform: translateY(-2px);
+}
+.gps-toggle-label {
+  color: var(--text-main);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.gps-toggle-switch {
+  position: relative;
+  width: 48px;
+  height: 26px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 13px;
+  transition: background 0.3s ease;
+}
+.gps-toggle-switch.active {
+  background: var(--primary-green);
+}
+.gps-toggle-switch::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+.gps-toggle-switch.active::after {
+  transform: translateX(22px);
+}
+
+@media(max-width:768px){
+  .hero h1{font-size:2rem; min-height: 2.5em;}
+  .fusion-text { font-size: 2rem; }
+  .hero p{font-size:1rem;}
+  nav a{margin-left:1rem;font-size:.85rem;}
+  .wechat-number{font-size:1.8rem;}
+  .flow-item::after{display:none;}
+  .gps-toggle {
+    top: 70px;
+    right: 10px;
+    padding: 10px 12px;
+  }
+  .gps-toggle-label {
+    font-size: 12px;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- GPS轨迹控制开关 -->
+<div class="gps-toggle" id="gpsToggle">
+  <span class="gps-toggle-label">GPS轨迹</span>
+  <div class="gps-toggle-switch active" id="gpsSwitch"></div>
+</div>
+
+<div id="bg-scene">
+  <div class="sun-glow"></div>
+  <svg id="trace-svg" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events: none;"></svg>
+  <div class="speed-legend" id="speedLegend">
+    <span>慢</span>
+    <div class="speed-legend-bar" id="legendBar"></div>
+    <span>快</span>
+  </div>
+</div>
+
+<header id="header">
+  <div class="logo">52<span>Run.cn</span></div>
+  <nav>
+    <a href="#home">首页</a>
+    <a href="#features">功能优势</a>
+    <a href="#cases">案例展示</a>
+    <a href="#process">使用流程</a>
+    <a href="#faq">常见问题</a>
+    <a href="#contact">联系我们</a>
+  </nav>
+</header>
+
+<section class="hero" id="home">
+  <div class="hero-badge">🏃 52Run.cn · 跑步数据可视化分析平台</div>
+  <h1><span class="fusion-text" id="fusionText"></span></h1>
+  <p>52Run.cn 专注于跑步运动数据的深度解析与可视化呈现。支持 Keep / 咕咚 / 悦跑圈 / 悦动圈 GPX/TCX 数据导入，提供轨迹渲染、配速曲线、心率区间与跑量趋势的多维复盘，让每一次奔跑都沉淀为可信赖的数据资产。</p>
+  <a href="tools.html" class="btn btn-primary">Keep运动截图拼图生成器</a>
+</section>
+
+<section id="stats" style="background:linear-gradient(180deg,rgba(6,33,19,0.3),transparent);">
+  <div class="stats-grid">
+    <div class="card stat-item"><div class="stat-num" data-target="3000" data-suffix="+">0</div><div class="stat-label">服务跑友</div></div>
+    <div class="card stat-item"><div class="stat-num" data-target="5000" data-suffix="+">0</div><div class="stat-label">分析记录</div></div>
+    <div class="card stat-item"><div class="stat-num" data-target="99.2" data-suffix="%">0</div><div class="stat-label">数据准确率</div></div>
+    <div class="card stat-item"><div class="stat-num" data-target="24" data-suffix="h">0</div><div class="stat-label">极速响应</div></div>
+  </div>
+</section>
+
+<section id="features">
+  <h2>选择 52Run.cn 的理由</h2>
+  <p class="subtitle">以数据基石为核心理念，让每一次奔跑都有据可依</p>
+  <div class="grid-4">
+    <div class="card">
+      <div class="step-num">🗺️</div>
+      <h3>轨迹解析</h3>
+      <p>基于多源 GPS 数据融合算法，还原真实运动轨迹，支持高程、坡度与转弯半径的可视化呈现，误差 &lt; 0.1%</p>
+      <div class="tag">核心功能</div>
+    </div>
+    <div class="card">
+      <div class="step-num">📊</div>
+      <h3>指标校准</h3>
+      <p>自动识别异常漂移点与静默段，提供配速、步频、心率的平滑校准与区间统计分析</p>
+      <div class="tag">精准分析</div>
+    </div>
+    <div class="card">
+      <div class="step-num">📈</div>
+      <h3>多维复盘</h3>
+      <p>生成配速曲线图、心率热力图与跑量趋势图，支持按日/周/月/年维度的训练负荷复盘</p>
+      <div class="tag">可视化报告</div>
+    </div>
+    <div class="card">
+      <div class="step-num">🔒</div>
+      <h3>数据安全</h3>
+      <p>全流程本地化数据处理，不留存用户账号信息，仅用于本次分析与可视化渲染</p>
+      <div class="tag">隐私保护</div>
+    </div>
+  </div>
+</section>
+
+<section id="selling" style="background:linear-gradient(180deg,transparent,rgba(0,230,118,0.03));">
+  <h2>核心卖点</h2>
+  <p class="subtitle">每一个细节都为你的数据安全和分析体验考虑</p>
+  <div class="grid-4">
+    <div class="card">
+      <div class="step-num">🎯</div>
+      <h4>精准轨迹</h4>
+      <p>支持任意日期、任意地点的 GPX/TCX 数据导入，轨迹平滑流畅，适配多平台导出</p>
+    </div>
+    <div class="card">
+      <div class="step-num">⚡</div>
+      <h4>极速渲染</h4>
+      <p>上传数据后 30 分钟内生成可视化图表，支持 PNG/SVG 高清导出</p>
+    </div>
+    <div class="card">
+      <div class="step-num">🔐</div>
+      <h4>隐私保护</h4>
+      <p>绝不泄露你的账号信息，全程不索要密码，分析完成后可删除源数据</p>
+    </div>
+    <div class="card">
+      <div class="step-num">💡</div>
+      <h4>智能建议</h4>
+      <p>基于历史数据自动生成训练负荷评估与恢复建议，助力科学训练</p>
+    </div>
+  </div>
+</section>
+
+<section id="cases">
+  <h2>数据分析案例</h2>
+  <p class="subtitle">真实跑步数据，专业可视化呈现</p>
+  <div class="grid-4">
+    <div class="glass-card case-card">
+      <div class="case-img">🏃‍♂️</div>
+      <div class="case-body">
+        <h4>复盘案例 · 5.0km 晨跑</h4>
+        <p>某跑者导入 Keep 原始 GPX 数据，经 52Run.cn 解析后生成配速曲线与心率区间图，轨迹平滑自然，数据可用于个人训练复盘。</p>
+        <div class="case-tag">Keep 数据可视化</div>
+      </div>
+    </div>
+    <div class="glass-card case-card">
+      <div class="case-img">🌙</div>
+      <div class="case-body">
+        <h4>复盘案例 · 7.0km 夜跑</h4>
+        <p>某跑者上传咕咚 TCX 文件，52Run.cn 自动校准漂移点，生成完整的夜跑轨迹渲染图与消耗分析报告。</p>
+        <div class="case-tag">咕咚数据复盘</div>
+      </div>
+    </div>
+    <div class="glass-card case-card">
+      <div class="case-img">🏅</div>
+      <div class="case-body">
+        <h4>复盘案例 · 10km 路跑</h4>
+        <p>悦跑圈 GPX 数据导入 52Run.cn，步频稳定在 170，配速区间分布合理，完整呈现城市路跑轨迹。</p>
+        <div class="case-tag">悦跑圈可视化</div>
+      </div>
+    </div>
+    <div class="glass-card case-card">
+      <div class="case-img">🎽</div>
+      <div class="case-body">
+        <h4>复盘案例 · 21km 半马</h4>
+        <p>悦动圈原始数据经 52Run.cn 解析，生成半马全程轨迹渲染与分段配速分析，助力跑者赛后复盘。</p>
+        <div class="case-tag">悦动圈数据解析</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="process" style="background:linear-gradient(180deg,rgba(0,230,118,0.03),transparent);">
+  <h2>四步完成数据分析</h2>
+  <p class="subtitle">简单四步，轻松拿到你的跑步可视化报告</p>
+  <div class="flow-grid">
+    <div class="glass-card flow-item">
+      <div class="step-num">01</div>
+      <h4>上传数据</h4>
+      <p>提供 GPX/TCX 格式跑步文件，支持多平台数据导入</p>
+    </div>
+    <div class="glass-card flow-item">
+      <div class="step-num">02</div>
+      <h4>解析渲染</h4>
+      <p>系统自动解析轨迹点，生成可视化图表与指标报告</p>
+    </div>
+    <div class="glass-card flow-item">
+      <div class="step-num">03</div>
+      <h4>校准优化</h4>
+      <p>人工辅助校准异常数据段，确保图表真实反映运动状态</p>
+    </div>
+    <div class="glass-card flow-item">
+      <div class="step-num">04</div>
+      <h4>导出分享</h4>
+      <p>生成高清复盘报告，支持导出 PNG/SVG 或直接分享至社交平台</p>
+    </div>
+  </div>
+</section>
+
+<section id="scenes">
+  <h2>适用场景</h2>
+  <p class="subtitle">无论什么需求，我们都能帮你搞定</p>
+  <div class="grid-4">
+    <div class="glass-card scene-card">
+      <div class="scene-icon">✅</div>
+      <h4>训练复盘</h4>
+      <p>科学分析每次训练的强度与效果，优化后续训练计划</p>
+    </div>
+    <div class="glass-card scene-card">
+      <div class="scene-icon">🏁</div>
+      <h4>赛事回顾</h4>
+      <p>对已完成赛事进行全维度数据复盘，提炼成功经验</p>
+    </div>
+    <div class="glass-card scene-card">
+      <div class="scene-icon">📱</div>
+      <h4>社交分享</h4>
+      <p>生成高颜值数据图表，用于朋友圈、跑团社群的健康分享</p>
+    </div>
+    <div class="glass-card scene-card">
+      <div class="scene-icon">📂</div>
+      <h4>档案归档</h4>
+      <p>长期归档跑步数据，形成个人运动生涯的数字档案</p>
+    </div>
+  </div>
+</section>
+
+<section id="notices" style="background:linear-gradient(180deg,transparent,rgba(0,230,118,0.03));">
+  <h2>使用须知</h2>
+  <p class="subtitle">使用前请仔细阅读，让你放心使用</p>
+  <div class="notice-grid">
+    <div class="glass-card notice-card">
+      <h4>关于数据导入</h4>
+      <p>支持 Keep、咕咚、悦跑圈、悦动圈全平台的 GPX/TCX 数据导入，日期、地点、距离全覆盖。</p>
+    </div>
+    <div class="glass-card notice-card">
+      <h4>关于处理时间</h4>
+      <p>一般 24 小时内完成数据解析，急单可协商加急处理。图表生成通常 5-30 分钟。</p>
+    </div>
+    <div class="glass-card notice-card">
+      <h4>关于隐私</h4>
+      <p>绝不泄露你的账号信息，仅用于本次数据分析。完成后可删除源数据，不留痕迹。</p>
+    </div>
+    <div class="glass-card notice-card">
+      <h4>关于售后</h4>
+      <p>数据有问题，免费重新生成。微信一对一沟通，不满意可以重做。</p>
+    </div>
+    <div class="glass-card notice-card" style="grid-column:1/-1;max-width:600px;margin:0 auto;">
+      <h4 style="color:#ff9800;">⚠️ 温馨提示</h4>
+      <p>本平台仅提供跑步数据的可视化分析与个人复盘服务，请合理使用，严禁用于任何违规行为。</p>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <h2>你可能关心的问题</h2>
+  <p class="subtitle">新手必看，打消你的所有顾虑</p>
+  <div class="faq-list">
+    <div class="glass-card faq-item">
+      <div class="faq-q">支持哪些平台的数据？<span class="arrow">▼</span></div>
+      <div class="faq-a">支持 Keep、咕咚、悦跑圈、悦动圈等主流平台，可导入 GPX/TCX 格式数据进行可视化分析，包括距离、配速、心率、卡路里等全维度指标。</div>
+    </div>
+    <div class="glass-card faq-item">
+      <div class="faq-q">数据准确吗？<span class="arrow">▼</span></div>
+      <div class="faq-a">采用多源 GPS 数据融合算法，自动识别并校准异常漂移点，配速、心率、步频等核心指标误差率低于 0.1%，至今保持高准确率记录。</div>
+    </div>
+    <div class="glass-card faq-item">
+      <div class="faq-q">多久能完成分析？<span class="arrow">▼</span></div>
+      <div class="faq-a">上传 GPX/TCX 文件后，系统自动解析并生成可视化图表，通常 5-30 分钟内完成。复杂数据或大量文件可协商处理时间。</div>
+    </div>
+    <div class="glass-card faq-item">
+      <div class="faq-q">隐私安全吗？<span class="arrow">▼</span></div>
+      <div class="faq-a">全流程本地化数据处理，绝不留存用户账号信息。分析完成后可主动删除源数据文件，全程不索要任何平台密码。</div>
+    </div>
+  </div>
+</section>
+
+<section id="guarantee" style="background:linear-gradient(180deg,rgba(0,230,118,0.03),transparent);">
+  <h2>服务保障</h2>
+  <p class="subtitle">四大承诺，让你放心使用</p>
+  <div class="guarantee-bar">
+    <div class="glass-card guarantee-item">
+      <div class="guarantee-icon">👨‍💻</div>
+      <h4>专业团队</h4>
+      <p>四年运动数据解析经验，累计服务 3000+ 跑友</p>
+    </div>
+    <div class="glass-card guarantee-item">
+      <div class="guarantee-icon">✅</div>
+      <h4>品质保证</h4>
+      <p>数据精准，配速曲线自然，可视化效果专业</p>
+    </div>
+    <div class="glass-card guarantee-item">
+      <div class="guarantee-icon">🔐</div>
+      <h4>安全保障</h4>
+      <p>隐私保护，绝不泄露账号信息，全流程可追踪</p>
+    </div>
+    <div class="glass-card guarantee-item">
+      <div class="guarantee-icon">💬</div>
+      <h4>服务保障</h4>
+      <p>微信一对一服务，24 小时在线，不满意免费重做</p>
+    </div>
+  </div>
+</section>
+
+<section class="contact" id="contact">
+  <h2>准备复盘你的跑步数据了吗？</h2>
+  <p>微信添加好友，备注"数据分析"，快速响应</p>
+  <div class="wechat-box">
+    <div class="wechat-label">微信账号</div>
+    <div class="wechat-number">278715464</div>
+    <a href="weixin://addfriend/278715464" class="wechat-btn">打开微信添加</a>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-links">
+    <a href="#home">首页</a>
+    <a href="#features">功能优势</a>
+    <a href="#cases">案例展示</a>
+    <a href="#process">使用流程</a>
+    <a href="#faq">常见问题</a>
+    <a href="#contact">联系我们</a>
+  </div>
+  <p style="margin-top:.5rem;">© 2025 52Run.cn · 专注跑步数据可视化与科学复盘 · 微信：278715464</p>
+</footer>
+
+<div class="back-top" id="backTop">↑</div>
+
+<script>
+const greetings = [
+  "迈开腿，风自然会来。",
+  "若被时间绊住脚步，便让微风替你抵达。",
+  "城市的脉搏与心跳，将化作你最真实的注脚。",
+  "终点处的闪耀光芒，本就该属于你的胸膛。",
+  "说出一座向往的城市，余下的风景由我们铺展。"
+];
+
+const fusionEl = document.getElementById('fusionText');
+let gIdx = 0;
+let fusionTimer;
+
+function cycleFusion() {
+  fusionEl.classList.remove('active');
+  setTimeout(() => {
+    fusionEl.innerText = greetings[gIdx];
+    gIdx = (gIdx + 1) % greetings.length;
+    void fusionEl.offsetWidth;
+    fusionEl.classList.add('active');
+    fusionTimer = setTimeout(cycleFusion, 3500);
+  }, 1500); 
+}
+cycleFusion();
+
+window.addEventListener('scroll',()=>{
+  document.getElementById('header').classList.toggle('scrolled',window.scrollY>50);
+  document.getElementById('backTop').classList.toggle('show',window.scrollY>500);
+});
+document.getElementById('backTop').onclick=()=>window.scrollTo({top:0,behavior:'smooth'});
+document.querySelectorAll('.faq-q').forEach(q=>{
+  q.onclick=()=>q.parentElement.classList.toggle('open');
+});
+
+const observer=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      e.target.style.opacity='1';
+      e.target.style.transform='translateY(0)';
+      observer.unobserve(e.target);
+    }
+  });
+},{threshold:0.1});
+document.querySelectorAll('.glass-card, .card').forEach(el=>{
+  el.style.opacity='0';
+  el.style.transform='translateY(30px)';
+  el.style.transition='opacity 0.6s ease, transform 0.6s ease, background 0.3s, border-color 0.3s, box-shadow 0.3s';
+  observer.observe(el);
+});
+
+const bgScene = document.getElementById('bg-scene');
+
+for (let i = 0; i < 60; i++) {
+  const node = document.createElement('div');
+  node.className = 'bg-node';
+  const size = Math.random() * 3 + 1;
+  node.style.width = size + 'px';
+  node.style.height = size + 'px';
+  node.style.left = Math.random() * 100 + '%';
+  node.style.top = Math.random() * 100 + '%';
+  node.style.setProperty('--dur', (2 + Math.random() * 4).toFixed(2) + 's');
+  node.style.setProperty('--delay', (Math.random() * 4).toFixed(2) + 's');
+  bgScene.appendChild(node);
+}
+
+function spawnScanLine() {
+  const line = document.createElement('div');
+  line.className = 'scan-line';
+  line.style.top = (Math.random() * 90 + 5) + '%';
+  line.style.setProperty('--dur', (2.5 + Math.random() * 1.5).toFixed(2) + 's');
+  bgScene.appendChild(line);
+  setTimeout(() => line.remove(), 4000);
+}
+setInterval(spawnScanLine, 4500);
+spawnScanLine();
+
+let mx = 0, my = 0, cx = 0, cy = 0;
+let lastParticleTime = 0;
+
+window.addEventListener('mousemove', e => {
+  mx = (e.clientX / window.innerWidth - 0.5) * 2;
+  my = (e.clientY / window.innerHeight - 0.5) * 2;
+
+  const now = Date.now();
+  if (now - lastParticleTime > 30) {
+    const p = document.createElement('div');
+    p.className = 'cursor-particle';
+    p.style.left = e.clientX + 'px';
+    p.style.top = e.clientY + 'px';
+    document.body.appendChild(p);
+    
+    setTimeout(() => {
+      p.style.transform = `scale(0) translate(${(Math.random() - 0.5) * 30}px, ${(Math.random() - 0.5) * 30}px)`;
+      p.style.opacity = '0';
+    }, 10);
+
+    setTimeout(() => p.remove(), 600);
+    lastParticleTime = now;
+  }
+});
+
+function tickParallax() {
+  cx += (mx - cx) * 0.05;
+  cy += (my - cy) * 0.05;
+  bgScene.style.transform = `translate3d(${cx * -20}px, ${cy * -15}px, 0)`;
+  requestAnimationFrame(tickParallax);
+}
+tickParallax();
+
+const SPEED_PALETTES = [
+  ['#1a237e', '#0d47a1', '#00bcd4', '#00e676', '#ffeb3b', '#ff9800', '#f44336'],
+  ['#0d47a1', '#0097a7', '#4caf50', '#8bc34a', '#ffc107', '#ff5722', '#d32f2f'],
+  ['#4a148c', '#1976d2', '#00acc1', '#66bb6a', '#fdd835', '#ef6c00', '#e53935'],
+  ['#1565c0', '#42a5f5', '#26a69a', '#9ccc65', '#ffee58', '#ffa726', '#ef5350'],
+  ['#1b2838', '#2a5298', '#00b4d8', '#48cae4', '#90e0ef', '#80ed99', '#52b788'],
+  ['#2e7d32', '#689f38', '#cddc39', '#ffc107', '#ff9800', '#f44336', '#b71c1c'],
+];
+
+function createGradientDefs(svg, palette, gradId) {
+  const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+  const grad = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+  grad.setAttribute('id', gradId);
+  grad.setAttribute('x1', '0%');
+  grad.setAttribute('y1', '0%');
+  grad.setAttribute('x2', '100%');
+  grad.setAttribute('y2', '100%');
+  
+  palette.forEach((color, i) => {
+    const stop = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
+    stop.setAttribute('offset', `${(i / (palette.length - 1) * 100).toFixed(1)}%`);
+    stop.setAttribute('stop-color', color);
+    grad.appendChild(stop);
+  });
+  
+  defs.appendChild(grad);
+  svg.appendChild(defs);
+  return gradId;
+}
+
+function getSpeedColor(palette, t) {
+  t = Math.max(0, Math.min(1, t));
+  const idx = t * (palette.length - 1);
+  const i = Math.floor(idx);
+  const frac = idx - i;
+  if (i >= palette.length - 1) return palette[palette.length - 1];
+  
+  const c1 = hexToRgb(palette[i]);
+  const c2 = hexToRgb(palette[i + 1]);
+  const r = Math.round(c1.r + (c2.r - c1.r) * frac);
+  const g = Math.round(c1.g + (c2.g - c1.g) * frac);
+  const b = Math.round(c1.b + (c2.b - c1.b) * frac);
+  return `rgb(${r},${g},${b})`;
+}
+
+function hexToRgb(hex) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : { r: 0, g: 230, b: 118 };
+}
+
+function generateSpeedProfile(numSegments, avgSpeed = 0.5) {
+  const speeds = [];
+  let current = avgSpeed + (Math.random() - 0.5) * 0.3;
+  for (let i = 0; i < numSegments; i++) {
+    const change = (Math.random() - 0.5) * 0.25;
+    current += change;
+    if (Math.random() < 0.12) {
+      current += (Math.random() - 0.3) * 0.4;
+    }
+    current = Math.max(0.05, Math.min(0.98, current));
+    speeds.push(current);
+  }
+  return speeds;
+}
+
+const traceSvg = document.getElementById('trace-svg');
+const speedLegend = document.getElementById('speedLegend');
+const legendBar = document.getElementById('legendBar');
+let traceMode = 0;
+let paletteIdx = 0;
+
+function updateLegend(palette) {
+  const gradStops = palette.map((c, i) => 
+    `<stop offset="${(i/(palette.length-1)*100).toFixed(0)}%" stop-color="${c}"/>`
+  ).join('');
+  legendBar.style.background = `linear-gradient(90deg, ${palette.join(', ')})`;
+}
+
+function spawnTextTrace() {
+  const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  textEl.setAttribute('x', (Math.random() * 50 + 25) + '%');
+  textEl.setAttribute('y', (Math.random() * 50 + 25) + '%');
+  textEl.setAttribute('font-family', "'Oswald', sans-serif");
+  textEl.setAttribute('font-size', '3.2vw');
+  textEl.setAttribute('font-weight', '700');
+  textEl.setAttribute('text-anchor', 'middle');
+  textEl.classList.add('text-trace');
+  textEl.textContent = '52run.Cn';
+  const scale = 0.5 + Math.random() * 0.3;
+  const rotate = Math.random() * 16 - 8;
+  textEl.style.transform = `scale(${scale}) rotate(${rotate}deg)`;
+  const dur = (3 + Math.random() * 1).toFixed(2);
+  textEl.style.setProperty('--dur', dur + 's');
+  traceSvg.appendChild(textEl);
+  setTimeout(() => textEl.remove(), parseFloat(dur) * 1000 + 1500);
+}
+
+function spawn1314Trace() {
+  const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  textEl.setAttribute('x', (Math.random() * 50 + 25) + '%');
+  textEl.setAttribute('y', (Math.random() * 50 + 25) + '%');
+  textEl.setAttribute('font-family', "'Oswald', sans-serif");
+  textEl.setAttribute('font-size', '4.5vw');
+  textEl.setAttribute('font-weight', '700');
+  textEl.setAttribute('text-anchor', 'middle');
+  textEl.setAttribute('stroke', 'rgba(255, 80, 120, 0.85)');
+  textEl.setAttribute('stroke-width', '3');
+  textEl.style.filter = 'drop-shadow(0 0 8px rgba(255, 80, 120, 0.7))';
+  textEl.classList.add('text-trace');
+  textEl.textContent = '13.14km';
+  const scale = 0.55 + Math.random() * 0.3;
+  const rotate = Math.random() * 12 - 6;
+  textEl.style.transform = `scale(${scale}) rotate(${rotate}deg)`;
+  const dur = (3.5 + Math.random() * 1).toFixed(2);
+  textEl.style.setProperty('--dur', dur + 's');
+  traceSvg.appendChild(textEl);
+  setTimeout(() => textEl.remove(), parseFloat(dur) * 1000 + 1500);
+}
+
+function spawnLakeTrace() {
+  const palette = SPEED_PALETTES[paletteIdx % SPEED_PALETTES.length];
+  paletteIdx++;
+  updateLegend(palette);
+  const dur = (8 + Math.random() * 2).toFixed(2);
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  g.classList.add('track-group');
+  g.style.setProperty('--dur', dur + 's');
+  const vw = window.innerWidth || 1920;
+  const vh = window.innerHeight || 1080;
+  const tx = (Math.random() * 0.3 + 0.35) * vw;
+  const ty = (Math.random() * 0.3 + 0.35) * vh;
+  const scale = 1.0 + Math.random() * 0.4;
+  const rotate = Math.random() * 20 - 10;
+  g.setAttribute('transform', `translate(${tx}, ${ty}) scale(${scale}) rotate(${rotate})`);
+  const numPoints = 200;
+  const baseR = 90;
+  const pts = [];
+  for (let i = 0; i <= numPoints; i++) {
+    const angle = (i / numPoints) * Math.PI * 2;
+    const r = baseR + 18 * Math.sin(3 * angle + 0.5) + 12 * Math.cos(5 * angle + 1.2) + 8 * Math.sin(7 * angle + 2.1) + 5 * Math.cos(2 * angle + 0.8) + 4 * Math.sin(11 * angle);
+    const x = r * Math.cos(angle);
+    const y = r * Math.sin(angle) * 0.85;
+    pts.push({ x, y });
+  }
+  const numSegs = 14;
+  const segSpeeds = generateSpeedProfile(numSegs, 0.45 + Math.random() * 0.2);
+  const ptsPerSeg = Math.floor(numPoints / numSegs);
+  for (let s = 0; s < numSegs; s++) {
+    const startIdx = s * ptsPerSeg;
+    const endIdx = (s === numSegs - 1) ? numPoints : (s + 1) * ptsPerSeg;
+    let d = '';
+    for (let i = startIdx; i <= endIdx; i++) {
+      d += `${i === startIdx ? 'M' : 'L'} ${pts[i].x.toFixed(2)} ${pts[i].y.toFixed(2)} `;
+    }
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', d.trim());
+    const color = getSpeedColor(palette, segSpeeds[s]);
+    path.setAttribute('stroke', color);
+    path.setAttribute('stroke-width', '5');
+    path.classList.add('track-seg');
+    const segDur = (dur * 0.72).toFixed(2);
+    path.style.setProperty('--dur', segDur + 's');
+    const delay = (s / numSegs * dur * 0.62).toFixed(2);
+    path.style.setProperty('--seg-delay', delay + 's');
+    path.style.filter = `drop-shadow(0 0 4px ${color})`;
+    g.appendChild(path);
+  }
+  let fillD = '';
+  for (let i = 0; i <= numPoints; i++) {
+    fillD += `${i === 0 ? 'M' : 'L'} ${pts[i].x.toFixed(2)} ${pts[i].y.toFixed(2)} `;
+  }
+  fillD += 'Z';
+  const lakeFill = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  lakeFill.setAttribute('d', fillD);
+  lakeFill.setAttribute('fill', 'rgba(0, 180, 216, 0.06)');
+  lakeFill.classList.add('heart-fill');
+  lakeFill.style.setProperty('--dur', dur + 's');
+  g.appendChild(lakeFill);
+  let innerD = '';
+  for (let i = 0; i <= numPoints; i++) {
+    const angle = (i / numPoints) * Math.PI * 2;
+    const r = baseR * 0.78 + 14 * Math.sin(3 * angle + 0.5) + 9 * Math.cos(5 * angle + 1.2) + 6 * Math.sin(7 * angle + 2.1);
+    const x = r * Math.cos(angle);
+    const y = r * Math.sin(angle) * 0.85;
+    innerD += `${i === 0 ? 'M' : 'L'} ${x.toFixed(2)} ${y.toFixed(2)} `;
+  }
+  innerD += 'Z';
+  const innerPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  innerPath.setAttribute('d', innerD.trim());
+  innerPath.classList.add('track-lane');
+  innerPath.style.setProperty('--dur', dur + 's');
+  g.appendChild(innerPath);
+  const lakeLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  lakeLabel.setAttribute('x', '0');
+  lakeLabel.setAttribute('y', '5');
+  lakeLabel.setAttribute('fill', 'rgba(0, 180, 216, 0.85)');
+  lakeLabel.setAttribute('font-size', '15');
+  lakeLabel.setAttribute('font-weight', '700');
+  lakeLabel.setAttribute('font-family', 'Oswald, sans-serif');
+  lakeLabel.setAttribute('text-anchor', 'middle');
+  lakeLabel.classList.add('track-label');
+  lakeLabel.style.setProperty('--dur', dur + 's');
+  lakeLabel.textContent = '🏞️ 环湖 5km';
+  g.appendChild(lakeLabel);
+  const startAngle = 0;
+  const startX = baseR * Math.cos(startAngle);
+  const startY = baseR * Math.sin(startAngle) * 0.85;
+  const startG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  startG.classList.add('trace-start');
+  startG.style.setProperty('--dur', dur + 's');
+  const startRing = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  startRing.setAttribute('cx', startX.toFixed(2));
+  startRing.setAttribute('cy', startY.toFixed(2));
+  startRing.setAttribute('r', '8');
+  startRing.classList.add('trace-start-ring');
+  startRing.style.setProperty('--dur', dur + 's');
+  startG.appendChild(startRing);
+  const startPt = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  startPt.setAttribute('cx', startX.toFixed(2));
+  startPt.setAttribute('cy', startY.toFixed(2));
+  startPt.setAttribute('r', '10');
+  startPt.setAttribute('fill', '#00e676');
+  startPt.classList.add('trace-start-dot');
+  startG.appendChild(startPt);
+  g.appendChild(startG);
+  const startLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  startLabel.setAttribute('x', (startX + 16).toFixed(2));
+  startLabel.setAttribute('y', (startY - 12).toFixed(2));
+  startLabel.setAttribute('fill', '#00e676');
+  startLabel.setAttribute('font-size', '11');
+  startLabel.setAttribute('font-weight', '700');
+  startLabel.setAttribute('font-family', 'Oswald, sans-serif');
+  startLabel.style.animation = `markerAppear ${dur}s ease-in-out forwards`;
+  startLabel.textContent = 'START';
+  g.appendChild(startLabel);
+  const endAngle = Math.PI * 2 * 0.7;
+  const endR = baseR + 18 * Math.sin(3 * endAngle + 0.5) + 12 * Math.cos(5 * endAngle + 1.2);
+  const endX = endR * Math.cos(endAngle);
+  const endY = endR * Math.sin(endAngle) * 0.85;
+  const endG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  endG.classList.add('trace-end');
+  endG.style.setProperty('--dur', dur + 's');
+  const endRing = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  endRing.setAttribute('cx', endX.toFixed(2));
+  endRing.setAttribute('cy', endY.toFixed(2));
+  endRing.setAttribute('r', '8');
+  endRing.classList.add('trace-end-ring');
+  endRing.style.setProperty('--dur', dur + 's');
+  endG.appendChild(endRing);
+  const endPt = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  endPt.setAttribute('cx', endX.toFixed(2));
+  endPt.setAttribute('cy', endY.toFixed(2));
+  endPt.setAttribute('r', '10');
+  endPt.setAttribute('fill', '#ff1744');
+  endPt.classList.add('trace-end-dot');
+  endG.appendChild(endPt);
+  g.appendChild(endG);
+  const endLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  endLabel.setAttribute('x', (endX + 16).toFixed(2));
+  endLabel.setAttribute('y', (endY + 18).toFixed(2));
+  endLabel.setAttribute('fill', '#ff1744');
+  endLabel.setAttribute('font-size', '11');
+  endLabel.setAttribute('font-weight', '700');
+  endLabel.setAttribute('font-family', 'Oswald, sans-serif');
+  endLabel.style.animation = `markerAppearEnd ${dur}s ease-in-out forwards`;
+  endLabel.textContent = 'END';
+  g.appendChild(endLabel);
+  const speedAnns = [
+    { idx: 2, label: '4\'20"', dx: 25, dy: -18 },
+    { idx: 7, label: '5\'45"', dx: -35, dy: 15 },
+    { idx: 11, label: '4\'05"', dx: 25, dy: 10 },
+  ];
+  speedAnns.forEach(ann => {
+    if (ann.idx < numSegs) {
+      const pIdx = Math.min(numPoints, ann.idx * ptsPerSeg + Math.floor(ptsPerSeg / 2));
+      const px = pts[pIdx].x + ann.dx;
+      const py = pts[pIdx].y + ann.dy;
+      const tagColor = getSpeedColor(palette, segSpeeds[ann.idx]);
+      const tag = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      tag.setAttribute('x', px.toFixed(1));
+      tag.setAttribute('y', py.toFixed(1));
+      tag.setAttribute('fill', tagColor);
+      tag.setAttribute('font-size', '13');
+      tag.classList.add('speed-tag');
+      tag.style.setProperty('--dur', dur + 's');
+      tag.textContent = ann.label;
+      g.appendChild(tag);
+    }
+  });
+  traceSvg.appendChild(g);
+  speedLegend.classList.add('show');
+  setTimeout(() => {
+    g.remove();
+    speedLegend.classList.remove('show');
+  }, parseFloat(dur) * 1000 + 1500);
+}
+
+function spawnKeepTrace() {
+  const palette = SPEED_PALETTES[paletteIdx % SPEED_PALETTES.length];
+  paletteIdx++;
+  updateLegend(palette);
+  const dur = (8 + Math.random() * 2).toFixed(2);
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  g.classList.add('track-group');
+  g.style.setProperty('--dur', dur + 's');
+  const vw = window.innerWidth || 1920;
+  const vh = window.innerHeight || 1080;
+  const tx = (Math.random() * 0.3 + 0.35) * vw;
+  const ty = (Math.random() * 0.3 + 0.35) * vh;
+  const scale = 0.9 + Math.random() * 0.4;
+  const rotate = Math.random() * 16 - 8;
+  g.setAttribute('transform', `translate(${tx}, ${ty}) scale(${scale}) rotate(${rotate})`);
+  const segDefs = [];
+  segDefs.push({ type: 'L', x1: -40, y1: -80, x2: -40, y2: 80 });
+  segDefs.push({ type: 'L', x1: -40, y1: 0, x2: 45, y2: -80 });
+  segDefs.push({ type: 'L', x1: -40, y1: 0, x2: 45, y2: 80 });
+  const segSpeeds = generateSpeedProfile(segDefs.length, 0.5 + Math.random() * 0.2);
+  segDefs.forEach((seg, i) => {
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    const d = `M ${seg.x1} ${seg.y1} L ${seg.x2} ${seg.y2}`;
+    path.setAttribute('d', d);
+    const color = getSpeedColor(palette, segSpeeds[i]);
+    path.setAttribute('stroke', color);
+    path.setAttribute('stroke-width', '8');
+    path.setAttribute('stroke-linecap', 'round');
+    path.classList.add('track-seg');
+    const segDur = (dur * 0.6).toFixed(2);
+    path.style.setProperty('--dur', segDur + 's');
+    const delay = (i / segDefs.length * dur * 0.5).toFixed(2);
+    path.style.setProperty('--seg-delay', delay + 's');
+    path.style.filter = `drop-shadow(0 0 5px ${color})`;
+    g.appendChild(path);
+  });
+  const rectW = 110;
+  const rectH = 110;
+  const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  rect.setAttribute('x', (-rectW/2 - 20).toFixed(1));
+  rect.setAttribute('y', (-rectH/2 - 20).toFixed(1));
+  rect.setAttribute('width', (rectW + 40).toFixed(1));
+  rect.setAttribute('height', (rectH + 40).toFixed(1));
+  rect.setAttribute('rx', '20');
+  rect.setAttribute('ry', '20');
+  rect.setAttribute('fill', 'none');
+  rect.setAttribute('stroke', 'rgba(0, 230, 118, 0.3)');
+  rect.setAttribute('stroke-width', '2');
+  rect.setAttribute('stroke-dasharray', '8 6');
+  rect.classList.add('track-lane');
+  rect.style.setProperty('--dur', dur + 's');
+  g.appendChild(rect);
+  const keepLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  keepLabel.setAttribute('x', '0');
+  keepLabel.setAttribute('y', '105');
+  keepLabel.setAttribute('fill', 'rgba(0, 230, 118, 0.9)');
+  keepLabel.setAttribute('font-size', '15');
+  keepLabel.setAttribute('font-weight', '700');
+  keepLabel.setAttribute('font-family', 'Oswald, sans-serif');
+  keepLabel.setAttribute('text-anchor', 'middle');
+  keepLabel.classList.add('track-label');
+  keepLabel.style.setProperty('--dur', dur + 's');
+  keepLabel.textContent = 'KEEP';
+  g.appendChild(keepLabel);
+  const startX = -40;
+  const startY = -80;
+  const startG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  startG.classList.add('trace-start');
+  startG.style.setProperty('--dur', dur + 's');
+  const startRing = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  startRing.setAttribute('cx', startX);
+  startRing.setAttribute('cy', startY);
+  startRing.setAttribute('r', '8');
+  startRing.classList.add('trace-start-ring');
+  startRing.style.setProperty('--dur', dur + 's');
+  startG.appendChild(startRing);
+  const startPt = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  startPt.setAttribute('cx', startX);
+  startPt.setAttribute('cy', startY);
+  startPt.setAttribute('r', '10');
+  startPt.setAttribute('fill', '#00e676');
+  startPt.classList.add('trace-start-dot');
+  startG.appendChild(startPt);
+  g.appendChild(startG);
+  const startLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  startLabel.setAttribute('x', startX - 40);
+  startLabel.setAttribute('y', startY - 12);
+  startLabel.setAttribute('fill', '#00e676');
+  startLabel.setAttribute('font-size', '11');
+  startLabel.setAttribute('font-weight', '700');
+  startLabel.setAttribute('font-family', 'Oswald, sans-serif');
+  startLabel.style.animation = `markerAppear ${dur}s ease-in-out forwards`;
+  startLabel.textContent = 'START';
+  g.appendChild(startLabel);
+  const endX = 45;
+  const endY = 80;
+  const endG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  endG.classList.add('trace-end');
+  endG.style.setProperty('--dur', dur + 's');
+  const endRing = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  endRing.setAttribute('cx', endX);
+  endRing.setAttribute('cy', endY);
+  endRing.setAttribute('r', '8');
+  endRing.classList.add('trace-end-ring');
+  endRing.style.setProperty('--dur', dur + 's');
+  endG.appendChild(endRing);
+  const endPt = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  endPt.setAttribute('cx', endX);
+  endPt.setAttribute('cy', endY);
+  endPt.setAttribute('r', '10');
+  endPt.setAttribute('fill', '#ff1744');
+  endPt.classList.add('trace-end-dot');
+  endG.appendChild(endPt);
+  g.appendChild(endG);
+  const endLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  endLabel.setAttribute('x', endX + 14);
+  endLabel.setAttribute('y', endY + 18);
+  endLabel.setAttribute('fill', '#ff1744');
+  endLabel.setAttribute('font-size', '11');
+  endLabel.setAttribute('font-weight', '700');
+  endLabel.setAttribute('font-family', 'Oswald, sans-serif');
+  endLabel.style.animation = `markerAppearEnd ${dur}s ease-in-out forwards`;
+  endLabel.textContent = 'END';
+  g.appendChild(endLabel);
+  const speedAnns = [
+    { idx: 0, label: '4\'50"', dx: -55, dy: 0 },
+    { idx: 1, label: '4\'10"', dx: 20, dy: -20 },
+    { idx: 2, label: '5\'30"', dx: 20, dy: 20 },
+  ];
+  speedAnns.forEach(ann => {
+    if (ann.idx < segDefs.length) {
+      const seg = segDefs[ann.idx];
+      const mx = (seg.x1 + seg.x2) / 2 + ann.dx;
+      const my = (seg.y1 + seg.y2) / 2 + ann.dy;
+      const tagColor = getSpeedColor(palette, segSpeeds[ann.idx]);
+      const tag = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      tag.setAttribute('x', mx.toFixed(1));
+      tag.setAttribute('y', my.toFixed(1));
+      tag.setAttribute('fill', tagColor);
+      tag.setAttribute('font-size', '13');
+      tag.classList.add('speed-tag');
+      tag.style.setProperty('--dur', dur + 's');
+      tag.textContent = ann.label;
+      g.appendChild(tag);
+    }
+  });
+  traceSvg.appendChild(g);
+  speedLegend.classList.add('show');
+  setTimeout(() => {
+    g.remove();
+    speedLegend.classList.remove('show');
+  }, parseFloat(dur) * 1000 + 1500);
+}
+
+function spawnTrackTrace() {
+  const palette = SPEED_PALETTES[paletteIdx % SPEED_PALETTES.length];
+  paletteIdx++;
+  updateLegend(palette);
+  const dur = (7 + Math.random() * 2).toFixed(2);
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  g.classList.add('track-group');
+  g.style.setProperty('--dur', dur + 's');
+  const vw = window.innerWidth || 1920;
+  const vh = window.innerHeight || 1080;
+  const tx = (Math.random() * 0.3 + 0.35) * vw;
+  const ty = (Math.random() * 0.3 + 0.35) * vh;
+  const scale = 0.9 + Math.random() * 0.4;
+  const rotate = Math.random() * 20 - 10;
+  g.setAttribute('transform', `translate(${tx}, ${ty}) scale(${scale}) rotate(${rotate})`);
+  const straight = 160;
+  const r = 70;
+  const totalW = straight + 2 * r;
+  const totalH = 2 * r;
+  const ox = -totalW / 2;
+  const oy = -totalH / 2;
+  const fullD = `
+    M ${ox + r} ${oy}
+    L ${ox + r + straight} ${oy}
+    A ${r} ${r} 0 1 1 ${ox + r + straight} ${oy + 2 * r}
+    L ${ox + r} ${oy + 2 * r}
+    A ${r} ${r} 0 1 1 ${ox + r} ${oy}
+    Z
+  `;
+  const segDefs = [];
+  segDefs.push({ type: 'L', x1: ox+r, y1: oy, x2: ox+r+straight*0.5, y2: oy });
+  segDefs.push({ type: 'L', x1: ox+r+straight*0.5, y1: oy, x2: ox+r+straight, y2: oy });
+  const arcSegs = 3;
+  for (let i = 0; i < arcSegs; i++) {
+    const a1 = -Math.PI/2 + (i/arcSegs) * Math.PI;
+    const a2 = -Math.PI/2 + ((i+1)/arcSegs) * Math.PI;
+    const cx_a = ox + r + straight;
+    const cy_a = oy + r;
+    segDefs.push({
+      type: 'A',
+      x1: cx_a + r * Math.cos(a1),
+      y1: cy_a + r * Math.sin(a1),
+      x2: cx_a + r * Math.cos(a2),
+      y2: cy_a + r * Math.sin(a2),
+      r: r,
+      sweep: 1
+    });
+  }
+  segDefs.push({ type: 'L', x1: ox+r+straight, y1: oy+2*r, x2: ox+r+straight*0.5, y2: oy+2*r });
+  segDefs.push({ type: 'L', x1: ox+r+straight*0.5, y1: oy+2*r, x2: ox+r, y2: oy+2*r });
+  for (let i = 0; i < arcSegs; i++) {
+    const a1 = Math.PI/2 + (i/arcSegs) * Math.PI;
+    const a2 = Math.PI/2 + ((i+1)/arcSegs) * Math.PI;
+    const cx_a = ox + r;
+    const cy_a = oy + r;
+    segDefs.push({
+      type: 'A',
+      x1: cx_a + r * Math.cos(a1),
+      y1: cy_a + r * Math.sin(a1),
+      x2: cx_a + r * Math.cos(a2),
+      y2: cy_a + r * Math.sin(a2),
+      r: r,
+      sweep: 1
+    });
+  }
+  const segSpeeds = generateSpeedProfile(segDefs.length, 0.4 + Math.random() * 0.25);
+  segDefs.forEach((seg, i) => {
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    let d;
+    if (seg.type === 'L') {
+      d = `M ${seg.x1.toFixed(1)} ${seg.y1.toFixed(1)} L ${seg.x2.toFixed(1)} ${seg.y2.toFixed(1)}`;
+    } else {
+      d = `M ${seg.x1.toFixed(1)} ${seg.y1.toFixed(1)} A ${seg.r} ${seg.r} 0 0 ${seg.sweep} ${seg.x2.toFixed(1)} ${seg.y2.toFixed(1)}`;
+    }
+    path.setAttribute('d', d);
+    const color = getSpeedColor(palette, segSpeeds[i]);
+    path.setAttribute('stroke', color);
+    path.setAttribute('stroke-width', '5');
+    path.classList.add('track-seg');
+    const segDur = (dur * 0.7).toFixed(2);
+    path.style.setProperty('--dur', segDur + 's');
+    const delay = (i / segDefs.length * dur * 0.6).toFixed(2);
+    path.style.setProperty('--seg-delay', delay + 's');
+    path.style.filter = `drop-shadow(0 0 3px ${color})`;
+    g.appendChild(path);
+  });
+  const innerR = r - 12;
+  const innerPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  const dInner = `
+    M ${ox + r} ${oy + 6}
+    L ${ox + r + straight} ${oy + 6}
+    A ${innerR} ${innerR} 0 1 1 ${ox + r + straight} ${oy + 2 * r - 6}
+    L ${ox + r} ${oy + 2 * r - 6}
+    A ${innerR} ${innerR} 0 1 1 ${ox + r} ${oy + 6}
+    Z
+  `;
+  innerPath.setAttribute('d', dInner);
+  innerPath.classList.add('track-lane');
+  innerPath.style.setProperty('--dur', dur + 's');
+  g.appendChild(innerPath);
+  const centerCircle = document.createElementNS('http://www.w3.org/2000/svg', 'ellipse');
+  centerCircle.setAttribute('cx', '0');
+  centerCircle.setAttribute('cy', '0');
+  centerCircle.setAttribute('rx', '20');
+  centerCircle.setAttribute('ry', '12');
+  centerCircle.setAttribute('fill', 'rgba(0, 230, 118, 0.5)');
+  centerCircle.classList.add('track-center');
+  centerCircle.style.setProperty('--dur', dur + 's');
+  g.appendChild(centerCircle);
+  const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  label.setAttribute('x', '0');
+  label.setAttribute('y', '5');
+  label.setAttribute('fill', 'rgba(0, 230, 118, 0.9)');
+  label.classList.add('track-label');
+  label.style.setProperty('--dur', dur + 's');
+  label.textContent = '400m';
+  g.appendChild(label);
+  const startX = ox + r;
+  const startY = oy;
+  const startG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  startG.classList.add('trace-start');
+  startG.style.setProperty('--dur', dur + 's');
+  const startRing = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  startRing.setAttribute('cx', startX);
+  startRing.setAttribute('cy', startY);
+  startRing.setAttribute('r', '5');
+  startRing.classList.add('trace-start-ring');
+  startRing.style.setProperty('--dur', dur + 's');
+  startG.appendChild(startRing);
+  const startPt = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  startPt.setAttribute('cx', startX);
+  startPt.setAttribute('cy', startY);
+  startPt.setAttribute('r', '6');
+  startPt.setAttribute('fill', '#00e676');
+  startPt.classList.add('trace-start-dot');
+  startG.appendChild(startPt);
+  g.appendChild(startG);
+  const startLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  startLabel.setAttribute('x', startX + 12);
+  startLabel.setAttribute('y', startY - 10);
+  startLabel.setAttribute('fill', '#00e676');
+  startLabel.setAttribute('font-size', '11');
+  startLabel.setAttribute('font-weight', '700');
+  startLabel.setAttribute('font-family', 'Oswald, sans-serif');
+  startLabel.style.animation = `markerAppear ${dur}s ease-in-out forwards`;
+  startLabel.textContent = 'START';
+  g.appendChild(startLabel);
+  const endX = ox + r;
+  const endY = oy + 2 * r;
+  const endG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  endG.classList.add('trace-end');
+  endG.style.setProperty('--dur', dur + 's');
+  const endRing = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  endRing.setAttribute('cx', endX);
+  endRing.setAttribute('cy', endY);
+  endRing.setAttribute('r', '5');
+  endRing.classList.add('trace-end-ring');
+  endRing.style.setProperty('--dur', dur + 's');
+  endG.appendChild(endRing);
+  const endPt = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  endPt.setAttribute('cx', endX);
+  endPt.setAttribute('cy', endY);
+  endPt.setAttribute('r', '6');
+  endPt.setAttribute('fill', '#ff1744');
+  endPt.classList.add('trace-end-dot');
+  endG.appendChild(endPt);
+  g.appendChild(endG);
+  const endLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  endLabel.setAttribute('x', endX + 12);
+  endLabel.setAttribute('y', endY + 16);
+  endLabel.setAttribute('fill', '#ff1744');
+  endLabel.setAttribute('font-size', '11');
+  endLabel.setAttribute('font-weight', '700');
+  endLabel.setAttribute('font-family', 'Oswald, sans-serif');
+  endLabel.style.animation = `markerAppearEnd ${dur}s ease-in-out forwards`;
+  endLabel.textContent = 'END';
+  g.appendChild(endLabel);
+  const speedAnnotations = [
+    { idx: 1, label: '4\'32"', offset: { x: 15, y: -8 } },
+    { idx: 5, label: '5\'48"', offset: { x: 15, y: 8 } },
+    { idx: 9, label: '4\'15"', offset: { x: -30, y: 8 } },
+  ];
+  speedAnnotations.forEach(ann => {
+    if (ann.idx < segDefs.length) {
+      const seg = segDefs[ann.idx];
+      const mx = (seg.x1 + seg.x2) / 2 + ann.offset.x;
+      const my = (seg.y1 + seg.y2) / 2 + ann.offset.y;
+      const tagColor = getSpeedColor(palette, segSpeeds[ann.idx]);
+      const tag = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      tag.setAttribute('x', mx.toFixed(1));
+      tag.setAttribute('y', my.toFixed(1));
+      tag.setAttribute('fill', tagColor);
+      tag.classList.add('speed-tag');
+      tag.style.setProperty('--dur', dur + 's');
+      tag.textContent = ann.label;
+      g.appendChild(tag);
+    }
+  });
+  traceSvg.appendChild(g);
+  speedLegend.classList.add('show');
+  setTimeout(() => {
+    g.remove();
+    speedLegend.classList.remove('show');
+  }, parseFloat(dur) * 1000 + 1500);
+}
+
+function spawnHeartTrace() {
+  const palette = SPEED_PALETTES[paletteIdx % SPEED_PALETTES.length];
+  paletteIdx++;
+  updateLegend(palette);
+  const dur = (9 + Math.random() * 2).toFixed(2);
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  g.classList.add('heart-group');
+  g.style.setProperty('--dur', dur + 's');
+  const vw = window.innerWidth || 1920;
+  const vh = window.innerHeight || 1080;
+  const tx = (Math.random() * 0.3 + 0.35) * vw;
+  const ty = (Math.random() * 0.3 + 0.35) * vh;
+  const scale = 2.0 + Math.random() * 0.6;
+  const rotate = Math.random() * 16 - 8;
+  g.setAttribute('transform', `translate(${tx}, ${ty}) scale(${scale}) rotate(${rotate})`);
+  const numPoints = 240;
+  const heartScale = 4.5;
+  const bottomOffset = 5.375;
+  const pts = [];
+  for (let i = 0; i <= numPoints; i++) {
+    const t = ((i / numPoints) * Math.PI * 2 + bottomOffset) % (Math.PI * 2);
+    const x = 16 * Math.pow(Math.sin(t), 3) * heartScale;
+    const y = -(13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t)) * heartScale;
+    pts.push({ x, y, t });
+  }
+  const numSegs = 16;
+  const segSpeeds = generateSpeedProfile(numSegs, 0.4 + Math.random() * 0.25);
+  const ptsPerSeg = Math.floor(numPoints / numSegs);
+  for (let s = 0; s < numSegs; s++) {
+    const startIdx = s * ptsPerSeg;
+    const endIdx = (s === numSegs - 1) ? numPoints : (s + 1) * ptsPerSeg;
+    let d = '';
+    for (let i = startIdx; i <= endIdx; i++) {
+      d += `${i === startIdx ? 'M' : 'L'} ${pts[i].x.toFixed(2)} ${pts[i].y.toFixed(2)} `;
+    }
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', d.trim());
+    const color = getSpeedColor(palette, segSpeeds[s]);
+    path.setAttribute('stroke', color);
+    path.setAttribute('stroke-width', '5');
+    path.classList.add('heart-seg');
+    const segDur = (dur * 0.75).toFixed(2);
+    path.style.setProperty('--dur', segDur + 's');
+    const delay = (s / numSegs * dur * 0.65).toFixed(2);
+    path.style.setProperty('--seg-delay', delay + 's');
+    path.style.filter = `drop-shadow(0 0 4px ${color})`;
+    g.appendChild(path);
+  }
+  let fillD = '';
+  for (let i = 0; i <= numPoints; i++) {
+    fillD += `${i === 0 ? 'M' : 'L'} ${pts[i].x.toFixed(2)} ${pts[i].y.toFixed(2)} `;
+  }
+  fillD += 'Z';
+  const heartFill = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  heartFill.setAttribute('d', fillD);
+  heartFill.setAttribute('fill', 'rgba(255, 23, 68, 0.06)');
+  heartFill.classList.add('heart-fill');
+  heartFill.style.setProperty('--dur', dur + 's');
+  g.appendChild(heartFill);
+  const tStart = bottomOffset;
+  const startX = 16 * Math.pow(Math.sin(tStart), 3) * heartScale;
+  const startY = -(13 * Math.cos(tStart) - 5 * Math.cos(2*tStart) - 2 * Math.cos(3*tStart) - Math.cos(4*tStart)) * heartScale;
+  const startG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  startG.classList.add('trace-start');
+  startG.style.setProperty('--dur', dur + 's');
+  const startRing = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  startRing.setAttribute('cx', startX.toFixed(2));
+  startRing.setAttribute('cy', startY.toFixed(2));
+  startRing.setAttribute('r', '8');
+  startRing.classList.add('trace-start-ring');
+  startRing.style.setProperty('--dur', dur + 's');
+  startG.appendChild(startRing);
+  const startPt = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  startPt.setAttribute('cx', startX.toFixed(2));
+  startPt.setAttribute('cy', startY.toFixed(2));
+  startPt.setAttribute('r', '10');
+  startPt.setAttribute('fill', '#00e676');
+  startPt.classList.add('trace-start-dot');
+  startG.appendChild(startPt);
+  g.appendChild(startG);
+  const startLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  startLabel.setAttribute('x', (startX + 18).toFixed(2));
+  startLabel.setAttribute('y', (startY + 30).toFixed(2));
+  startLabel.setAttribute('fill', '#00e676');
+  startLabel.setAttribute('font-size', '11');
+  startLabel.setAttribute('font-weight', '700');
+  startLabel.setAttribute('font-family', 'Oswald, sans-serif');
+  startLabel.style.animation = `markerAppear ${dur}s ease-in-out forwards`;
+  startLabel.textContent = 'START';
+  g.appendChild(startLabel);
+  const tEnd = (0.6 * Math.PI * 2 + bottomOffset) % (Math.PI * 2);
+  const endX = 16 * Math.pow(Math.sin(tEnd), 3) * heartScale;
+  const endY = -(13 * Math.cos(tEnd) - 5 * Math.cos(2*tEnd) - 2 * Math.cos(3*tEnd) - Math.cos(4*tEnd)) * heartScale;
+  const endG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  endG.classList.add('trace-end');
+  endG.style.setProperty('--dur', dur + 's');
+  const endRing = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  endRing.setAttribute('cx', endX.toFixed(2));
+  endRing.setAttribute('cy', endY.toFixed(2));
+  endRing.setAttribute('r', '8');
+  endRing.classList.add('trace-end-ring');
+  endRing.style.setProperty('--dur', dur + 's');
+  endG.appendChild(endRing);
+  const endPt = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  endPt.setAttribute('cx', endX.toFixed(2));
+  endPt.setAttribute('cy', endY.toFixed(2));
+  endPt.setAttribute('r', '10');
+  endPt.setAttribute('fill', '#ff1744');
+  endPt.classList.add('trace-end-dot');
+  endG.appendChild(endPt);
+  g.appendChild(endG);
+  const endLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  endLabel.setAttribute('x', (endX + 18).toFixed(2));
+  endLabel.setAttribute('y', (endY - 14).toFixed(2));
+  endLabel.setAttribute('fill', '#ff1744');
+  endLabel.setAttribute('font-size', '11');
+  endLabel.setAttribute('font-weight', '700');
+  endLabel.setAttribute('font-family', 'Oswald, sans-serif');
+  endLabel.style.animation = `markerAppearEnd ${dur}s ease-in-out forwards`;
+  endLabel.textContent = 'END';
+  g.appendChild(endLabel);
+  const loveLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  loveLabel.setAttribute('x', '0');
+  loveLabel.setAttribute('y', '-5');
+  loveLabel.setAttribute('fill', 'rgba(255, 100, 130, 0.9)');
+  loveLabel.classList.add('heart-label');
+  loveLabel.style.setProperty('--dur', dur + 's');
+  loveLabel.textContent = 'LOVE';
+  g.appendChild(loveLabel);
+  const speedAnns = [
+    { idx: 3, label: '3\'50"', dx: 45, dy: -20 },
+    { idx: 9, label: '5\'20"', dx: -50, dy: 20 },
+    { idx: 13, label: '4\'05"', dx: 45, dy: 10 },
+  ];
+  speedAnns.forEach(ann => {
+    if (ann.idx < numSegs) {
+      const pIdx = Math.min(numPoints, ann.idx * ptsPerSeg + Math.floor(ptsPerSeg/2));
+      const px = pts[pIdx].x + ann.dx;
+      const py = pts[pIdx].y + ann.dy;
+      const tagColor = getSpeedColor(palette, segSpeeds[ann.idx]);
+      const tag = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      tag.setAttribute('x', px.toFixed(1));
+      tag.setAttribute('y', py.toFixed(1));
+      tag.setAttribute('fill', tagColor);
+      tag.setAttribute('font-size', '14');
+      tag.classList.add('speed-tag');
+      tag.style.setProperty('--dur', dur + 's');
+      tag.textContent = ann.label;
+      g.appendChild(tag);
+    }
+  });
+  traceSvg.appendChild(g);
+  speedLegend.classList.add('show');
+  setTimeout(() => {
+    g.remove();
+    speedLegend.classList.remove('show');
+  }, parseFloat(dur) * 1000 + 1500);
+}
+
+// ==========================================
+// ====== 北京马拉松轨迹（标题左下角） ======
+// ==========================================
+function spawnBeijingMarathonTrace() {
+  const palette = SPEED_PALETTES[paletteIdx % SPEED_PALETTES.length];
+  paletteIdx++;
+  updateLegend(palette);
+
+  const dur = 16; 
+
+  const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  g.classList.add('track-group', 'bj-marathon-group');
+  g.style.setProperty('--dur', dur + 's');
+
+  const vw = window.innerWidth || 1920;
+  const vh = window.innerHeight || 1080;
+  const pathWidth = 850;
+  const pathHeight = 340; 
+  const scale = Math.min((vw * 0.94) / pathWidth, (vh * 0.62) / pathHeight);
+  const tx = vw / 2;
+  const ty = vh / 2 + 40; 
+  g.setAttribute('transform', `translate(${tx}, ${ty}) scale(${scale})`);
+
+  const waypoints = [
+    { x: -400, y: 140, name: '天安门广场', isStart: true },
+    { x: -300, y: 140, name: '西单' },
+    { x: -200, y: 140, name: '复兴门' },
+    { x: -150, y: 125, name: '' },
+    { x: -130, y: 88,  name: '' },
+    { x: -125, y: 38,  name: '' },
+    { x: -120, y: -12, name: '' },
+    { x: -118, y: -58, name: '西直门' },
+    { x: -110, y: -102, name: '' },
+    { x: -85,  y: -136, name: '' },
+    { x: -35,  y: -150, name: '' },
+    { x:  50,  y: -150, name: '安贞桥' },
+    { x: 180,  y: -150, name: '和平西桥' },
+    { x: 400,  y: -150, name: '国家体育场', isEnd: true }
+  ];
+
+  function smoothPath(points) {
+    if (points.length < 2) return '';
+    let d = `M ${points[0].x.toFixed(1)} ${points[0].y.toFixed(1)}`;
+    for (let i = 0; i < points.length - 1; i++) {
+      const p0 = points[i - 1] || points[i];
+      const p1 = points[i];
+      const p2 = points[i + 1];
+      const p3 = points[i + 2] || p2;
+      const cp1x = p1.x + (p2.x - p0.x) / 6;
+      const cp1y = p1.y + (p2.y - p0.y) / 6;
+      const cp2x = p2.x - (p3.x - p1.x) / 6;
+      const cp2y = p2.y - (p3.y - p1.y) / 6;
+      d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+    }
+    return d;
+  }
+  const fullPathD = smoothPath(waypoints);
+
+  const tempPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  tempPath.setAttribute('d', fullPathD);
+  traceSvg.appendChild(tempPath);
+  const totalLength = tempPath.getTotalLength();
+
+  const sampleCount = 70;
+  const sampledPoints = [];
+  for (let i = 0; i <= sampleCount; i++) {
+    const pt = tempPath.getPointAtLength((i / sampleCount) * totalLength);
+    sampledPoints.push({ x: pt.x, y: pt.y });
+  }
+  tempPath.remove();
+
+  const numSegs = 24;
+  const segSpeeds = [];
+  let currentSpeed = 0.4 + Math.random() * 0.3;
+  for(let i=0; i<numSegs; i++) {
+    currentSpeed += (Math.random() - 0.5) * 0.35;
+    if(Math.random() < 0.2) currentSpeed += (Math.random() - 0.5) * 0.5;
+    currentSpeed = Math.max(0.05, Math.min(0.98, currentSpeed));
+    segSpeeds.push(currentSpeed);
+  }
+  const ptsPerSeg = Math.floor(sampledPoints.length / numSegs);
+
+  for (let s = 0; s < numSegs; s++) {
+    const startIdx = s * ptsPerSeg;
+    const endIdx = (s === numSegs - 1) ? sampledPoints.length - 1 : (s + 1) * ptsPerSeg;
+
+    let d = `M ${sampledPoints[startIdx].x.toFixed(1)} ${sampledPoints[startIdx].y.toFixed(1)}`;
+    for (let i = startIdx + 1; i <= endIdx; i++) {
+      d += ` L ${sampledPoints[i].x.toFixed(1)} ${sampledPoints[i].y.toFixed(1)}`;
+    }
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', d);
+
+    const color = getSpeedColor(palette, segSpeeds[s]);
+    path.setAttribute('stroke', color);
+    path.setAttribute('stroke-width', '4.5');
+    path.setAttribute('fill', 'none');
+    path.setAttribute('stroke-linecap', 'round');
+    path.setAttribute('stroke-linejoin', 'round');
+    path.setAttribute('opacity', '0.9');
+    path.classList.add('track-seg');
+
+    const segDur = (dur * 0.82).toFixed(2);
+    path.style.setProperty('--dur', segDur + 's');
+    const delay = (s / numSegs * dur * 0.7).toFixed(2);
+    path.style.setProperty('--seg-delay', delay + 's');
+    path.style.filter = `drop-shadow(0 0 3px ${color})`;
+
+    g.appendChild(path);
+  }
+
+  // 速度标注
+  const speedAnnotations = [
+    { idx: 3, label: "4'25\"", dx: 0, dy: -18 },
+    { idx: 9, label: "6'10\"", dx: -25, dy: 0 },
+    { idx: 15, label: "4'50\"", dx: 0, dy: -18 },
+    { idx: 20, label: "5'35\"", dx: 0, dy: -18 }
+  ];
+  speedAnnotations.forEach(ann => {
+    if (ann.idx < numSegs) {
+      const pIdx = Math.min(sampledPoints.length - 1, ann.idx * ptsPerSeg + Math.floor(ptsPerSeg / 2));
+      const px = sampledPoints[pIdx].x + ann.dx;
+      const py = sampledPoints[pIdx].y + ann.dy;
+      const tagColor = getSpeedColor(palette, segSpeeds[ann.idx]);
+      const tag = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      tag.setAttribute('x', px.toFixed(1));
+      tag.setAttribute('y', py.toFixed(1));
+      tag.setAttribute('fill', tagColor);
+      tag.setAttribute('font-size', '13');
+      tag.setAttribute('font-weight', '700');
+      tag.setAttribute('font-family', 'Oswald, sans-serif');
+      tag.setAttribute('text-anchor', 'middle');
+      tag.classList.add('speed-tag');
+      tag.style.setProperty('--dur', dur + 's');
+      tag.textContent = ann.label;
+      g.appendChild(tag);
+    }
+  });
+
+  // 高亮地标点
+  waypoints.forEach((wp, idx) => {
+    if (wp.name) {
+      const dotG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      dotG.style.opacity = '0';
+      dotG.style.animation = `bjDotFadeIn ${dur}s ease-in-out forwards`;
+      dotG.style.animationDelay = (idx / waypoints.length * dur * 0.6) + 's';
+
+      const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      dot.setAttribute('cx', wp.x);
+      dot.setAttribute('cy', wp.y);
+      dot.setAttribute('r', '3.5'); 
+      dot.setAttribute('fill', 'rgba(255, 255, 255, 0.9)'); 
+      dotG.appendChild(dot);
+
+      const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      label.setAttribute('x', wp.x);
+      label.setAttribute('y', wp.y - 12); 
+      label.setAttribute('fill', 'rgba(255, 255, 255, 0.95)'); 
+      label.setAttribute('font-size', '14'); 
+      label.setAttribute('font-weight', '600');
+      label.setAttribute('text-anchor', 'middle');
+      label.setAttribute('font-family', 'Microsoft YaHei, sans-serif');
+      label.style.filter = 'drop-shadow(0 1px 2px rgba(0,0,0,0.8))'; 
+      label.textContent = wp.name;
+      dotG.appendChild(label);
+
+      g.appendChild(dotG);
+    }
+  });
+
+  // 起终点
+  const startWp = waypoints[0];
+  const startG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  startG.classList.add('trace-start');
+  startG.style.setProperty('--dur', dur + 's');
+  const startRing = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  startRing.setAttribute('cx', startWp.x);
+  startRing.setAttribute('cy', startWp.y);
+  startRing.setAttribute('r', '8');
+  startRing.classList.add('trace-start-ring');
+  startRing.style.setProperty('--dur', dur + 's');
+  startG.appendChild(startRing);
+  const startPt = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  startPt.setAttribute('cx', startWp.x);
+  startPt.setAttribute('cy', startWp.y);
+  startPt.setAttribute('r', '10');
+  startPt.setAttribute('fill', '#00e676');
+  startPt.classList.add('trace-start-dot');
+  startG.appendChild(startPt);
+  g.appendChild(startG);
+  
+  const startLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  startLabel.setAttribute('x', startWp.x);
+  startLabel.setAttribute('y', startWp.y + 35); 
+  startLabel.setAttribute('fill', '#00e676');
+  startLabel.setAttribute('font-size', '14');
+  startLabel.setAttribute('font-weight', '700');
+  startLabel.setAttribute('font-family', 'Oswald, sans-serif');
+  startLabel.setAttribute('text-anchor', 'middle');
+  startLabel.style.filter = 'drop-shadow(0 0 4px rgba(0,230,118,0.6))';
+  startLabel.style.animation = `markerAppear ${dur}s ease-in-out forwards`;
+  startLabel.textContent = 'START';
+  g.appendChild(startLabel);
+
+  const endWp = waypoints[waypoints.length - 1];
+  const endG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  endG.classList.add('trace-end');
+  endG.style.setProperty('--dur', dur + 's');
+  const endRing = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  endRing.setAttribute('cx', endWp.x);
+  endRing.setAttribute('cy', endWp.y);
+  endRing.setAttribute('r', '8');
+  endRing.classList.add('trace-end-ring');
+  endRing.style.setProperty('--dur', dur + 's');
+  endG.appendChild(endRing);
+  const endPt = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  endPt.setAttribute('cx', endWp.x);
+  endPt.setAttribute('cy', endWp.y);
+  endPt.setAttribute('r', '10');
+  endPt.setAttribute('fill', '#ff1744');
+  endPt.classList.add('trace-end-dot');
+  endG.appendChild(endPt);
+  g.appendChild(endG);
+  
+  const endLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  endLabel.setAttribute('x', endWp.x);
+  endLabel.setAttribute('y', endWp.y + 35); 
+  endLabel.setAttribute('fill', '#ff1744');
+  endLabel.setAttribute('font-size', '14');
+  endLabel.setAttribute('font-weight', '700');
+  endLabel.setAttribute('font-family', 'Oswald, sans-serif');
+  endLabel.setAttribute('text-anchor', 'middle');
+  endLabel.style.filter = 'drop-shadow(0 0 4px rgba(255,23,68,0.6))';
+  endLabel.style.animation = `markerAppearEnd ${dur}s ease-in-out forwards`;
+  endLabel.textContent = 'END · 鸟巢';
+  g.appendChild(endLabel);
+
+  // 主标题固定显示在天安门、西单附近上方，颜色为主题绿色
+  const titleLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  titleLabel.setAttribute('x', '-300'); // 位于西单正上方
+  titleLabel.setAttribute('y', '80');   // 天安门、西单(y=140)的上方
+  titleLabel.setAttribute('fill', '#00e676');
+  titleLabel.setAttribute('font-size', '24');
+  titleLabel.setAttribute('font-weight', '700');
+  titleLabel.setAttribute('font-family', 'Microsoft YaHei, sans-serif');
+  titleLabel.setAttribute('text-anchor', 'middle');
+  titleLabel.setAttribute('letter-spacing', '1');
+  titleLabel.style.opacity = '0';
+  titleLabel.style.animation = `bjTitleFade ${dur}s ease-in-out forwards`;
+  titleLabel.textContent = '北京马拉松 42.195公里';
+  g.appendChild(titleLabel);
+
+  // 发光光球
+  const orbG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  orbG.classList.add('bj-orb');
+  orbG.style.opacity = '0';
+  orbG.style.transition = 'opacity 0.5s ease';
+
+  const orbRing = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  orbRing.setAttribute('cx', '0');
+  orbRing.setAttribute('cy', '0');
+  orbRing.setAttribute('r', '5');
+  orbRing.setAttribute('fill', 'none');
+  orbRing.setAttribute('stroke', '#ffffff');
+  orbRing.setAttribute('stroke-width', '1.5');
+  orbRing.style.animation = 'orbRingExpand 1.4s ease-out infinite';
+  orbG.appendChild(orbRing);
+
+  const trailG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  const trailConfigs = [
+    { dx: -8,  r: 3.2, op: 0.75 },
+    { dx: -16, r: 2.6, op: 0.55 },
+    { dx: -24, r: 2.1, op: 0.38 },
+    { dx: -32, r: 1.6, op: 0.22 },
+    { dx: -40, r: 1.2, op: 0.10 }
+  ];
+  trailConfigs.forEach((cfg, i) => {
+    const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    c.setAttribute('cx', cfg.dx);
+    c.setAttribute('cy', '0');
+    c.setAttribute('r', cfg.r);
+    c.setAttribute('fill', '#ffffff');
+    c.setAttribute('opacity', cfg.op);
+    trailG.appendChild(c);
+  });
+  orbG.appendChild(trailG);
+
+  const orbHalo = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  orbHalo.setAttribute('cx', '0');
+  orbHalo.setAttribute('cy', '0');
+  orbHalo.setAttribute('r', '7');
+  orbHalo.setAttribute('fill', 'rgba(255, 255, 255, 0.45)');
+  orbHalo.style.filter = 'blur(2px)';
+  orbHalo.style.animation = 'orbPulse 0.9s ease-in-out infinite';
+  orbG.appendChild(orbHalo);
+
+  const orbCore = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  orbCore.setAttribute('cx', '0');
+  orbCore.setAttribute('cy', '0');
+  orbCore.setAttribute('r', '3.5');
+  orbCore.setAttribute('fill', '#ffffff');
+  orbCore.style.filter = 'drop-shadow(0 0 6px rgba(255,255,255,0.9)) drop-shadow(0 0 12px rgba(0,230,118,0.6))';
+  orbG.appendChild(orbCore);
+
+  g.appendChild(orbG);
+
+  // 光球沿路径动画
+  const cumLengths = [0];
+  for (let i = 1; i < sampledPoints.length; i++) {
+    const dx = sampledPoints[i].x - sampledPoints[i - 1].x;
+    const dy = sampledPoints[i].y - sampledPoints[i - 1].y;
+    cumLengths.push(cumLengths[i - 1] + Math.sqrt(dx * dx + dy * dy));
+  }
+  const totalRunnerLen = cumLengths[cumLengths.length - 1];
+
+  function getPointOnPath(t) {
+    t = Math.max(0, Math.min(1, t));
+    const targetLen = t * totalRunnerLen;
+    let i = 0;
+    while (i < cumLengths.length - 1 && cumLengths[i + 1] < targetLen) i++;
+    if (i >= sampledPoints.length - 1) {
+      const last = sampledPoints[sampledPoints.length - 1];
+      const prev = sampledPoints[sampledPoints.length - 2] || last;
+      return {
+        x: last.x,
+        y: last.y,
+        angle: Math.atan2(last.y - prev.y, last.x - prev.x) * 180 / Math.PI
+      };
+    }
+    const segT = (targetLen - cumLengths[i]) / Math.max(0.001, cumLengths[i + 1] - cumLengths[i]);
+    const x = sampledPoints[i].x + (sampledPoints[i + 1].x - sampledPoints[i].x) * segT;
+    const y = sampledPoints[i].y + (sampledPoints[i + 1].y - sampledPoints[i].y) * segT;
+    const dx = sampledPoints[i + 1].x - sampledPoints[i].x;
+    const dy = sampledPoints[i + 1].y - sampledPoints[i].y;
+    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+    return { x, y, angle };
+  }
+
+  let orbFrameId;
+  const orbStartDelay = dur * 0.15 * 1000;
+  const orbAnimDur = dur * 0.78 * 1000;
+  const animStartTime = performance.now();
+
+  function animateOrb(now) {
+    const elapsed = now - animStartTime - orbStartDelay;
+
+    if (elapsed < 0) {
+      orbFrameId = requestAnimationFrame(animateOrb);
+      return;
+    }
+
+    if (orbG.style.opacity !== '1') orbG.style.opacity = '1';
+
+    let t = elapsed / orbAnimDur;
+    let reachedEnd = false;
+    if (t >= 1) { t = 1; reachedEnd = true; }
+
+    const pt = getPointOnPath(t);
+
+    const finalX = pt.x;
+    const finalY = pt.y;
+    const orbScale = 1.2;
+
+    orbG.setAttribute('transform',
+      `translate(${finalX.toFixed(1)}, ${finalY.toFixed(1)}) rotate(${pt.angle.toFixed(1)}) scale(${orbScale})`);
+
+    if (!reachedEnd) {
+      orbFrameId = requestAnimationFrame(animateOrb);
+    } else {
+      setTimeout(() => { orbG.style.opacity = '0'; }, 900);
+    }
+  }
+  orbFrameId = requestAnimationFrame(animateOrb);
+
+  traceSvg.appendChild(g);
+  speedLegend.classList.add('show');
+
+  setTimeout(() => {
+    if (orbFrameId) cancelAnimationFrame(orbFrameId);
+    g.remove();
+    speedLegend.classList.remove('show');
+  }, parseFloat(dur) * 1000 + 1500);
+}
+
+// ==========================================
+// ====== 调度循环 =======
+// ==========================================
+let spawnTimer = null;
+
+function spawnNext() {
+  while (traceSvg.firstChild) {
+    traceSvg.removeChild(traceSvg.firstChild);
+  }
+
+  let dur = 5;
+
+  if (traceMode === 0) {
+    spawnTextTrace();
+    dur = 3.5;
+  } else if (traceMode === 1) {
+    spawnTrackTrace();
+    dur = 8;
+  } else if (traceMode === 2) {
+    spawnHeartTrace();
+    dur = 10;
+  } else if (traceMode === 3) {
+    spawn1314Trace();
+    dur = 4;
+  } else if (traceMode === 4) {
+    spawnLakeTrace();
+    dur = 9;
+  } else if (traceMode === 5) {
+    spawnKeepTrace();
+    dur = 8;
+  } else if (traceMode === 6) {
+    spawnBeijingMarathonTrace();
+    dur = 16;
+  }
+  traceMode = (traceMode + 1) % 7;
+
+  const nextDelay = dur * 1000 + 1500 + 300;
+  spawnTimer = setTimeout(spawnNext, nextDelay);
+}
+
+spawnNext();
+
+// === 统计数据跳动增长 ===
+function animateValue(el, target, duration, suffix) {
+  let start = 0;
+  let startTimestamp = null;
+  const isFloat = target % 1 !== 0;
+
+  function step(timestamp) {
+    if (!startTimestamp) startTimestamp = timestamp;
+    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+    let current = progress * (target - start) + start;
+    
+    let displayVal;
+    if (target >= 1000) {
+      displayVal = Math.floor(current / 10) * 10;
+    } else if (isFloat) {
+      displayVal = current.toFixed(1);
+    } else {
+      displayVal = Math.floor(current);
+    }
+    
+    el.innerText = displayVal + suffix;
+
+    if (progress < 1) {
+      window.requestAnimationFrame(step);
+    } else {
+      el.innerText = target + suffix;
+    }
+  }
+  window.requestAnimationFrame(step);
+}
+
+const statsObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      document.querySelectorAll('.stat-num').forEach(el => {
+        const target = parseFloat(el.getAttribute('data-target'));
+        const suffix = el.getAttribute('data-suffix');
+        animateValue(el, target, 1500, suffix);
+      });
+      statsObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.3 });
+
+const statsSection = document.getElementById('stats');
+if (statsSection) {
+  statsObserver.observe(statsSection);
+}
+
+// === GPS轨迹控制开关 ===
+let gpsEnabled = true;
+const gpsToggle = document.getElementById('gpsToggle');
+const gpsSwitch = document.getElementById('gpsSwitch');
+
+gpsToggle.addEventListener('click', function() {
+  gpsEnabled = !gpsEnabled;
+
+  if (gpsEnabled) {
+    gpsSwitch.classList.add('active');
+    // 恢复轨迹动画
+    if (!spawnTimer) {
+      spawnNext();
+    }
+  } else {
+    gpsSwitch.classList.remove('active');
+    // 停止轨迹动画
+    if (spawnTimer) {
+      clearTimeout(spawnTimer);
+      spawnTimer = null;
+    }
+    // 清除现有轨迹
+    while (traceSvg.firstChild) {
+      traceSvg.removeChild(traceSvg.firstChild);
+    }
+    speedLegend.classList.remove('show');
+  }
+});
+</script>
+</body>
+</html>
