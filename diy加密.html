@@ -1771,7 +1771,7 @@ init();
             var c=document.getElementById('main-canvas');if(c)c.style.pointerEvents='none';
             var b=function(){return false;};
             ['placeMaterial','deleteElement','undo','confirmReset','exportJPG','startDrag','onCanvasMouseDown','addCustomInfo'].forEach(function(f){if(typeof window[f]==='function')window[f]=b;});
-            var e=document.getElementById('canvas-empty');if(e){e.innerHTML='<i class="fa-solid fa-lock" style="color:#F44336;font-size:32px;"></i><div class="hint"><div style="color:#F44336;font-weight:700;">非官方环境，编辑功能已禁用</div><div style="font-size:12px;margin-top:8px;color:#666;">请访问 https://www.keepdata.top 使用完整功能</div></div>';e.style.display='block';}
+            var e=document.getElementById('canvas-empty');if(e){e.innerHTML='<i class="fa-solid fa-lock" style="color:#F44336;font-size:32px;"></i><div class="hint"><div style="color:#F44336;font-weight:700;">非官方环境，编辑功能已失效</div><div style="font-size:12px;margin-top:8px;color:#666;">请访问 https://www.52run.cn 使用完整功能</div></div>';e.style.display='block';}
             document.addEventListener('click', function once(ev){
                 if(ev.target.closest('a,button'))return;
                 document.removeEventListener('click',once);
