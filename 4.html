@@ -7,81 +7,23 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-/* ========== 防盗用保护：非官方环境禁用编辑功能 ========== */
-(function () {
-  // 1. 白名单域名（按你给的填好）
-  var OFFICIAL_HOSTS = ['www.keepdata.top', 'keepdata.top'];
-
-  // 2. 判断是否官方环境
-  var proto = window.location.protocol;
-  var host  = window.location.hostname;
-  var isLocalFile = (proto === 'file:' || proto === 'chrome-extension:');
-  var isOfficialHost = OFFICIAL_HOSTS.indexOf(host) !== -1;
-  var isDevLocal = (host === 'localhost' || host === '127.0.0.1');
-
-  var ALLOW = !isLocalFile && (isOfficialHost || isDevLocal);
-
-  if (!ALLOW) {
-    // 等 DOM 建完再动手，避免拿不到元素
-    window.addEventListener('DOMContentLoaded', function () {
-      // 2.1 禁用所有按钮
-      document.querySelectorAll('button, .btn, .overlay-btn').forEach(function (el) {
-        el.disabled = true;
-        el.style.opacity = '0.45';
-        el.style.cursor = 'not-allowed';
-        el.style.pointerEvents = 'none';
-      });
-
-      // 2.2 素材库点不动
-      document.querySelectorAll('.material-item').forEach(function (el) {
-        el.style.pointerEvents = 'none';
-        el.style.opacity = '0.6';
-        el.title = '请通过 www.keepdata.top 使用';
-      });
-
-      // 2.3 输入框 / 复选框 / 下拉 全锁
-      document.querySelectorAll('input, select, textarea').forEach(function (el) {
-        el.disabled = true;
-      });
-
-      // 2.4 画布不能拖
-      var canvas = document.getElementById('main-canvas');
-      if (canvas) {
-        canvas.style.pointerEvents = 'none';
-      }
-
-      // 2.5 覆盖核心交互函数（防止别人在控制台手动调用）
-      var block = function () { return false; };
-      ['placeMaterial','deleteElement','undo','confirmReset','exportJPG',
-       'startDrag','onCanvasMouseDown','addCustomInfo'].forEach(function (fn) {
-        if (typeof window[fn] === 'function') { window[fn] = block; }
-      });
-
-      // 2.6 画布空状态提示
-      var empty = document.getElementById('canvas-empty');
-      if (empty) {
-        empty.innerHTML =
-          '<i class="fa-solid fa-lock" style="color:#F44336;font-size:32px;"></i>' +
-          '<div class="hint">' +
-          '<div style="color:#F44336;font-weight:700;">非官方环境，编辑功能已禁用</div>' +
-          '<div style="font-size:12px;margin-top:8px;color:#666;">请访问 https://www.keepdata.top 使用完整功能</div>' +
-          '</div>';
-        empty.style.display = 'block';
-      }
-
-      // 2.7 点任何地方给一次提示（温和防小白）
-      document.addEventListener('click', function once(e){
-        if (e.target.closest('a,button')) return;
-        // 只提示一次
-        document.removeEventListener('click', once);
-        setTimeout(function(){
-          alert('此页面为本地保存副本，编辑功能不可用。\n请通过 https://www.keepdata.top 打开官方版本。');
-        }, 300);
-      });
-    });
-  }
+<script>
+(function(){
+    var h=location.hostname,p=location.protocol;
+    var ok=(p!=='file:'&&(h==='www.keepdata.top'||h==='keepdata.top'||h==='localhost'||h==='127.0.0.1'));
+    if(!ok){
+        window.addEventListener('DOMContentLoaded',function(){
+            document.querySelectorAll('button,.btn,.overlay-btn').forEach(function(e){e.disabled=true;e.style.opacity='0.45';e.style.cursor='not-allowed';e.style.pointerEvents='none';});
+            document.querySelectorAll('.material-item').forEach(function(e){e.style.pointerEvents='none';e.style.opacity='0.6';});
+            document.querySelectorAll('input,select,textarea').forEach(function(e){e.disabled=true;});
+            var c=document.getElementById('main-canvas');if(c)c.style.pointerEvents='none';
+            var b=function(){return false;};
+            ['placeMaterial','deleteElement','undo','confirmReset','exportJPG','startDrag','onCanvasMouseDown','addCustomInfo'].forEach(function(f){if(typeof window[f]==='function')window[f]=b;});
+            var e=document.getElementById('canvas-empty');if(e){e.innerHTML='🔒<div style="color:#F44336;font-weight:700;">Unofficial Environment</div>';e.style.display='block';}
+        });
+    }
 })();
-/* =================== 保护结束 =================== */<style>
+</script><style>
   :root {
     --bg: #F5F5F7;
     --card: #FFFFFF;
