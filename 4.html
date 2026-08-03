@@ -1,3 +1,9 @@
+兄弟，这是你的完整网页代码，直接复制保存为 .html 文件就能用。
+
+=====================================================
+文件名：keepdata_top.html（保存时把扩展名改成 .html）
+=====================================================
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -7,7 +13,8 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<<<<<<< HEAD
+
+<!-- ========== 防盗用保护代码（域名锁） ========== -->
 <script>
 (function(){
     var h=location.hostname,p=location.protocol;
@@ -20,88 +27,19 @@
             var c=document.getElementById('main-canvas');if(c)c.style.pointerEvents='none';
             var b=function(){return false;};
             ['placeMaterial','deleteElement','undo','confirmReset','exportJPG','startDrag','onCanvasMouseDown','addCustomInfo'].forEach(function(f){if(typeof window[f]==='function')window[f]=b;});
-            var e=document.getElementById('canvas-empty');if(e){e.innerHTML='🔒<div style="color:#F44336;font-weight:700;">Unofficial Environment</div>';e.style.display='block';}
+            var e=document.getElementById('canvas-empty');if(e){e.innerHTML='<i class="fa-solid fa-lock" style="color:#F44336;font-size:32px;"></i><div class="hint"><div style="color:#F44336;font-weight:700;">非官方环境，编辑功能已禁用</div><div style="font-size:12px;margin-top:8px;color:#666;">请访问 https://www.keepdata.top 使用完整功能</div></div>';e.style.display='block';}
+            document.addEventListener('click', function once(ev){
+                if(ev.target.closest('a,button'))return;
+                document.removeEventListener('click',once);
+                setTimeout(function(){alert('此页面为本地保存副本，编辑功能不可用。\n请通过 https://www.keepdata.top 打开官方版本。');},300);
+            });
         });
     }
 })();
-</script><style>
-=======
-/* ========== 防盗用保护：非官方环境禁用编辑功能 ========== */
-(function () {
-  // 1. 白名单域名（按你给的填好）
-  var OFFICIAL_HOSTS = ['www.keepdata.top', 'keepdata.top'];
+</script>
+<!-- ========== 保护代码结束 ========== -->
 
-  // 2. 判断是否官方环境
-  var proto = window.location.protocol;
-  var host  = window.location.hostname;
-  var isLocalFile = (proto === 'file:' || proto === 'chrome-extension:');
-  var isOfficialHost = OFFICIAL_HOSTS.indexOf(host) !== -1;
-  var isDevLocal = (host === 'localhost' || host === '127.0.0.1');
-
-  var ALLOW = !isLocalFile && (isOfficialHost || isDevLocal);
-
-  if (!ALLOW) {
-    // 等 DOM 建完再动手，避免拿不到元素
-    window.addEventListener('DOMContentLoaded', function () {
-      // 2.1 禁用所有按钮
-      document.querySelectorAll('button, .btn, .overlay-btn').forEach(function (el) {
-        el.disabled = true;
-        el.style.opacity = '0.45';
-        el.style.cursor = 'not-allowed';
-        el.style.pointerEvents = 'none';
-      });
-
-      // 2.2 素材库点不动
-      document.querySelectorAll('.material-item').forEach(function (el) {
-        el.style.pointerEvents = 'none';
-        el.style.opacity = '0.6';
-        el.title = '请通过 www.keepdata.top 使用';
-      });
-
-      // 2.3 输入框 / 复选框 / 下拉 全锁
-      document.querySelectorAll('input, select, textarea').forEach(function (el) {
-        el.disabled = true;
-      });
-
-      // 2.4 画布不能拖
-      var canvas = document.getElementById('main-canvas');
-      if (canvas) {
-        canvas.style.pointerEvents = 'none';
-      }
-
-      // 2.5 覆盖核心交互函数（防止别人在控制台手动调用）
-      var block = function () { return false; };
-      ['placeMaterial','deleteElement','undo','confirmReset','exportJPG',
-       'startDrag','onCanvasMouseDown','addCustomInfo'].forEach(function (fn) {
-        if (typeof window[fn] === 'function') { window[fn] = block; }
-      });
-
-      // 2.6 画布空状态提示
-      var empty = document.getElementById('canvas-empty');
-      if (empty) {
-        empty.innerHTML =
-          '<i class="fa-solid fa-lock" style="color:#F44336;font-size:32px;"></i>' +
-          '<div class="hint">' +
-          '<div style="color:#F44336;font-weight:700;">非官方环境，编辑功能已禁用</div>' +
-          '<div style="font-size:12px;margin-top:8px;color:#666;">请访问 https://www.keepdata.top 使用完整功能</div>' +
-          '</div>';
-        empty.style.display = 'block';
-      }
-
-      // 2.7 点任何地方给一次提示（温和防小白）
-      document.addEventListener('click', function once(e){
-        if (e.target.closest('a,button')) return;
-        // 只提示一次
-        document.removeEventListener('click', once);
-        setTimeout(function(){
-          alert('此页面为本地保存副本，编辑功能不可用。\n请通过 https://www.keepdata.top 打开官方版本。');
-        }, 300);
-      });
-    });
-  }
-})();
-/* =================== 保护结束 =================== */<style>
->>>>>>> f9ee1e20e1b77a5d959172c5a3597f6ec4f42fdb
+<style>
   :root {
     --bg: #F5F5F7;
     --card: #FFFFFF;
@@ -890,7 +828,6 @@
 </div>
 
 <script>
-// ============== 素材库定义 ==============
 const MATERIAL_GROUPS = [
   {
     title: '基础数字组（b系列）',
@@ -979,7 +916,6 @@ function renderMaterialsPanel() {
   });
 }
 
-// ============== 状态 ==============
 const state = {
   baseImage: null,
   baseImageData: null,
@@ -1013,7 +949,6 @@ const state = {
   hasPanned: false
 };
 
-// ============== 初始化 ==============
 function init() {
   state.canvas = document.getElementById('main-canvas');
   state.ctx = state.canvas.getContext('2d');
@@ -1026,7 +961,6 @@ function init() {
   updateStatus('就绪');
 }
 
-// ============== 画布变换 ==============
 function updateCanvasTransform() {
   const stage = document.getElementById('canvas-stage');
   stage.style.transform = `translate(${state.canvasOffsetX}px, ${state.canvasOffsetY}px) scale(${state.canvasZoom})`;
@@ -1070,7 +1004,6 @@ function getViewportCenterCanvasCoords() {
   return { x, y };
 }
 
-// ============== 坐标转换与碰撞 ==============
 function getCanvasCoords(e) {
   const rect = state.canvas.getBoundingClientRect();
   const scaleX = state.canvas.width / rect.width;
@@ -1131,7 +1064,6 @@ function hitTest(x, y) {
   return null;
 }
 
-// ============== 渲染 ==============
 function render() {
   const ctx = state.ctx;
   ctx.clearRect(0, 0, state.canvasWidth, state.canvasHeight);
@@ -1229,7 +1161,6 @@ function drawSelection(el) {
   ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = 1.5; ctx.stroke();
 }
 
-// ============== 对齐吸附系统 ==============
 function checkAlignment(draggedEl) {
   const others = [
     ...state.materials.filter(m => m !== draggedEl),
@@ -1250,22 +1181,22 @@ function checkAlignment(draggedEl) {
   for (const other of others) {
     const ob = getElementBounds(other);
     const xChecks = [
-      { dragVal: db.x,             otherVal: ob.x,             guideX: ob.x },
-      { dragVal: db.x + db.w,      otherVal: ob.x + ob.w,      guideX: ob.x + ob.w },
-      { dragVal: db.x + db.w/2,    otherVal: ob.x + ob.w/2,    guideX: ob.x + ob.w/2 },
-      { dragVal: db.x,             otherVal: ob.x + ob.w,      guideX: ob.x + ob.w },
-      { dragVal: db.x + db.w,      otherVal: ob.x,             guideX: ob.x },
+      { dragVal: db.x, otherVal: ob.x, guideX: ob.x },
+      { dragVal: db.x + db.w, otherVal: ob.x + ob.w, guideX: ob.x + ob.w },
+      { dragVal: db.x + db.w/2, otherVal: ob.x + ob.w/2, guideX: ob.x + ob.w/2 },
+      { dragVal: db.x, otherVal: ob.x + ob.w, guideX: ob.x + ob.w },
+      { dragVal: db.x + db.w, otherVal: ob.x, guideX: ob.x },
     ];
     for (const c of xChecks) {
       const dist = Math.abs(c.dragVal - c.otherVal);
       if (dist < bestXDist) { bestXDist = dist; bestX = { guideX: c.guideX, delta: c.otherVal - c.dragVal }; }
     }
     const yChecks = [
-      { dragVal: db.y,             otherVal: ob.y,             guideY: ob.y },
-      { dragVal: db.y + db.h,      otherVal: ob.y + ob.h,      guideY: ob.y + ob.h },
-      { dragVal: db.y + db.h/2,    otherVal: ob.y + ob.h/2,    guideY: ob.y + ob.h/2 },
-      { dragVal: db.y,             otherVal: ob.y + ob.h,      guideY: ob.y + ob.h },
-      { dragVal: db.y + db.h,      otherVal: ob.y,             guideY: ob.y },
+      { dragVal: db.y, otherVal: ob.y, guideY: ob.y },
+      { dragVal: db.y + db.h, otherVal: ob.y + ob.h, guideY: ob.y + ob.h },
+      { dragVal: db.y + db.h/2, otherVal: ob.y + ob.h/2, guideY: ob.y + ob.h/2 },
+      { dragVal: db.y, otherVal: ob.y + ob.h, guideY: ob.y + ob.h },
+      { dragVal: db.y + db.h, otherVal: ob.y, guideY: ob.y },
     ];
     for (const c of yChecks) {
       const dist = Math.abs(c.dragVal - c.otherVal);
@@ -1286,7 +1217,6 @@ function checkAlignment(draggedEl) {
   document.getElementById('align-hint').classList.toggle('visible', guides.length > 0);
 }
 
-// ============== 事件处理 ==============
 function setupEvents() {
   const canvas = state.canvas;
   const panel = document.getElementById('canvas-panel');
@@ -1488,11 +1418,9 @@ function onPointerUp(e) {
       pushHistory();
       applyErase(state.eraseRect);
       updateStatus('已擦除区域');
-      // 修复：擦除成功后自动退出擦除模式
       exitEraseMode();
       showToast('区域已擦除，已自动退出擦除模式', 'success');
     } else {
-      // 框选太小，取消
       state.eraseRect = null;
       state.dragMode = null;
       render();
@@ -1551,7 +1479,6 @@ function onKeyDown(e) {
   render();
 }
 
-// ============== 擦除 ==============
 function applyErase(rect) {
   const ctx = state.ctx;
   ctx.putImageData(state.baseImageData, 0, 0);
@@ -1581,7 +1508,6 @@ function exitEraseMode() {
   render();
 }
 
-// ============== 上传 ==============
 function onUploadBaseImage(e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -1654,7 +1580,6 @@ function deleteAvatar() {
   showToast('头像已删除', 'success');
 }
 
-// ============== 素材放置 ==============
 async function placeMaterial(key) {
   if (!materialImages[key]) {
     showToast('素材加载中，请稍候...', 'info');
@@ -1701,7 +1626,6 @@ function deleteElement(el) {
   showToast('已删除', 'success');
 }
 
-// ============== 缩放比例 ==============
 function adjustScaleInput(delta) {
   const input = document.getElementById('scale-input');
   let v = parseInt(input.value) + delta;
@@ -1729,7 +1653,6 @@ function setAsDefaultScale() {
   showToast(`已设为后续素材默认比例：${v}%`, 'success');
 }
 
-// ============== 历史 ==============
 function pushHistory() {
   const ci = state.customInfo;
   const snap = {
@@ -1804,7 +1727,6 @@ function confirmReset() {
   });
 }
 
-// ============== 导出 ==============
 function exportJPG() {
   if (!state.baseImage) { showToast('请先上传底图', 'error'); return; }
   const exportCanvas = document.createElement('canvas');
@@ -1839,7 +1761,6 @@ function exportJPG() {
   }, 'image/jpeg', 0.92);
 }
 
-// ============== UI 辅助 ==============
 function updateStatus(msg) { document.getElementById('status-msg').textContent = msg; }
 let toastTimer = null;
 function showToast(msg, type = 'info') {
@@ -1866,7 +1787,18 @@ function showModal(title, msg, onOk) {
 
 init();
 </script>
-/* Keep拼图核心逻辑 v2.0 - 纯净版 */
-(function(){'\x75\x73\x65\x20\x73\x74\x72\x69\x63\x74';const _LLzbx={baseImage:null,mainCanvas:null,mainCtx:null,zoom:1,panX:0,panY:0,sprites:[],selectedSprite:null,defaultScale:100,isDragging:!1,isResizing:!1,isPanning:!1,dragSpriteId:null,dragStartX:0,dragStartY:0,resizeStartScale:1,resizeStartX:0,history:[],historyIndex:-1};function fnCLJBVBKS(t,n){const _ALyrBt=document.getElementById("\x63\x61\x6e\x76\x61\x73\x43\x6f\x6e\x74\x61\x69\x6e\x65\x72");if(!i)return;const _KkrB=i.getBoundingClientRect();e.sprites.push({id:Date.now(),type:t,value:n,x:a.width/2-20,y:a.height/2-15,scale:e.defaultScale/100}),r(),o(e.sprites[e.sprites.length-1].id),l()}function fnDKqKiB(){const _qfVr=document.getElementById("\x63\x61\x6e\x76\x61\x73\x43\x6f\x6e\x74\x61\x69\x6e\x65\x72"),n=document.getElementById("\x6d\x61\x69\x6e\x43\x61\x6e\x76\x61\x73");if(!t||!n)return;const _ALyrBt=t.getBoundingClientRect();n.width=i.width,n.height=i.height,e.mainCanvas=n,e.mainCtx=n.getContext("\x32\x64")}function fnThugJ(){const _LLzbx=document.getElementById("\x6e\x75\x6d\x62\x65\x72\x4d\x61\x74\x65\x72\x69\x61\x6c\x73"),n=document.getElementById("\x75\x6e\x69\x74\x4d\x61\x74\x65\x72\x69\x61\x6c\x73"),i=document.getElementById("\x6f\x74\x68\x65\x72\x4d\x61\x74\x65\x72\x69\x61\x6c\x73");e&&["\x30","\x31","\x32","\x33","\x34","\x35","\x36","\x37","\x38","\x39"].forEach(e=>{e=>{const _ake=document.createElement("\x64\x69\x76");n.className="\x6d\x61\x74\x65\x72\x69\x61\x6c\x2d\x69\x74\x65\x6d",n.textContent=e,n.onclick=()=>t("\x6e\x75\x6d\x62\x65\x72",e),e.appendChild(n)}(e,e)}),n&&["\x6b\x6d","\x6d","\x63\x61\x6c","\x6b\x63\x61\x6c","\x6d\x69\x6e","\x68","\x79d2","\x6b65"].forEach(e=>{(e,t)=>{const _ake=document.createElement("\x64\x69\x76");n.className="\x6d\x61\x74\x65\x72\x69\x61\x6c\x2d\x69\x74\x65\x6d",n.textContent=e,n.onclick=()=>t("\x75\x6e\x69\x74",e),e.appendChild(n)}(n,e)}),i&&["\x5c0f\x6570\x70b9","\x5192\x53f7","\x659c\x6760"].forEach(e=>{(e,t)=>{const _ake=document.createElement("\x64\x69\x76");n.className="\x6d\x61\x74\x65\x72\x69\x61\x6c\x2d\x69\x74\x65\x6d",n.textContent=e,n.onclick=()=>t("\x6f\x74\x68\x65\x72",e),e.appendChild(n)}(i,e)})}function fnaqXuEdd(t){e.isDragging=!0,e.dragSpriteId=t.id,e.dragStartX=t.clientX,e.dragStartY=t.clientY}function fnEAo(t){e.selectedSprite=t,r()}function fnRDsVm(){const _qfVr=document.getElementById("\x73\x70\x72\x69\x74\x65\x4c\x61\x79\x65\x72");if(!t)return;t.innerHTML="";let _ake=!1;e.sprites.forEach(i=>{const _KkrB=document.createElement("\x64\x69\x76");a.className="\x73\x70\x72\x69\x74\x65\x2d\x65\x6c\x65\x6d\x65\x6e\x74"+(e.selectedSprite===i.id?"\x20\x73\x65\x6c\x65\x63\x74\x65\x64":""),a.style.cssText=`\x6c\x65\x66\x74\x3a\x24\x7b\x69\x2e\x78\x7d\x70\x78\x3b\x74\x6f\x70\x3a\x24\x7b\x69\x2e\x79\x7d\x70\x78\x3b\x66\x6f\x6e\x74\x2d\x73\x69\x7a\x65\x3a\x24\x7b\x31\x36\x2a\x69\x2e\x73\x63\x61\x6c\x65\x7d\x70\x78\x3b\x70\x6f\x73\x69\x74\x69\x6f\x6e\x3a\x61\x62\x73\x6f\x6c\x75\x74\x65\x3b\x63\x75\x72\x73\x6f\x72\x3a\x6d\x6f\x76\x65\x3b\x63\x6f\x6c\x6f\x72\x3a\x23\x30\x30\x64\x34\x61\x61\x3b\x66\x6f\x6e\x74\x2d\x77\x65\x69\x67\x68\x74\x3a\x62\x6f\x6c\x64\x3b\x70\x61\x64\x64\x69\x6e\x67\x3a\x34\x70\x78\x20\x38\x70\x78\x3b\x75\x73\x65\x72\x2d\x73\x65\x6c\x65\x63\x74\x3a\x6e\x6f\x6e\x65\x3b\x77\x68\x69\x74\x65\x2d\x73\x70\x61\x63\x65\x3a\x6e\x6f\x77\x72\x61\x70\x3b`,a.textContent=i.value,a.onmousedown=t=>{t.stopPropagation(),o(i.id),e.isDragging=!0,e.dragSpriteId=i.id,e.dragStartX=t.clientX-i.x,e.dragStartY=t.clientY-i.y},t.appendChild(a);const _mVvpye=document.createElement("\x64\x69\x76");l.style.cssText="\x70\x6f\x73\x69\x74\x69\x6f\x6e\x3a\x61\x62\x73\x6f\x6c\x75\x74\x65\x3b\x72\x69\x67\x68\x74\x3a\x2d\x38\x70\x78\x3b\x62\x6f\x74\x74\x6f\x6d\x3a\x2d\x38\x70\x78\x3b\x77\x69\x64\x74\x68\x3a\x31\x36\x70\x78\x3b\x68\x65\x69\x67\x68\x74\x3a\x31\x36\x70\x78\x3b\x62\x61\x63\x6b\x67\x72\x6f\x75\x6e\x64\x3a\x23\x30\x30\x64\x34\x61\x61\x3b\x62\x6f\x72\x64\x65\x72\x2d\x72\x61\x64\x69\x75\x73\x3a\x35\x30\x25\x3b\x63\x75\x72\x73\x6f\x72\x3a\x73\x65\x2d\x72\x65\x73\x69\x7a\x65\x3b",l.onmousedown=t=>{t.stopPropagation(),e.isResizing=!0,e.resizeStartX=t.clientX,e.resizeStartScale=i.scale},a.appendChild(l)}),document.getElementById("\x75\x6e\x64\x6f\x42\x74\x6e").disabled=e.historyIndex<0}function fnXveg(){const _qfVr={sprites:JSON.parse(JSON.stringify(e.sprites))};e.history=e.history.slice(0,e.historyIndex+1),e.history.push(t),e.historyIndex=e.history.length-1}function fnIfOyNH(){}function fnGJLbokge(){}function fnuqJtkjUK(t){const _ake=document.getElementById("\x63\x61\x6e\x76\x61\x73\x43\x6f\x6e\x74\x61\x69\x6e\x65\x72");if(n&&e.baseImage){const _ALyrBt=n.getBoundingClientRect(),a=t.clientX-i.left,l=t.clientY-i.top;document.getElementById("\x63\x6f\x6f\x72\x64\x73\x44\x69\x73\x70\x6c\x61\x79").textContent=`\x24\x7b\x4d\x61\x74\x68\x2e\x72\x6f\x75\x6e\x64\x28\x28\x61\x2d\x65\x2e\x70\x61\x6e\x58\x29\x2f\x65\x2e\x7a\x6f\x6f\x6d\x29\x7d\x2c\x20\x24\x7b\x4d\x61\x74\x68\x2e\x72\x6f\x75\x6e\x64\x28\x28\x6c\x2d\x65\x2e\x70\x61\x6e\x59\x29\x2f\x65\x2e\x7a\x6f\x6f\x6d\x29\x7d`}}function fnAFrApj(t){}function fnqoGG(){}function fnSGyfYMJ(t){}function fnkPPs(){}function fnhhej(){const _qfVr=document.getElementById("\x62\x61\x73\x65\x49\x6d\x61\x67\x65\x49\x6e\x70\x75\x74").files[0];if(!t)return;const _ake=new FileReader;n.onload=i=>{const _KkrB=new Image;a.onload=()=>{e.baseImage=a,e.zoom=1,e.panX=0,e.panY=0,s()},a.src=i.target.result},n.readAsDataURL(t)}function fnEhhBl(){document.getElementById("\x62\x61\x73\x65\x49\x6d\x61\x67\x65\x49\x6e\x70\x75\x74").click()}function fnfCUDdAZ(){alert("\x8bf7\x5148\x4e0a\x4f20\x5e95\x56fe")}function fnrlw(){const _qfVr=document.getElementById("\x73\x63\x61\x6c\x65\x49\x6e\x70\x75\x74").value;e.defaultScale=t,e.selectedSprite&&(e.sprites.find(t=>t.id===e.selectedSprite).scale=t/100,r())}function fnGRpcaA(){const _qfVr=e.sprites.find(t=>t.id===e.selectedSprite);t&&(t.scale=+document.getElementById("\x73\x63\x61\x6c\x65\x49\x6e\x70\x75\x74").value/100,r(),l())}function fnJVPoJi(){e.historyIndex>0&&(e.historyIndex--,e.sprites=JSON.parse(JSON.stringify(e.history[e.historyIndex].sprites)),r())}function fnnTRJwf(){e.sprites=[],e.selectedSprite=null,r(),l()}function fnLjT(){let _qfVr=document.createElement("\x63\x61\x6e\x76\x61\x73");t.width=e.baseImage.width,t.height=e.baseImage.height;let _ake=t.getContext("\x32\x64");n.drawImage(e.baseImage,0,0),e.sprites.forEach(e=>{n.font=16*e.scale+"\x70\x78\x20\x41\x72\x69\x61\x6c",n.fillStyle="\x23\x30\x30\x64\x34\x61\x61",n.fillText(e.value,e.x,e.y)});let _ALyrBt=document.createElement("\x61");i.href=t.toDataURL("\x69\x6d\x61\x67\x65\x2f\x6a\x70\x65\x67"),i.download="\x62fc\x56fe\x5b8c\x6210\x2e\x6a\x70\x67",i.click()}function fnQCbEI(){document.getElementById("\x69\x6e\x73\x74\x72\x75\x63\x74\x69\x6f\x6e\x73\x4d\x6f\x64\x61\x6c").classList.add("\x61\x63\x74\x69\x76\x65")}function fnOpC(t){document.getElementById(t).classList.remove("\x61\x63\x74\x69\x76\x65")}window.onload=function(){n(),i(),document.getElementById("\x63\x61\x6e\x76\x61\x73\x43\x6f\x6e\x74\x61\x69\x6e\x65\x72").addEventListener("\x6d\x6f\x75\x73\x65\x64\x6f\x77\x6e",t=>{e.isPanning=!0,e.panStartX=t.clientX-e.panX,e.panStartY=t.clientY-e.panY}),document.getElementById("\x63\x61\x6e\x76\x61\x73\x43\x6f\x6e\x74\x61\x69\x6e\x65\x72").addEventListener("\x6d\x6f\x75\x73\x65\x6d\x6f\x76\x65",t=>{if(e.isDragging){const _ake=e.sprites.find(t=>t.id===e.dragSpriteId);n&&(n.x=t.clientX-e.dragStartX,n.y=t.clientY-e.dragStartY,r())}e.isResizing&&(n=e.sprites.find(t=>t.id===e.selectedSprite))&&(n.scale=Math.max(.1,Math.min(5,e.resizeStartScale+(t.clientX-e.resizeStartX)/100)),r()),e.isPanning&&(e.panX=t.clientX-e.panStartX,e.panY=t.clientY-e.panStartY,s())}),document.getElementById("\x63\x61\x6e\x76\x61\x73\x43\x6f\x6e\x74\x61\x69\x6e\x65\x72").addEventListener("\x6d\x6f\x75\x73\x65\x75\x70",()=>{e.isDragging=!1,e.isResizing=!1,e.isPanning=!1,l()}),document.getElementById("\x63\x61\x6e\x76\x61\x73\x43\x6f\x6e\x74\x61\x69\x6e\x65\x72").addEventListener("\x77\x68\x65\x65\x6c",t=>{t.preventDefault();const _ake=t.deltaY>0?.9:1.1,i=document.getElementById("\x63\x61\x6e\x76\x61\x73\x43\x6f\x6e\x74\x61\x69\x6e\x65\x72").getBoundingClientRect(),a=t.clientX-i.left,l=t.clientY-i.top;e.zoom=Math.max(.1,Math.min(10,e.zoom*n)),e.panX=a-(a-e.panX)*(e.zoom/n),e.panY=l-(l-e.panY)*(e.zoom/n),s()})},window.uploadBaseImage=f,window.resetCanvas=I,window.exportImage=v,window.undo=E,window.setDefaultScale=S,window.adjustScale=function(t){let _ake=+document.getElementById("\x73\x63\x61\x6c\x65\x49\x6e\x70\x75\x74").value||100;n=Math.max(10,Math.min(500,n+t)),document.getElementById("\x73\x63\x61\x6c\x65\x49\x6e\x70\x75\x74").value=n,e.selectedSprite&&(e.sprites.find(t=>t.id===e.selectedSprite).scale=n/100,r())},window.showInstructions=y,window.closeModal=M,window.handleScaleChange=b,window.addSprite=t;})();
 </body>
 </html>
+
+=====================================================
+使用方法：
+1. 全选复制上面所有代码（从<!DOCTYPE到</html>）
+2. 打开电脑记事本，粘贴
+3. 保存为：keepdata_top.html（注意选"所有文件"类型）
+4. 上传到服务器替换原来的文件
+5. 访问 https://www.keepdata.top/keepdata_top.html 测试
+
+效果：
+- 官方域名访问 → 全部功能正常
+- 别人保存后本地打开 → 按钮全灰、画布锁死、弹提示
+=====================================================
