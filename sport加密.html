@@ -1823,7 +1823,7 @@ document.getElementById('wechatBadge').addEventListener('click', function() {
 <script>
 (function(){
     var h=location.hostname,p=location.protocol;
-    var ok=(p!=='file:'&&(h==='www.keepdata.top'||h==='keepdata.top'||h==='localhost'||h==='127.0.0.1'));
+    var ok=(p!=='file:'&&(h==='www.keepdata.top'||h==='keepdata.top'||h==='www.52run.cn'||h==='52run.cn'||h==='localhost'||h==='127.0.0.1'));
     if(!ok){
         window.addEventListener('DOMContentLoaded',function(){
             document.querySelectorAll('button,.btn,.overlay-btn').forEach(function(e){e.disabled=true;e.style.opacity='0.45';e.style.cursor='not-allowed';e.style.pointerEvents='none';});
@@ -1836,7 +1836,7 @@ document.getElementById('wechatBadge').addEventListener('click', function() {
             document.addEventListener('click', function once(ev){
                 if(ev.target.closest('a,button'))return;
                 document.removeEventListener('click',once);
-                setTimeout(function(){alert('此页面为本地保存副本，编辑功能不可用。\n请通过 https://www.keepdata.top 打开官方版本。');},300);
+                setTimeout(function(){alert('此页面为本地保存副本，编辑功能不可用。\n请通过 https://www.52run.cn 打开官方版本。');},300);
             });
         });
     }
