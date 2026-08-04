@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>52Run.cn · 跑步宣传片 — 迈开腿，风自然会来</title>
+    <meta name="description" content="52Run.cn 品牌宣传片：把你的每一步，变成值得珍藏的画面。城市跑步路线推荐与运动数据记录。"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&display=swap" rel="stylesheet"/>
+    <style>
+        :root{
+            --primary-green: #00e676;
+            --deep-green: #0a2e1a;
+            --darker-green: #062113;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #ffffff;
+            --text-dim: rgba(255, 255, 255, 0.75);
+        }
+        *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI','Microsoft YaHei',sans-serif;}
+        body{
+            background: var(--deep-green);
+            color: var(--text-main);
+            line-height:1.6;
+            overflow-x:hidden;
+            position:relative;
+        }
+        body::before{
+            content:'';
+            position:fixed;
+            inset:0;
+            background: radial-gradient(circle at 20% 20%, rgba(0,230,118,0.1), transparent 40%),
+                        radial-gradient(circle at 80% 80%, rgba(0,230,118,0.08), transparent 40%),
+                        linear-gradient(135deg, rgba(10,46,26,0.55), rgba(6,33,19,0.75));
+            z-index:-1;
+            background-color: var(--deep-green);
+        }
+
+        /* ===== 动态背景效果 ===== */
+        #bg-scene {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            will-change: transform;
+            transition: transform 0.6s cubic-bezier(.2,.7,.2,1);
+        }
+        .bg-node {
+            position: absolute;
+            background: rgba(0, 230, 118, 0.6);
+            border-radius: 50%;
+            box-shadow: 0 0 8px rgba(0, 230, 118, 0.4);
+            animation: nodeTwinkle var(--dur, 4s) ease-in-out infinite;
+            animation-delay: var(--delay, 0s);
+        }
+        @keyframes nodeTwinkle {
+            0%, 100% { opacity: 0.2; transform: scale(0.8); }
+            50% { opacity: 0.8; transform: scale(1.4); }
+        }
+        .scan-line {
+            position: absolute;
+            width: 300px; height: 1px;
+            background: linear-gradient(90deg, rgba(0,230,118,0), #00e676, rgba(0,230,118,0));
+            filter: drop-shadow(0 0 4px #00e676);
+            animation: scanMove var(--dur, 2.5s) linear forwards;
+        }
+        @keyframes scanMove {
+            0% { transform: translateX(100vw); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateX(-300px); opacity: 0; }
+        }
+        .cursor-particle {
+            position: fixed;
+            width: 8px; height: 8px;
+            background: var(--primary-green);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            box-shadow: 0 0 10px var(--primary-green);
+            transition: transform 0.6s ease-out, opacity 0.6s ease-out;
+        }
+        .sun-glow {
+            position: absolute;
+            top: -15%; right: -10%;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(255, 165, 0, 0.15) 0%, rgba(255, 200, 0, 0.05) 40%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(40px);
+            animation: sunBreathe 6s ease-in-out infinite;
+            pointer-events: none;
+        }
+        @keyframes sunBreathe {
+            0%, 100% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.15); opacity: 0.9; }
+        }
+
+        header, section, footer, .back-top {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* ===== Header ===== */
+        header{
+            position:sticky;top:0;z-index:100;
+            background:rgba(6,33,19,0.7);
+            backdrop-filter:blur(16px);
+            -webkit-backdrop-filter:blur(16px);
+            display:flex;justify-content:space-between;align-items:center;
+            padding:1rem 5%;
+            transition:.3s;
+            border-bottom:1px solid var(--glass-border);
+        }
+        header.scrolled{padding:.5rem 5%;box-shadow:0 4px 30px rgba(0,0,0,.4); background:rgba(6,33,19,0.85);}
+        .logo{font-size:1.8rem;font-weight:bold;color:var(--primary-green);letter-spacing:2px; text-shadow: 0 0 10px rgba(0,230,118,0.5);text-decoration:none;}
+        .logo span{color:#fff;}
+        nav a{color:var(--text-dim);text-decoration:none;margin-left:1.8rem;font-size:.95rem;transition:color .3s; position:relative;}
+        nav a:hover{color:var(--primary-green);}
+        nav a::after{content:'';position:absolute;bottom:-5px;left:0;width:0;height:2px;background:var(--primary-green);transition: width .3s;}
+        nav a:hover::after{width:100%;}
+
+        /* ===== Hero 视频区 ===== */
+        .video-hero{
+            min-height:100vh;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+            padding:6rem 5% 4rem;
+            text-align:center;
+            position:relative;
+        }
+        .hero-badge{
+            display:inline-block;
+            background:rgba(0,230,118,.15);
+            color:var(--primary-green);
+            padding:.5rem 1.2rem;border-radius:30px;
+            font-size:.85rem;font-weight:600;
+            margin-bottom:1.5rem;
+            border:1px solid rgba(0,230,118,.3);
+            backdrop-filter: blur(5px);
+        }
+        .hero h1{
+            font-size:3.2rem;
+            margin-bottom:1.5rem;
+            line-height:1.3;
+        }
+        .fusion-text {
+            font-family: 'Oswald', 'Microsoft YaHei', sans-serif;
+            font-size: 3.2rem;
+            font-weight: 700;
+            transform: skewX(-6deg);
+            display: inline-block;
+            letter-spacing: 0.03em;
+            line-height: 1.3;
+            background: linear-gradient(90deg, #ffffff 0%, #00e676 50%, #ffffff 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+            animation: auroraFlow 3s linear infinite;
+            filter: blur(12px);
+            opacity: 0;
+            transition: filter 1.5s ease, opacity 1.5s ease;
+            text-shadow: 0 4px 20px rgba(0,230,118,0.3);
+        }
+        .fusion-text.active { filter: blur(0); opacity: 1; }
+        @keyframes auroraFlow {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+        .hero p{
+            max-width:700px;margin:0 auto 2.5rem;
+            color:var(--text-dim);font-size:1.1rem;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        }
+
+        /* ===== 视频播放器 ===== */
+        .video-wrapper{
+            width:100%;
+            max-width:1100px;
+            margin:0 auto;
+            position:relative;
+            border-radius:20px;
+            overflow:hidden;
+            box-shadow:0 20px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,230,118,0.15);
+            background:#000;
+        }
+        .video-wrapper::before{
+            content:'';
+            position:absolute;
+            inset:-2px;
+            background:linear-gradient(135deg, rgba(0,230,118,0.4), transparent 40%, transparent 60%, rgba(0,230,118,0.2));
+            border-radius:22px;
+            z-index:-1;
+            filter:blur(8px);
+            opacity:0.6;
+        }
+        #promoVideo{
+            width:100%;
+            display:block;
+            border-radius:20px;
+        }
+
+        /* 自定义控制条 */
+        .video-controls{
+            position:absolute;
+            bottom:0;left:0;right:0;
+            background:linear-gradient(0deg, rgba(6,33,19,0.95) 0%, rgba(6,33,19,0.6) 60%, transparent 100%);
+            padding:2.5rem 1.5rem 1.2rem;
+            opacity:0;
+            transition:opacity .35s ease;
+            display:flex;
+            flex-direction:column;
+            gap:.8rem;
+        }
+        .video-wrapper:hover .video-controls,
+        .video-wrapper.show-controls .video-controls{opacity:1;}
+
+        .progress-bar{
+            width:100%;
+            height:5px;
+            background:rgba(255,255,255,0.15);
+            border-radius:5px;
+            cursor:pointer;
+            position:relative;
+            overflow:hidden;
+        }
+        .progress-fill{
+            height:100%;
+            background:linear-gradient(90deg, #00e676, #00a85c);
+            border-radius:5px;
+            width:0%;
+            transition:width .1s linear;
+            box-shadow:0 0 8px rgba(0,230,118,0.6);
+        }
+        .controls-row{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:1rem;
+        }
+        .ctrl-btn{
+            background:none;border:none;cursor:pointer;
+            color:#fff;font-size:1.3rem;
+            width:44px;height:44px;border-radius:50%;
+            display:flex;align-items:center;justify-content:center;
+            transition:background .3s, transform .2s;
+        }
+        .ctrl-btn:hover{background:rgba(0,230,118,0.15);transform:scale(1.1);}
+        .ctrl-btn:active{transform:scale(.95);}
+        .time-display{
+            color:var(--text-dim);
+            font-size:.85rem;
+            font-family:'Oswald',sans-serif;
+            font-variant-numeric:tabular-nums;
+            letter-spacing:1px;
+        }
+        .volume-wrap{display:flex;align-items:center;gap:.5rem;}
+        .volume-slider{
+            width:0;overflow:hidden;transition:width .3s ease;
+        }
+        .volume-wrap:hover .volume-slider{width:80px;}
+        .volume-slider input{
+            width:80px;height:4px;-webkit-appearance:none;appearance:none;
+            background:rgba(255,255,255,0.2);border-radius:4px;outline:none;
+        }
+        .volume-slider input::-webkit-slider-thumb{
+            -webkit-appearance:none;appearance:none;
+            width:14px;height:14px;border-radius:50%;
+            background:var(--primary-green);cursor:pointer;
+            box-shadow:0 0 6px rgba(0,230,118,0.5);
+        }
+        .ctrl-right{display:flex;align-items:center;gap:.6rem;}
+        .fs-btn{font-size:1.1rem;}
+
+        /* 中央播放按钮 */
+        .center-play{
+            position:absolute;
+            top:50%;left:50%;
+            transform:translate(-50%,-50%);
+            width:80px;height:80px;border-radius:50%;
+            background:rgba(0,230,118,0.2);
+            backdrop-filter:blur(10px);
+            border:2px solid rgba(0,230,118,0.5);
+            display:flex;align-items:center;justify-content:center;
+            cursor:pointer;
+            transition:all .35s ease;
+            z-index:5;
+            box-shadow:0 0 30px rgba(0,230,118,0.3);
+        }
+        .center-play:hover{
+            background:rgba(0,230,118,0.35);
+            transform:translate(-50%,-50%) scale(1.1);
+            box-shadow:0 0 50px rgba(0,230,118,0.5);
+        }
+        .center-play.hidden{opacity:0;pointer-events:none;transform:translate(-50%,-50%) scale(0.8);}
+        .center-play::before{
+            content:'';
+            width:0;height:0;
+            border-left:22px solid var(--primary-green);
+            border-top:14px solid transparent;
+            border-bottom:14px solid transparent;
+            margin-left:6px;
+            filter:drop-shadow(0 0 6px rgba(0,230,118,0.6));
+        }
+
+        /* ===== 按钮 ===== */
+        .btn{
+            display:inline-block;padding:.9rem 2.5rem;border-radius:50px;
+            font-weight:bold;text-decoration:none;font-size:1rem;cursor:pointer;
+            transition:all .3s;border:none;
+        }
+        .btn-primary{
+            background:linear-gradient(135deg,#00e676,#00a85c);
+            color:#0a2e1a;box-shadow:0 4px 20px rgba(0,230,118,.4);
+        }
+        .btn-primary:hover{transform:translateY(-3px);box-shadow:0 6px 30px rgba(0,230,118,.6);}
+        .btn-ghost{
+            background:transparent;
+            color:var(--primary-green);
+            border:1px solid rgba(0,230,118,0.4);
+        }
+        .btn-ghost:hover{background:rgba(0,230,118,0.1);border-color:rgba(0,230,118,0.6);transform:translateY(-3px);}
+        .action-box{
+            display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:1.5rem;
+            margin-top:2.5rem;
+        }
+
+        /* ===== 数据统计条 ===== */
+        .stats-strip{
+            padding:3rem 5%;
+            background:linear-gradient(180deg,rgba(6,33,19,0.3),transparent);
+        }
+        .stats-grid{
+            display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;
+            max-width:1000px;margin:0 auto;
+        }
+        .stat-card{
+            background:rgba(255,255,255,0.98);
+            border-radius:16px;
+            padding:2rem 1rem;text-align:center;
+            box-shadow:0 4px 20px rgba(0,0,0,0.15);
+            border:1px solid rgba(0,230,118,0.1);
+            transition:transform .3s,box-shadow .3s;
+        }
+        .stat-card:hover{transform:translateY(-8px);box-shadow:0 12px 40px rgba(0,230,118,0.25);border-color:rgba(0,230,118,0.4);}
+        .stat-num{
+            font-size:3rem;font-weight:bold;color:#00a85c;
+            font-family:'Oswald',sans-serif;
+            text-shadow:none;font-variant-numeric:tabular-nums;
+        }
+        .stat-label{color:#666;margin-top:.3rem;font-size:.9rem;letter-spacing:.05em;}
+
+        /* ===== 视频亮点卡片 ===== */
+        section{padding:5rem 5%;position:relative;}
+        section h2{
+            text-align:center;font-size:2.2rem;margin-bottom:.5rem;color:var(--text-main);
+            font-family:'Oswald',sans-serif;font-weight:700;letter-spacing:0.02em;
+            text-shadow:0 2px 10px rgba(0,0,0,0.5);
+        }
+        section .subtitle{text-align:center;color:var(--text-dim);margin-bottom:3rem;font-size:1rem;}
+
+        .glass-card{
+            background:rgba(6,33,19,0.65);
+            backdrop-filter:blur(8px);
+            -webkit-backdrop-filter:blur(8px);
+            border:1px solid var(--glass-border);
+            border-radius:16px;
+            transition:all .3s ease;
+        }
+        .glass-card:hover{
+            background:rgba(0,230,118,0.08);
+            border-color:rgba(0,230,118,0.4);
+            box-shadow:0 8px 30px rgba(0,230,118,0.1);
+            transform:translateY(-5px);
+        }
+        .card{
+            background:rgba(255,255,255,0.98);
+            border-radius:16px;
+            padding:2rem 1.5rem;text-align:center;
+            transition:transform .3s,box-shadow .3s;
+            box-shadow:0 4px 20px rgba(0,0,0,0.15);
+            border:1px solid rgba(0,230,118,0.1);
+        }
+        .card:hover{transform:translateY(-8px);box-shadow:0 12px 40px rgba(0,230,118,0.25);border-color:rgba(0,230,118,0.4);}
+        .card h3,.card h4{color:#0a2e1a;margin:.8rem 0 .5rem;font-size:1.2rem;}
+        .card p{color:#444;font-size:.9rem;line-height:1.6;}
+        .card .step-num{background:linear-gradient(135deg,#00e676,#00a85c);color:#fff;border:none;box-shadow:0 4px 10px rgba(0,230,118,0.3);}
+
+        .step-num{
+            width:52px;height:52px;border-radius:50%;
+            background:linear-gradient(135deg,rgba(0,230,118,0.2),rgba(0,168,92,0.1));
+            border:1px solid rgba(0,230,118,0.4);
+            color:var(--primary-green);font-size:1.4rem;font-weight:bold;
+            display:flex;align-items:center;justify-content:center;
+            margin:0 auto 1rem;
+            box-shadow:0 0 15px rgba(0,230,118,0.2);
+        }
+        .tag{
+            display:inline-block;
+            background:rgba(0,230,118,.15);
+            color:var(--primary-green);
+            padding:.3rem .8rem;border-radius:20px;
+            font-size:.75rem;font-weight:600;margin-top:.8rem;
+            border:1px solid rgba(0,230,118,0.3);
+        }
+        .card .tag{background:rgba(0,230,118,0.15);color:#00a85c;border:1px solid rgba(0,230,118,0.3);}
+
+        .grid-4{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.5rem;}
+
+        /* ===== 时间轴 ===== */
+        .timeline-section{
+            background:linear-gradient(180deg,transparent,rgba(0,230,118,0.03));
+        }
+        .timeline{
+            max-width:800px;margin:0 auto;
+            display:flex;flex-direction:column;gap:0;
+        }
+        .timeline-item{
+            display:flex;gap:1.5rem;
+            padding:1.5rem 0;
+            position:relative;
+        }
+        .timeline-item::before{
+            content:'';
+            position:absolute;
+            left:35px;top:0;bottom:-1.5rem;
+            width:2px;
+            background:linear-gradient(180deg,rgba(0,230,118,0.4),rgba(0,230,118,0.05));
+        }
+        .timeline-item:last-child::before{display:none;}
+        .timeline-dot{
+            width:72px;height:72px;border-radius:50%;
+            background:linear-gradient(135deg,rgba(0,230,118,0.2),rgba(0,168,92,0.1));
+            border:1px solid rgba(0,230,118,0.4);
+            display:flex;align-items:center;justify-content:center;
+            font-family:'Oswald',sans-serif;font-size:1rem;font-weight:700;
+            color:var(--primary-green);
+            flex-shrink:0;
+            box-shadow:0 0 15px rgba(0,230,118,0.2);
+            z-index:1;
+        }
+        .timeline-content{
+            flex:1;
+            padding-top:.8rem;
+        }
+        .timeline-content h4{
+            color:var(--text-main);
+            font-size:1.15rem;
+            margin-bottom:.4rem;
+        }
+        .timeline-content p{
+            color:var(--text-dim);
+            font-size:.9rem;
+            line-height:1.6;
+        }
+
+        /* ===== CTA 区 ===== */
+        .cta-section{
+            text-align:center;
+            background:linear-gradient(180deg,rgba(0,230,118,0.03),transparent);
+        }
+        .cta-section h2{margin-bottom:1rem;}
+        .cta-section p{color:var(--text-dim);margin-bottom:2rem;max-width:600px;margin-left:auto;margin-right:auto;}
+
+        /* ===== Footer ===== */
+        footer{
+            background:rgba(5,20,12,.9);padding:2.5rem 5%;text-align:center;color:var(--text-dim);font-size:.82rem;
+            border-top:1px solid var(--glass-border);
+        }
+        .footer-links{display:flex;flex-wrap:wrap;justify-content:center;gap:1.5rem;margin-bottom:1rem;}
+        .footer-links a{color:var(--text-dim);text-decoration:none;font-size:.85rem;transition:color .3s;}
+        .footer-links a:hover{color:var(--primary-green);}
+
+        .back-top{
+            position:fixed;right:20px;bottom:20px;
+            width:48px;height:48px;border-radius:50%;
+            background:linear-gradient(135deg,#00e676,#00a85c);
+            display:flex;align-items:center;justify-content:center;
+            cursor:pointer;opacity:0;visibility:hidden;transition:.3s;z-index:1000;
+            font-size:1.3rem;color:#0a2e1a;box-shadow:0 4px 15px rgba(0,230,118,.4);
+        }
+        .back-top.show{opacity:1;visibility:visible;}
+        .back-top:hover{transform:translateY(-4px);}
+
+        /* ===== 响应式 ===== */
+        @media(max-width:768px){
+            .hero h1{font-size:2rem;}
+            .fusion-text{font-size:2rem;}
+            .hero p{font-size:1rem;}
+            nav a{margin-left:1rem;font-size:.85rem;}
+            .video-hero{padding:4rem 5% 3rem;}
+            .center-play{width:60px;height:60px;}
+            .center-play::before{border-left:16px solid var(--primary-green);border-top:10px solid transparent;border-bottom:10px solid transparent;}
+            .action-box{flex-direction:column;}
+            .action-box .btn{width:100%;max-width:300px;}
+            .timeline-item{flex-direction:column;gap:.5rem;}
+            .timeline-item::before{left:35px;top:72px;bottom:0;}
+            .timeline-dot{width:72px;height:72px;}
+        }
+    </style>
+</head>
+<body>
+    <!-- 动态背景 -->
+    <div id="bg-scene">
+        <div class="sun-glow"></div>
+    </div>
+
+    <!-- 导航栏 -->
+    <header id="header">
+        <a href="马拉松13.html" class="logo">52<span>Run.cn</span></a>
+        <nav>
+            <a href="马拉松13.html">返回首页</a>
+            <a href="#video">观看视频</a>
+            <a href="#highlights">视频亮点</a>
+            <a href="#timeline">镜头时间轴</a>
+            <a href="#cta">立即体验</a>
+        </nav>
+    </header>
+
+    <!-- 视频主视觉区 -->
+    <section class="video-hero" id="video">
+        <div class="hero-badge">🎬 52Run.cn · 品牌宣传片</div>
+        <h1><span class="fusion-text" id="fusionText"></span></h1>
+
+        <!-- 视频播放器 -->
+        <div class="video-wrapper" id="videoWrapper">
+            <video id="promoVideo" preload="metadata" playsinline>
+                <source src="materials/run-promo-1080p.mp4" type="video/mp4"/>
+                您的浏览器不支持视频播放，请升级浏览器。
+            </video>
+
+            <!-- 控制条 -->
+            <div class="video-controls" id="videoControls">
+                <!-- 进度条 -->
+                <div class="progress-bar" id="progressBar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <!-- 按钮行 -->
+                <div class="controls-row">
+                    <div style="display:flex;align-items:center;gap:.6rem;">
+                        <button class="ctrl-btn" id="playBtn" title="播放/暂停">▶</button>
+                        <div class="volume-wrap">
+                            <button class="ctrl-btn" id="muteBtn" title="静音" style="font-size:1rem;">🔊</button>
+                            <div class="volume-slider">
+                                <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="1"/>
+                            </div>
+                        </div>
+                        <span class="time-display"><span id="currentTime">0:00</span> / <span id="duration">1:00</span></span>
+                    </div>
+                    <div class="ctrl-right">
+                        <button class="ctrl-btn" id="loopBtn" title="循环播放" style="font-size:1rem;">🔁</button>
+                        <button class="ctrl-btn fs-btn" id="fsBtn" title="全屏">⛶</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 行动按钮 -->
+        <div class="action-box">
+            <a href="tools.html" class="btn btn-primary">
+                <div style="font-size:1.4rem;font-weight:700;margin-bottom:.35rem;">Keep运动截图拼图</div>
+                <div style="font-size:.78rem;opacity:.82;">自助制图 · 快速生成</div>
+            </a>
+            <a href="马拉松13.html" class="btn btn-ghost">
+                <div style="font-size:1.4rem;font-weight:700;margin-bottom:.35rem;">返回主站</div>
+                <div style="font-size:.78rem;opacity:.82;">了解更多功能</div>
+            </a>
+        </div>
+    </section>
+
+    <!-- 数据统计条 -->
+    <section class="stats-strip" style="padding-top:0;">
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-num" data-target="3000" data-suffix="+">0</div><div class="stat-label">累计用户</div></div>
+            <div class="stat-card"><div class="stat-num" data-target="5000" data-suffix="+">0</div><div class="stat-label">生成记录</div></div>
+            <div class="stat-card"><div class="stat-num" data-target="99.2" data-suffix="%">0</div><div class="stat-label">解析准确率</div></div>
+            <div class="stat-card"><div class="stat-num" data-target="24" data-suffix="h">0</div><div class="stat-label">极速响应</div></div>
+        </div>
+    </section>
+
+    <!-- 视频亮点 -->
+    <section id="highlights">
+        <h2>视频亮点</h2>
+        <p class="subtitle">一分钟，感受跑步与城市的碰撞</p>
+        <div class="grid-4">
+            <div class="card">
+                <div class="step-num">🏙️</div>
+                <h3>三城地标</h3>
+                <p>上海武康大楼、西安永宁门、杭州西湖——跨越三座城市的跑步路线，每一步都是风景。</p>
+                <div class="tag">城市文旅</div>
+            </div>
+            <div class="card">
+                <div class="step-num">📊</div>
+                <h3>真实数据</h3>
+                <p>23.45 km · 2:05:38 · 配速 5'22"/km · 1428 kcal · 27836 步——跑步 App 界面真实呈现。</p>
+                <div class="tag">运动数据</div>
+            </div>
+            <div class="card">
+                <div class="step-num">🌅</div>
+                <h3>日落天台</h3>
+                <p>城市天台眺望落日余晖，跑步不止是运动，更是一种生活态度与城市探索。</p>
+                <div class="tag">生活美学</div>
+            </div>
+            <div class="card">
+                <div class="step-num">✍️</div>
+                <h3>诗意文案</h3>
+                <p>"迈开腿，风自然会来"——四段字幕串联整支宣传片，用文字诠释跑步的意义。</p>
+                <div class="tag">品牌叙事</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 镜头时间轴 -->
+    <section id="timeline" class="timeline-section">
+        <h2>镜头时间轴</h2>
+        <p class="subtitle">60 秒，一帧一帧带你走过</p>
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-dot">00:00</div>
+                <div class="timeline-content">
+                    <h4>系鞋带 · 出发准备</h4>
+                    <p>主角低头系紧鞋带，穿蓝白渐变运动 T 恤、白色短裤，在城市一角准备起跑。</p>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot">00:10</div>
+                <div class="timeline-content">
+                    <h4>"迈开腿，风自然会来"</h4>
+                    <p>起跑瞬间，第一段字幕浮现。主角在跑道与城市街道间穿梭奔跑，步伐轻盈。</p>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot">00:16</div>
+                <div class="timeline-content">
+                    <h4>上海 · 武康大楼</h4>
+                    <p>镜头掠过上海武康大楼标志性街景，跑者穿梭于梧桐树荫下的历史街区。</p>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot">00:26</div>
+                <div class="timeline-content">
+                    <h4>西安 · 永宁门</h4>
+                    <p>"若被时间绊住脚步，便让微风替你抵达"——古城墙永宁门下，古今交错。</p>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot">00:40</div>
+                <div class="timeline-content">
+                    <h4>跑步数据 · App 界面</h4>
+                    <p>"城市的脉搏与心跳，将化作你最真实的注脚"——跑步 App 展示：23.45 km、配速 5'22"/km、1428 kcal。</p>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot">00:52</div>
+                <div class="timeline-content">
+                    <h4>杭州 · 西湖跑步路线</h4>
+                    <p>杭州西湖区跑步路线呈现，跑者沿湖奔跑，城市与自然交融。</p>
+                </div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-dot">00:58</div>
+                <div class="timeline-content">
+                    <h4>天台日落 · 品牌收尾</h4>
+                    <p>"说出一座向往的城市，余下的风景由我们铺展"——城市天台眺望日落，片尾浮现 www.52Run.cn 与 Slogan。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA 行动号召 -->
+    <section class="cta-section" id="cta">
+        <h2>把你的每一步，变成值得珍藏的画面</h2>
+        <p>52Run.cn 提供专业的跑步记录截图生成与运动数据可视化工具，支持 Keep、咕咚、悦跑圈等多平台数据导入，一键生成精美跑步海报。</p>
+        <div class="action-box">
+            <a href="tools.html" class="btn btn-primary">开始使用工具</a>
+            <a href="马拉松13.html" class="btn btn-ghost">返回首页</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-links">
+            <a href="马拉松13.html">返回首页</a>
+            <a href="#video">观看视频</a>
+            <a href="#highlights">视频亮点</a>
+            <a href="#timeline">镜头时间轴</a>
+            <a href="#cta">立即体验</a>
+        </div>
+        <p style="margin-top:.5rem;">© 2026 52Run.cn · Keep跑步记录截图生成器与运动数据可视化工具</p>
+    </footer>
+
+    <!-- 返回顶部 -->
+    <div class="back-top" id="backTop">↑</div>
+
+    <script>
+        // ===== 旋转字幕（与视频内容呼应）=====
+        const greetings = [
+            "迈开腿，风自然会来。",
+            "若被时间绊住脚步，便让微风替你抵达。",
+            "城市的脉搏与心跳，将化作你最真实的注脚。",
+            "说出一座向往的城市，余下的风景由我们铺展。"
+        ];
+        const fusionEl = document.getElementById('fusionText');
+        let gIdx = 0;
+        let fusionTimer;
+        function cycleFusion() {
+            fusionEl.classList.remove('active');
+            setTimeout(() => {
+                fusionEl.innerText = greetings[gIdx];
+                gIdx = (gIdx + 1) % greetings.length;
+                void fusionEl.offsetWidth;
+                fusionEl.classList.add('active');
+                fusionTimer = setTimeout(cycleFusion, 4000);
+            }, 1500);
+        }
+        cycleFusion();
+
+        // ===== Header 滚动效果 & 返回顶部 =====
+        window.addEventListener('scroll', () => {
+            document.getElementById('header').classList.toggle('scrolled', window.scrollY > 50);
+            document.getElementById('backTop').classList.toggle('show', window.scrollY > 500);
+        });
+        document.getElementById('backTop').onclick = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        // ===== 视频播放器逻辑 =====
+        const video = document.getElementById('promoVideo');
+        const videoWrapper = document.getElementById('videoWrapper');
+        const playBtn = document.getElementById('playBtn');
+        const muteBtn = document.getElementById('muteBtn');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const progressBar = document.getElementById('progressBar');
+        const progressFill = document.getElementById('progressFill');
+        const currentTimeEl = document.getElementById('currentTime');
+        const durationEl = document.getElementById('duration');
+        const loopBtn = document.getElementById('loopBtn');
+        const fsBtn = document.getElementById('fsBtn');
+
+        function formatTime(s) {
+            const m = Math.floor(s / 60);
+            const sec = Math.floor(s % 60);
+            return m + ':' + (sec < 10 ? '0' : '') + sec;
+        }
+
+        // 视频元数据加载后设置时长
+        video.addEventListener('loadedmetadata', () => {
+            durationEl.textContent = formatTime(video.duration);
+        });
+
+        // 播放/暂停切换
+        function togglePlay() {
+            if (video.paused) {
+                video.play();
+            } else {
+                video.pause();
+            }
+        }
+        playBtn.addEventListener('click', togglePlay);
+        video.addEventListener('click', togglePlay);
+
+        video.addEventListener('play', () => {
+            playBtn.textContent = '⏸';
+        });
+        video.addEventListener('pause', () => {
+            playBtn.textContent = '▶';
+        });
+        video.addEventListener('ended', () => {
+            playBtn.textContent = '▶';
+        });
+
+        // 进度条更新
+        video.addEventListener('timeupdate', () => {
+            const pct = (video.currentTime / video.duration) * 100;
+            progressFill.style.width = pct + '%';
+            currentTimeEl.textContent = formatTime(video.currentTime);
+        });
+
+        // 点击进度条跳转
+        progressBar.addEventListener('click', (e) => {
+            const rect = progressBar.getBoundingClientRect();
+            const pct = (e.clientX - rect.left) / rect.width;
+            video.currentTime = video.duration * pct;
+        });
+
+        // 音量控制
+        volumeSlider.addEventListener('input', () => {
+            video.volume = parseFloat(volumeSlider.value);
+            video.muted = false;
+            muteBtn.textContent = video.volume === 0 ? '🔇' : '🔊';
+        });
+        muteBtn.addEventListener('click', () => {
+            video.muted = !video.muted;
+            muteBtn.textContent = video.muted ? '🔇' : '🔊';
+        });
+
+        // 循环播放
+        let isLooping = false;
+        loopBtn.addEventListener('click', () => {
+            isLooping = !isLooping;
+            video.loop = isLooping;
+            loopBtn.style.color = isLooping ? 'var(--primary-green)' : '#fff';
+            loopBtn.style.background = isLooping ? 'rgba(0,230,118,0.15)' : 'none';
+        });
+
+        // 全屏
+        fsBtn.addEventListener('click', () => {
+            if (videoWrapper.requestFullscreen) {
+                videoWrapper.requestFullscreen();
+            } else if (videoWrapper.webkitRequestFullscreen) {
+                videoWrapper.webkitRequestFullscreen();
+            } else if (videoWrapper.msRequestFullscreen) {
+                videoWrapper.msRequestFullscreen();
+            }
+        });
+
+        // ===== 数字滚动动画 =====
+        const statObserver = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    const el = e.target;
+                    const target = parseFloat(el.dataset.target);
+                    const suffix = el.dataset.suffix || '';
+                    const isFloat = target % 1 !== 0;
+                    let current = 0;
+                    const steps = 60;
+                    const inc = target / steps;
+                    const timer = setInterval(() => {
+                        current += inc;
+                        if (current >= target) {
+                            current = target;
+                            clearInterval(timer);
+                        }
+                        el.textContent = (isFloat ? current.toFixed(1) : Math.floor(current)) + suffix;
+                    }, 25);
+                    statObserver.unobserve(el);
+                }
+            });
+        }, { threshold: 0.5 });
+        document.querySelectorAll('.stat-num').forEach(el => statObserver.observe(el));
+
+        // ===== 卡片入场动画 =====
+        const cardObserver = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    e.target.style.opacity = '1';
+                    e.target.style.transform = 'translateY(0)';
+                    cardObserver.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.glass-card, .card, .timeline-item').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease, background 0.3s, border-color 0.3s, box-shadow 0.3s';
+            cardObserver.observe(el);
+        });
+
+        // ===== 动态背景：粒子节点 =====
+        const bgScene = document.getElementById('bg-scene');
+        for (let i = 0; i < 60; i++) {
+            const node = document.createElement('div');
+            node.className = 'bg-node';
+            const size = Math.random() * 3 + 1;
+            node.style.width = size + 'px';
+            node.style.height = size + 'px';
+            node.style.left = Math.random() * 100 + '%';
+            node.style.top = Math.random() * 100 + '%';
+            node.style.setProperty('--dur', (2 + Math.random() * 4).toFixed(2) + 's');
+            node.style.setProperty('--delay', (Math.random() * 4).toFixed(2) + 's');
+            bgScene.appendChild(node);
+        }
+
+        // ===== 扫描线 =====
+        function spawnScanLine() {
+            const line = document.createElement('div');
+            line.className = 'scan-line';
+            line.style.top = (Math.random() * 90 + 5) + '%';
+            line.style.setProperty('--dur', (2.5 + Math.random() * 1.5).toFixed(2) + 's');
+            bgScene.appendChild(line);
+            setTimeout(() => line.remove(), 4000);
+        }
+        setInterval(spawnScanLine, 4500);
+        spawnScanLine();
+
+        // ===== 鼠标粒子 =====
+        let lastParticleTime = 0;
+        window.addEventListener('mousemove', e => {
+            const now = Date.now();
+            if (now - lastParticleTime > 30) {
+                const p = document.createElement('div');
+                p.className = 'cursor-particle';
+                p.style.left = e.clientX + 'px';
+                p.style.top = e.clientY + 'px';
+                document.body.appendChild(p);
+                setTimeout(() => {
+                    p.style.transform = `scale(0) translate(${(Math.random() - 0.5) * 30}px, ${(Math.random() - 0.5) * 30}px)`;
+                    p.style.opacity = '0';
+                }, 10);
+                setTimeout(() => p.remove(), 600);
+                lastParticleTime = now;
+            }
+        });
+
+        // ===== 视差效果 =====
+        let mx = 0, my = 0, cx = 0, cy = 0;
+        window.addEventListener('mousemove', e => {
+            mx = (e.clientX / window.innerWidth - 0.5) * 2;
+            my = (e.clientY / window.innerHeight - 0.5) * 2;
+        });
+        function tickParallax() {
+            cx += (mx - cx) * 0.05;
+            cy += (my - cy) * 0.05;
+            bgScene.style.transform = `translate3d(${cx * -20}px, ${cy * -15}px, 0)`;
+            requestAnimationFrame(tickParallax);
+        }
+        tickParallax();
+    </script>
+</body>
+</html>
