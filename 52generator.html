@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>RUNPRO 文章生成器 · AI版 · 一键发布</title>
+<title>52run 文章生成器 · AI版 · 一键发布</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI','Microsoft YaHei',sans-serif;}
 body{background:#0a2e1a;color:#fff;line-height:1.6;padding:20px;}
@@ -114,7 +114,7 @@ textarea{resize:vertical;}
 <body>
 
 <div class="wrap">
-  <h1 class="title">🏃 RUNPRO 文章生成器 · AI版</h1>
+  <h1 class="title">🏃 52run 文章生成器 · AI版</h1>
   <p class="sub">✅ 截图→AI写文案→自动填入→选配图→生成HTML → 🚀 一键发布到 GitHub 根目录</p>
 
   <div class="grid">
@@ -218,7 +218,7 @@ textarea{resize:vertical;}
       <label>发布日期（自动设为今天）</label>
       <input id="g_date" value="">
       <label>作者 / 来源</label>
-      <input id="g_author" value="RUNPRO 运动数据定制">
+      <input id="g_author" value="52run 运动数据定制">
     </div>
 
     <!-- 右：图片上传 -->
@@ -614,7 +614,7 @@ function rmPara(b){if(document.querySelectorAll('.para-item').length>1)b.parentE
 
 /* ===== 工具函数 ===== */
 function todayStr(){return new Date().toISOString().slice(0,10);}
-function autoFilename(){const d=todayStr().replace(/-/g,'');return 'article-'+d+'-'+String(Math.floor(Math.random()*900)+100)+'.html';}
+function autoFilename(){const d=todayStr().replace(/-/g,'');return '52'+d+'-'+String(Math.floor(Math.random()*900)+100)+'.html';}
 function getRealismLine(){return REALISM_LINES[Math.floor(Math.random()*REALISM_LINES.length)];}
 function extractTags(t){const tags={};const l=t.match(/([\u4e00-\u9fa5]+(?:市|区|县|公园|海边|路|街|道|广场|镇))/);if(l)tags.location=l[1];const d=t.match(/(\d+\.?\d*\s*公里)/);if(d)tags.distance=d[1];const p=t.match(/(\d+['\u2019]?\d*["\u201d]?)/);if(p)tags.pace=p[1].replace(/['\u2019]/g,"'").replace(/["\u201d]/g,'"');const c=t.match(/(\d+\.?\d*\s*千卡)/);if(c)tags.calorie=c[1];const du=t.match(/(\d+:\d{2}:\d{2})/);if(du)tags.duration=du[1];return tags;}
 function hl(text,keys){let r=esc(text);keys.forEach(k=>{if(!k)return;r=r.replace(new RegExp(k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g'),'<span class="highlight">'+esc(k)+'</span>');});return r;}
@@ -659,7 +659,7 @@ function buildFullHTML(imgBlock,params){
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>${esc(title)} | RUNPRO</title>
+<title>${esc(title)} | 52run</title>
 <meta name="description" content="${esc(desc)}">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI','Microsoft YaHei',sans-serif;}
@@ -701,7 +701,7 @@ footer{background:rgba(5,20,12,.95);padding:2rem 5%;text-align:center;color:rgba
 </style>
 </head>
 <body>
-<header id="header"><div class="logo">RUN<span>PRO</span></div><nav><a href="index.html">首页</a><a href="index.html#features">服务优势</a><a href="index.html#cases">案例</a><a href="index.html#contact">联系</a></nav></header>
+<header id="header"><div class="logo">52<span>run</span></div><nav><a href="index.html">首页</a><a href="index.html#features">服务优势</a><a href="index.html#cases">案例</a><a href="index.html#contact">联系</a></nav></header>
 <main class="content-wrap"><article class="article-body">
 <h1>${esc(title)}</h1>
 <p class="meta">${esc(date)} / ${esc(author)}</p>
@@ -717,7 +717,7 @@ ${disc}
 ${wechatBox}
 </article></main>
 ${tagsBlock}
-<footer><div class="footer-links"><a href="index.html">首页</a><a href="index.html#features">服务优势</a><a href="index.html#cases">案例</a><a href="index.html#contact">联系</a></div><p>© 2026 RUN PRO${wechat?(' · 微信：'+esc(wechat)):''}</p></footer>
+<footer><div class="footer-links"><a href="index.html">首页</a><a href="index.html#features">服务优势</a><a href="index.html#cases">案例</a><a href="index.html#contact">联系</a></div><p>© 2026 52run${wechat?(' · 微信：'+esc(wechat)):''}</p></footer>
 <div class="back-top" id="backTop">↑</div>
 <script>
 window.addEventListener('scroll',()=>{document.getElementById('header').classList.toggle('scrolled',window.scrollY>50);document.getElementById('backTop').classList.toggle('show',window.scrollY>500);});
@@ -846,7 +846,7 @@ async function publishToGithub(){
 
   const title=document.getElementById('g_title').value.trim().replace(/[^\w\s-]/g,'').substring(0,30)||'article';
   const d=todayStr().replace(/-/g,'');
-  const htmlFilename=d+'-'+Math.floor(Math.random()*900+100)+'.html';
+  const htmlFilename='52'+d+'-'+Math.floor(Math.random()*900+100)+'.html';
 
   const htmlContent=btoa(unescape(encodeURIComponent(window.__publishHtml)));
 
@@ -920,5 +920,10 @@ function copyCode(){if(!window.__html){alert('请先点「⚡ 生成 HTML」');r
 function clearAll(){if(!confirm('确定清空？'))return;['g_title','g_desc','g_date','g_author','g_keys','g_wechat'].forEach(id=>document.getElementById(id).value='');document.getElementById('g_paras').innerHTML='<div class="para-item"><textarea placeholder="新段落"></textarea><button onclick="rmPara(this)">✕</button></div>';document.getElementById('smartPaste').value='';document.getElementById('ai_instruction').value='';imgs=[null,null,null];window.__imgDataUrls={};[0,1,2].forEach(i=>document.getElementById('prev'+i).src='');document.getElementById('codeBox').textContent='已清空';window.__html='';window.__publishHtml='';window.__imageFiles=[];document.getElementById('g_date').value=todayStr();}
 function switchTab(tab,btn){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');document.getElementById('codeBox').style.display=tab==='code'?'block':'none';document.getElementById('previewFrame').style.display=tab==='preview'?'block':'none';}
 </script>
+
+<!-- ICP备案号 -->
+<div style="text-align:center;padding:16px 12px;font-size:13px;color:#888;line-height:1.6;">
+  <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener" style="color:#888;text-decoration:none;border-bottom:1px solid #bbb;padding-bottom:1px;">渝ICP备2026017540号</a>
+</div>
 </body>
 </html>
