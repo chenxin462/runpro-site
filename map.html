@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>轨迹绘制路线 · 地图绘制弹窗</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; font-family: "PingFang SC", "Microsoft YaHei", sans-serif; overflow: hidden; }
+  /* 地图层压到最底，确保工具栏浮在其上、可点击 */
+  #map { width: 100%; height: 100%; position: absolute; top:0; left:0; z-index: 1; }
+
+  /* 左上角浮动工具栏 —— 全部操作集中在一处 */
+  .float-panel {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 2147483647;
+    pointer-events: auto;
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0,0,0,.15);
+    padding: 12px;
+    width: 420px;
+    max-width: calc(100vw - 24px);
+  }
+
+  /* 第一行：模式选择 */
+  .mode-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+  .mode-btn {
+    border: 1px solid #d1d5db; background: #f9fafb; color: #374151;
+    padding: 6px 11px; border-radius: 7px; cursor: pointer; font-size: 13px;
+    transition: all .15s; white-space: nowrap;
+  }
+  .mode-btn:hover { background: #eef2ff; border-color: #93b3e8; }
+  .mode-btn.active { background: #185FA5; color: #fff; border-color: #185FA5; }
+
+  /* 第二行：搜索框 */
+  .search-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .search-input {
+    flex: 1;
+    padding: 7px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 7px;
+    font-size: 13px;
+    outline: none;
+    min-width: 0;
+  }
+  .search-input:focus { border-color: #185FA5; box-shadow: 0 0 0 2px rgba(24,95,165,.15); }
+  .search-btn {
+    border: 1px solid #185FA5; background: #185FA5; color: #fff;
+    padding: 7px 14px; border-radius: 7px; cursor: pointer; font-size: 13px; white-space: nowrap;
+  }
+  .search-btn:hover { background: #134a82; }
+
+  /* 第三行：操作按钮 */
+  .action-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .draw-btn {
+    border: 1px solid #cbd5e1; background: #f8fafc; color: #334155;
+    padding: 6px 12px; border-radius: 7px; cursor: pointer; font-size: 13px; transition: all .15s;
+  }
+  .draw-btn:hover { background: #eef2ff; }
+  .draw-btn.active { background: #16a34a; color: #fff; border-color: #16a34a; }
+  .draw-btn.end.active { background: #dc2626; color: #fff; border-color: #dc2626; }
+  .btn-sm {
+    border: 1px solid #d1d5db; background: #f9fafb; color: #374151;
+    padding: 6px 10px; border-radius: 7px; cursor: pointer; font-size: 12px; transition: all .15s;
+  }
+  .btn-sm:hover { background: #e5e7eb; }
+  .btn-sm.primary { background: #185FA5; color: #fff; border-color: #185FA5; }
+  .btn-sm.primary:hover { background: #134a82; }
+  .btn-sm.danger { background: #fef2f2; color: #dc2626; border-color: #fecaca; }
+  .btn-sm.danger:hover { background: #fee2e2; }
+  .btn-sm.satellite { background: #1e293b; color: #fff; border-color: #1e293b; }
+  .btn-sm.satellite.on { background: #f59e0b; color: #000; border-color: #f59e0b; }
+  .sep { width: 1px; height: 20px; background: #e5e7eb; margin: 0 2px; }
+
+  /* 状态提示条 */
+  .hint-bar {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #f0f0f0;
+    font-size: 12px;
+    color: #6b7280;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+    background: #064e3b; color: #fff; padding: 10px 20px; border-radius: 8px;
+    font-size: 13px; opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 9999;
+  }
+  .toast.show { opacity: 1; }
+  .toast.err { background: #991b1b; }
+
+  /* Modal */
+  .modal-mask {
+    position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none;
+    align-items: center; justify-content: center; z-index: 9998;
+  }
+  .modal-mask.show { display: flex; }
+  .modal {
+    background: #fff; border-radius: 12px; width: 520px; max-width: 92vw;
+    max-height: 80vh; display: flex; flex-direction: column; overflow: hidden;
+  }
+  .modal h3 { margin: 0; padding: 14px 18px; border-bottom: 1px solid #eee; font-size: 15px; }
+  .modal pre { margin: 0; padding: 14px 18px; overflow: auto; font-size: 12px; background: #0f172a; color: #e2e8f0; flex: 1; }
+  .modal .foot { padding: 12px 18px; border-top: 1px solid #eee; text-align: right; }
+  .btn { border: none; border-radius: 8px; padding: 8px 16px; cursor: pointer; font-size: 13px; font-weight: 500; }
+  .btn.primary { background: #185FA5; color: #fff; }
+
+  /* 搜索结果下拉 */
+  .search-results {
+    position: absolute;
+    top: 100%;
+    left: 0; right: 0;
+    background: #fff;
+    border: 1px solid #d1d5db;
+    border-top: none;
+    border-radius: 0 0 7px 7px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 120;
+    display: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,.1);
+  }
+  .search-results.show { display: block; }
+  .sr-item {
+    padding: 8px 10px;
+    font-size: 13px;
+    cursor: pointer;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .sr-item:last-child { border-bottom: none; }
+  .sr-item:hover { background: #eff6ff; }
+  .sr-item .addr { font-size: 11px; color: #9ca3af; margin-left: 6px; }
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<!-- 左上角浮动工具栏 -->
+<div class="float-panel">
+  <!-- 第一行：模式选择 -->
+  <div class="mode-row">
+    <button class="mode-btn active" data-mode="click">● 点击连线</button>
+    <button class="mode-btn" data-mode="drag">○ 拖拽绘制</button>
+    <button class="mode-btn" data-mode="track">○ 跑道模式</button>
+    <button class="mode-btn" data-mode="rect">○ 图形快速模式</button>
+  </div>
+
+  <!-- 第二行：搜索地点 -->
+  <div class="search-row" style="position:relative;">
+    <input class="search-input" id="searchInput" placeholder="搜索地点..." autocomplete="off" />
+    <button class="search-btn" id="searchBtn">搜索</button>
+    <div class="search-results" id="searchResults"></div>
+  </div>
+
+  <!-- 第三行：操作按钮 -->
+  <div class="action-row">
+    <button class="draw-btn" id="startBtn">开始绘制</button>
+    <button class="draw-btn end" id="endBtn">结束绘制</button>
+    <span class="sep"></span>
+    <button class="btn-sm" id="undoBtn">↩ 撤销</button>
+    <button class="btn-sm danger" id="clearBtn">🗑 清空</button>
+    <button class="btn-sm primary" id="genBtn">生成轨迹</button>
+    <span class="sep"></span>
+    <button class="btn-sm" id="locateBtn">📍 定位</button>
+    <button class="btn-sm satellite" id="satelliteBtn">🛰 卫星图</button>
+    <button class="btn-sm primary" id="saveMapBtn">💾 保存地图</button>
+    <button class="btn-sm" id="exportBtn">导出 JSON</button>
+  </div>
+
+  <!-- 状态栏 -->
+  <div class="hint-bar">
+    <span id="hint">请选择模式后点「开始绘制」</span>
+    <span id="status">未绘制</span>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- 保存地图：命名弹窗 -->
+<div class="modal-mask" id="saveModal">
+  <div class="modal">
+    <h3>保存轨迹地图</h3>
+    <div style="padding:14px 18px;font-size:13px;color:#374151;">
+      <label>地图名称：</label>
+      <input id="saveName" class="search-input" style="width:100%;margin-top:8px;" placeholder="例如：晨跑-南滨路-5km" autocomplete="off" />
+      <p style="color:#6b7280;font-size:12px;line-height:1.6;margin:12px 0 0;">
+        将生成一个<strong>自带轨迹的地图网页文件（.html）</strong>，双击即可用腾讯地图查看轨迹与总里程；<br/>
+        该文件也能放到你「跑步截图」的地图轨迹区域中使用。<br/>
+        点击「保存并下载」后，请在浏览器下载框里选择<strong>桌面</strong>保存。
+      </p>
+    </div>
+    <div class="foot">
+      <button class="btn" id="saveCancel" style="background:#e5e7eb;margin-right:8px;">取消</button>
+      <button class="btn primary" id="saveConfirm">保存并下载</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-mask" id="modalMask">
+  <div class="modal">
+    <h3>轨迹 JSON</h3>
+    <pre id="jsonView"></pre>
+    <div class="foot"><button class="btn primary" id="closeModal">关闭</button></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+ *  腾讯地图 GL JS 轨迹绘制弹窗
+ *  四种模式：点击连线 / 拖拽绘制 / 跑道模式 / 图形快速模式
+ *  功能：搜索定位 / 卫星图切换 / 导出轨迹 JSON
+ * ============================================================ */
+
+const MAP_KEY = "LPVBZ-HVVWB-UZKUV-N6BKX-7EJR5-RIBXV";
+
+// ===== 自包含「带轨迹地图」HTML 模板（保存后双击即可查看）=====
+const STANDALONE_TPL = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>__NAME__ · 轨迹地图</title>
+<style>
+html,body{margin:0;height:100%;font-family:"PingFang SC","Microsoft YaHei",sans-serif;overflow:hidden;}
+#map{width:100%;height:100%;}
+#bar{position:fixed;top:10px;left:10px;z-index:9999;background:rgba(255,255,255,.95);padding:10px 14px;border-radius:10px;box-shadow:0 4px 16px rgba(0,0,0,.2);font-size:13px;color:#374151;max-width:90vw;}
+#bar b{color:#1E90FF;}
+#bar .t{font-size:15px;font-weight:600;color:#111;margin-bottom:4px;}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="bar"><div class="t">__NAME__</div>轨迹 <b>__SEGCOUNT__</b> 段 · 总里程 <b>__TOTALKM__ km</b></div>
+<script src="https://map.qq.com/api/gljs?v=1.8.0.2&key=__KEY__"><\/script>
+<script>
+(function(){
+  var DATA = __DATA__;
+  var geos=[];
+  var all=[];
+  function pushSeg(pts){
+    if(!pts||pts.length<2) return;
+    var path=pts.map(function(p){ return new TMap.LatLng(p[0],p[1]); });
+    geos.push({ id:"s"+geos.length, styleId:"line", paths:[path] });
+    pts.forEach(function(p){ all.push(p); });
+  }
+  DATA.segments.forEach(function(s){ pushSeg(s.points); });
+  (DATA.connections||[]).forEach(function(c){
+    if(!c||c.length<2) return;
+    geos.push({ id:"c"+geos.length, styleId:"line", paths:[ [new TMap.LatLng(c[0][0],c[0][1]), new TMap.LatLng(c[1][0],c[1][1])] ] });
+    c.forEach(function(p){ all.push(p); });
+  });
+  // 先用轨迹质心做初始中心，避免一打开闪到「中国全景」
+  var clat=29.563, clng=106.551;
+  if(all.length){ clat=0; clng=0; all.forEach(function(p){ clat+=p[0]; clng+=p[1]; }); clat/=all.length; clng/=all.length; }
+  var map = new TMap.Map("map",{ center:new TMap.LatLng(clat,clng), zoom:13 });
+  new TMap.MultiPolyline({ map:map, geometries:geos, styles:{ line:new TMap.PolylineStyle({ color:"#1E90FF", width:6, borderWidth:2, borderColor:"#FFFFFF", lineCap:"round" }) } });
+  if(all.length){
+    var lats=all.map(function(p){return p[0];}), lngs=all.map(function(p){return p[1];});
+    map.fitBounds(new TMap.LatLngBounds(
+      new TMap.LatLng(Math.min.apply(null,lats), Math.min.apply(null,lngs)),
+      new TMap.LatLng(Math.max.apply(null,lats), Math.max.apply(null,lngs))
+    ), { padding: 60 });
+  }
+})();
+<\/script>
+</body>
+</html>`;
+
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, function(c){ return ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"})[c]; }); }
+function fill(tpl, k, v){ return tpl.split(k).join(v); }
+
+// 取某段最终用于显示的折线点（与界面渲染一致：跑道自动成 stadium；其余原样）
+function finalPoints(t){
+  if(t.mode==="track" && t.points.length>=4){
+    return t.generated ? t.points : buildTrackPath(t.points.slice(0,4));
+  }
+  return t.points;
+}
+
+const HINTS = {
+  click: "点击地图添加途经点，点与点之间自动连线",
+  drag:  "在地图上按住鼠标左键拖动，松手即生成一段轨迹",
+  track: "跑道模式：在操场四个转弯角各点一点（共 4 点），点「生成轨迹」",
+  rect:  "图形快速模式：在地图上按住左键拖拽框选一个区域，松手后自动匹配附近道路生成轨迹"
+};
+
+let map = null, polyline = null, markerLayer = null, searchMarker = null;
+let mode = "click";
+// 多段轨迹模型：每段独立保留在地图上，跨模式/结束绘制都不清空，除非点「清空」
+let tracks = [];          // [{ mode, points:[{lat,lng}], generated:bool }]
+let activeIdx = -1;        // 当前正在绘制的段索引（-1 表示未在绘制）
+let drawingEnabled = false;
+let dragging = false;
+let lastDragTime = 0;
+let lastDragPoint = null;
+let isSatellite = false;
+const DRAG_MIN_DIST = 20;
+const DRAG_MIN_MS = 40;
+const IDLE_MS = 1200;       // 点击模式：超过此毫秒无新点视为一笔结束（收笔）
+let strokeOpen = false;     // 当前笔触是否仍在进行中
+let closeTimer = null;
+// 框选状态（图形快速模式）
+let boxSelecting = false;
+let boxStart = null;        // {lat,lng}
+let boxEnd = null;
+let selPolyline = null;     // 框选预览矩形
+
+function activeTrack(){ return activeIdx >= 0 ? tracks[activeIdx] : null; }
+
+// 开笔：标记笔触进行中，并启动空闲计时（到点自动收笔）
+function openStroke(){
+  strokeOpen = true;
+  if(closeTimer) clearTimeout(closeTimer);
+  closeTimer = setTimeout(()=>{ strokeOpen = false; }, IDLE_MS);
+}
+// 收笔：立即结束当前笔触（拖拽松手时调用）
+function closeStroke(){
+  strokeOpen = false;
+  if(closeTimer){ clearTimeout(closeTimer); closeTimer = null; }
+}
+
+// 落笔前确保当前笔触有效：若上一笔已收笔且已有笔触，则新开一段（一笔=一段）
+// 仅对自由绘制（click/drag）生效；跑道/矩形不自动断段
+function ensureStroke(){
+  if(mode!=="click" && mode!=="drag") return;
+  const t = activeTrack();
+  if(t && t.points.length>0 && !strokeOpen){
+    tracks.push({ mode, points:[], generated:false });
+    activeIdx = tracks.length - 1;
+  }
+  openStroke();
+}
+function totalPoints(){ return tracks.reduce((s,t)=>s+t.points.length,0); }
+// 单段轨迹长度（km）
+function trackDistanceKm(t){
+  if(!t || t.points.length<2) return 0;
+  let d=0;
+  for(let i=1;i<t.points.length;i++) d += distM(t.points[i-1], t.points[i]);
+  return d/1000;
+}
+function totalDistanceKm(){ return tracks.reduce((s,t)=>s+trackDistanceKm(t),0); }
+
+// 跑道角点标记（红色圆点）
+const DOT = "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='18'%20height='18'%3E%3Ccircle%20cx='9'%20cy='9'%20r='7'%20fill='%23E53935'%20stroke='%23fff'%20stroke-width='3'/%3E%3C/svg%3E";
+// 搜索结果标记（蓝色大头针）
+const PIN = "data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='32'%20height='40'%3E%3Cpath%20d='M16%202c-6.627%200-12%205.373-12%2012s12%2018%2012%2018%2012-11.373%2012-18S22.627%202%2016%202z'%20fill='%23185FA5'/%3E%3Ccircle%20cx='16'%20cy='14'%20r='5'%20fill='%23fff'/%3E%3C/svg%3E";
+
+const $ = (s) => document.querySelector(s);
+const statusEl = $("#status");
+const hintEl = $("#hint");
+const startBtn = $("#startBtn");
+const endBtn = $("#endBtn");
+
+function toast(msg, isErr) {
+  const t = $("#toast");
+  t.textContent = msg; t.classList.toggle("err", !!isErr); t.classList.add("show");
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove("show"), 2200);
+}
+function updateStatus() {
+  const st = drawingEnabled ? "绘制中" : (tracks.length ? "已停笔" : "未开始");
+  const km = totalDistanceKm();
+  statusEl.textContent = `${st} | ${totalPoints()} 点 | 累计 ${km.toFixed(2)} 公里`;
+  if (drawingEnabled && activeTrack()) {
+    const ak = trackDistanceKm(activeTrack());
+    const label = mode === "drag" ? "本次拖拽" : (mode === "click" ? "本次连线" : "本次绘制");
+    hintEl.textContent = `绘制中：${HINTS[mode]}（${label} ${ak.toFixed(2)} 公里，累计 ${km.toFixed(2)} 公里）`;
+  } else {
+    hintEl.textContent = "请选择模式后点「开始绘制」";
+  }
+}
+function LL(p) { return new TMap.LatLng(p.lat, p.lng); }
+
+// Haversine 距离（米）
+function distM(a, b) {
+  const R = 6371000;
+  const dLat = (b.lat - a.lat) * Math.PI / 180;
+  const dLng = (b.lng - a.lng) * Math.PI / 180;
+  const sa = Math.sin(dLat/2), so = Math.sin(dLng/2);
+  return R * 2 * Math.asin(Math.sqrt(sa*sa + Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*so*so));
+}
+
+function updateDraggable() {
+  if (!map || !map.setDraggable) return;
+  // 拖拽绘制 与 图形框选 都需禁用地图平移，才能用鼠标拖拽
+  try { map.setDraggable(mode !== "drag" && mode !== "rect"); } catch(e){}
+}
+
+function evtToPoint(evt) {
+  const ll = evt.latLng;
+  return { lat: ll.lat, lng: ll.lng };
+}
+
+// ===== 渲染图层 =====
+function render() {
+  if (!map) return;
+  // 把所有段渲染为独立的多条线（每段一个 geometry，跨模式都保留）
+  const lineGeo = [];
+  const dotGeos = [];
+  tracks.forEach((t, idx) => {
+    const drawPts = t.points;
+    // 跑道模式：未生成前只显示角点红点，不连线
+    if (t.mode === "track" && !t.generated) {
+      t.points.forEach((p, i) => dotGeos.push({ id: "d"+idx+"_"+i, styleId: "point", position: LL(p) }));
+      return;
+    }
+    // 其余模式：>=2 点即连线
+    if (drawPts.length >= 2) {
+      lineGeo.push({ id: "seg"+idx, styleId: "line", paths: [drawPts.map(LL)] });
+    }
+    // 跑道生成后继续保留 4 个角点红点
+    if (t.mode === "track") {
+      t.points.forEach((p, i) => dotGeos.push({ id: "d"+idx+"_"+i, styleId: "point", position: LL(p) }));
+    }
+  });
+
+  // 笔与笔之间自动连线（自由绘制段：click/drag 未生成的），保持路线连续
+  for (let i = 1; i < tracks.length; i++) {
+    const a = tracks[i-1], b = tracks[i];
+    const aFree = (a.mode==="click"||a.mode==="drag") && !a.generated;
+    const bFree = (b.mode==="click"||b.mode==="drag") && !b.generated;
+    if (aFree && bFree && a.points.length && b.points.length) {
+      lineGeo.push({ id:"conn"+(i-1), styleId:"line", paths:[ [LL(a.points[a.points.length-1]), LL(b.points[0])] ] });
+    }
+  }
+
+  if (polyline) {
+    polyline.setGeometries(lineGeo);
+  } else {
+    polyline = new TMap.MultiPolyline({
+      map,
+      geometries: lineGeo,
+      styles: {
+        line: new TMap.PolylineStyle({
+          color: "#1E90FF", width: 6, borderWidth: 2, borderColor: "#FFFFFF", lineCap: "round"
+        })
+      }
+    });
+  }
+
+  // 角点标记层：所有跑道段的角点都显示红点
+  if (dotGeos.length > 0) {
+    if (markerLayer) markerLayer.setGeometries(dotGeos);
+    else markerLayer = new TMap.MultiMarker({
+      map,
+      styles: { point: new TMap.MarkerStyle({ width: 18, height: 18, anchor:{x:9,y:9}, src: DOT }) },
+      geometries: dotGeos
+    });
+  } else if (markerLayer) {
+    markerLayer.setGeometries([]);
+  }
+  updateStatus();
+}
+
+// ===== 跑道 stadium 算法 =====
+function buildTrackPath(corners) {
+  const lats=corners.map(p=>p.lat), lngs=corners.map(p=>p.lng);
+  const latMin=Math.min(...lats), latMax=Math.max(...lats), lngMin=Math.min(...lngs), lngMax=Math.max(...lngs);
+  const cLat=(latMin+latMax)/2, cLng=(lngMin+lngMax)/2;
+  const hLat=latMax-latMin, hLng=lngMax-lngMin; const N=24; const out=[];
+  if(hLng>=hLat){
+    const b=hLat/2;
+    out.push({lat:latMax,lng:lngMin}); out.push({lat:latMax,lng:lngMax});
+    for(let i=1;i<N;i++){const a=Math.PI/2-Math.PI*(i/N);out.push({lat:cLat+b*Math.sin(a),lng:lngMax+b*Math.cos(a)});}
+    out.push({lat:latMin,lng:lngMax}); out.push({lat:latMin,lng:lngMin});
+    for(let i=1;i<N;i++){const a=-Math.PI/2-Math.PI*(i/N);out.push({lat:cLat+b*Math.sin(a),lng:lngMin+b*Math.cos(a)});}
+    out.push({lat:latMax,lng:lngMin});
+  } else {
+    const b=hLng/2;
+    out.push({lat:latMin,lng:lngMin}); out.push({lat:latMax,lng:lngMin});
+    for(let i=1;i<N;i++){const a=Math.PI-Math.PI*(i/N);out.push({lat:latMax+b*Math.sin(a),lng:cLng+b*Math.cos(a)});}
+    out.push({lat:latMax,lng:lngMax}); out.push({lat:latMin,lng:lngMax});
+    for(let i=1;i<N;i++){const a=0-Math.PI*(i/N);out.push({lat:latMin+b*Math.sin(a),lng:cLng+b*Math.cos(a)});}
+    out.push({lat:latMin,lng:lngMin});
+  }
+  return out;
+}
+
+// ===== 矩形 =====
+function buildRectPath(a,b){
+  return [{lat:a.lat,lng:a.lng},{lat:a.lat,lng:b.lng},{lat:b.lat,lng:b.lng},{lat:b.lat,lng:a.lng},{lat:a.lat,lng:a.lng}];
+}
+
+// ===== 框选预览 =====
+function rectPts(a,b){
+  return [{lat:a.lat,lng:a.lng},{lat:a.lat,lng:b.lng},{lat:b.lat,lng:b.lng},{lat:b.lat,lng:a.lng},{lat:a.lat,lng:a.lng}];
+}
+function showSelBox(){
+  if(!boxStart||!boxEnd) return;
+  const geo=[{ id:"selbox", styleId:"sel", paths:[ rectPts(boxStart,boxEnd).map(LL) ] }];
+  if(selPolyline) selPolyline.setGeometries(geo);
+  else selPolyline=new TMap.MultiPolyline({
+    map, geometries:geo,
+    styles:{ sel:new TMap.PolylineStyle({ color:"#FFA500", width:2, borderWidth:0, lineCap:"round", lineDash:[6,4] }) }
+  });
+}
+function hideSelBox(){ if(selPolyline) selPolyline.setGeometries([]); }
+
+// ===== 腾讯路线规划（Direction）沿道路匹配 =====
+// 解码腾讯/Google 编码折线（字符串，因子 1e6，顺序 lat,lng）
+function decodePolyline(str){
+  const coords=[]; let index=0, lat=0, lng=0, shift, result, b;
+  while(index < str.length){
+    result=1; shift=0;
+    do { b=str.charCodeAt(index++)-63-1; result += b<<shift; shift+=5; } while(b>=0x1f);
+    lat += (result & 1) ? ~(result>>1) : (result>>1);
+    result=1; shift=0;
+    do { b=str.charCodeAt(index++)-63-1; result += b<<shift; shift+=5; } while(b>=0x1f);
+    lng += (result & 1) ? ~(result>>1) : (result>>1);
+    coords.push({ lat: lat/1e6, lng: lng/1e6 });
+  }
+  return coords;
+}
+// 解码腾讯驾车路线 polyline 数组格式：[lat0,lng0,Δlat,Δlng,...]（delta 累加，因子 1e6）
+// 实测：此格式解码总距离与接口 route.distance 一致（1665m ≈ 1667m）
+function decodePolylineArray(arr){
+  if(!Array.isArray(arr) || arr.length<2) return [];
+  const pts=[{ lat:arr[0], lng:arr[1] }];
+  for(let i=2;i<arr.length;i+=2){
+    const prev=pts[pts.length-1];
+    pts.push({ lat: prev.lat + arr[i]/1e6, lng: prev.lng + arr[i+1]/1e6 });
+  }
+  return pts;
+}
+// 从一条路线里取所有坐标点（兼容 polyline 为编码字符串 或 数字数组；再退化为 steps 拼接）
+function extractRoutePoints(route){
+  let pts=[];
+  const poly = route && route.polyline;
+  if(typeof poly==="string" && poly.length) pts=decodePolyline(poly);
+  else if(Array.isArray(poly) && poly.length>=2) pts=decodePolylineArray(poly);
+  if(pts.length) return pts;
+  if(route && Array.isArray(route.steps)){
+    route.steps.forEach(s=>{
+      const sp=s && s.polyline;
+      if(typeof sp==="string" && sp.length) pts=pts.concat(decodePolyline(sp));
+      else if(Array.isArray(sp) && sp.length>=2) pts=pts.concat(decodePolylineArray(sp));
+    });
+  }
+  return pts;
+}
+function directionRoute(from,to){
+  return new Promise((resolve)=>{
+    const cb="tmap_dir_"+Date.now()+"_"+Math.floor(Math.random()*1e6);
+    const script=document.createElement("script");
+    const cleanup=()=>{ try{ delete window[cb]; }catch(e){} try{ script.remove(); }catch(e){} };
+    window[cb]=(data)=>{
+      cleanup();
+      try{
+        if(!data || data.status!==0){ resolve({pts:[], err:data?data.message:"无响应"}); return; }
+        const routes=data.result && data.result.routes;
+        if(!routes || !routes.length){ resolve({pts:[], err:"无可用路线"}); return; }
+        const pts=extractRoutePoints(routes[0]);
+        resolve({pts, err: pts.length?null:"路线无坐标点"});
+      }catch(e){ resolve({pts:[], err:e.message}); }
+    };
+    script.onerror=()=>{ cleanup(); resolve({pts:[], err:"网络错误"}); };
+    script.src=`https://apis.map.qq.com/ws/direction/v1/driving/?from=${from.lat},${from.lng}&to=${to.lat},${to.lng}&key=${MAP_KEY}&output=jsonp&callback=${cb}`;
+    document.head.appendChild(script);
+  });
+}
+
+// 框选完成 → 沿框四边各跑一次驾车路线，拼成"附近道路"轨迹
+async function generateRectRoute(b,e){
+  const sw={lat:Math.min(b.lat,e.lat),lng:Math.min(b.lng,e.lng)};
+  const ne={lat:Math.max(b.lat,e.lat),lng:Math.max(b.lng,e.lng)};
+  const nw={lat:ne.lat,lng:sw.lng}, se={lat:sw.lat,lng:ne.lng};
+  if(distM(sw,ne) < 30){ toast("框选区域太小，请框大一点",true); return; }
+  toast("正在匹配附近道路...");
+  const segs=[[sw,se],[se,ne],[ne,nw],[nw,sw]];
+  const polys=await Promise.all(segs.map(([a,c])=>directionRoute(a,c)));
+  let allPts=[];
+  let firstErr=null;
+  polys.forEach(p=>{ if(p&&p.pts&&p.pts.length) allPts=allPts.concat(p.pts); else if(p&&p.err&&!firstErr) firstErr=p.err; });
+  if(!allPts.length){
+    if(firstErr && firstErr.indexOf("域名")>=0){
+      toast("来源域名未被授权：请把本页域名加入该 Key 的 WebServiceAPI『域名白名单』（本地 file:// 测试请临时设 * ）",true);
+    } else if(firstErr){
+      toast("路线规划失败："+firstErr,true);
+    } else {
+      toast("未匹配到附近道路",true);
+    }
+    return;
+  }
+  // 移除开始绘制时创建的空段，避免堆积
+  if(activeTrack() && activeTrack().points.length===0){ tracks.splice(activeIdx,1); activeIdx=-1; }
+  tracks.push({ mode:"rect", points:allPts, generated:true });
+  activeIdx=tracks.length-1;
+  window._lastTrack={ mode:"rect", generatedAt:new Date().toISOString(), pointCount:allPts.length, distanceKm:+(trackDistanceKm({points:allPts})).toFixed(3), path:allPts.map(p=>[+p.lat.toFixed(6),+p.lng.toFixed(6)]) };
+  toast("已生成附近道路轨迹");
+  render();
+}
+
+// ===== 生成轨迹（跑道模式专用；图形模式框选后自动生成） =====
+function generateTrack(){
+  if(mode==="rect"){ toast("图形模式：框选区域后自动匹配道路生成，无需点此按钮"); return; }
+  let t = activeTrack();
+  if(!t || t.mode!=="track"){
+    for(let i=tracks.length-1;i>=0;i--){ if(tracks[i].mode==="track"){ t=tracks[i]; break; } }
+  }
+  if(!t || t.mode!=="track"){ toast("跑道模式：点满 4 个角点后点「生成轨迹」"); return; }
+  if(t.points.length<4){ toast("跑道需先点满 4 个角点"); return; }
+  t.points = buildTrackPath(t.points.slice(0,4));
+  t.generated = true;
+  window._lastTrack={ mode:"track", generatedAt:new Date().toISOString(), pointCount:t.points.length, distanceKm:+trackDistanceKm(t).toFixed(3), path:t.points.map(p=>[+p.lat.toFixed(6),+p.lng.toFixed(6)]) };
+  toast("跑道轨迹生成完成");
+  render();
+}
+
+function exportJSON(){
+  const t = {
+    segmentCount: tracks.length,
+    totalDistanceKm: +totalDistanceKm().toFixed(3),
+    totalPoints: totalPoints(),
+    segments: tracks.map((tr,i)=>({
+      index:i, mode:tr.mode, generated:tr.generated,
+      pointCount:tr.points.length,
+      distanceKm:+trackDistanceKm(tr).toFixed(3),
+      path:tr.points.map(p=>[+p.lat.toFixed(6),+p.lng.toFixed(6)])
+    }))
+  };
+  $("#jsonView").textContent=JSON.stringify(t,null,2);
+  $("#modalMask").classList.add("show");
+}
+
+// ===== 保存「带轨迹的地图」文件 =====
+function defaultMapName(){
+  const d=new Date(), p=n=>String(n).padStart(2,"0");
+  return `轨迹-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`;
+}
+function buildStandaloneHtml(name){
+  const name2 = name || defaultMapName();
+  const segs = tracks.map(t=>({ mode:t.mode, points: finalPoints(t).map(p=>[+p.lat.toFixed(6),+p.lng.toFixed(6)]) }));
+  // 段间连接线（自由段：click/drag 未生成）
+  const conns = [];
+  for(let i=1;i<tracks.length;i++){
+    const a=tracks[i-1], b=tracks[i];
+    const aFree=(a.mode==="click"||a.mode==="drag") && !a.generated;
+    const bFree=(b.mode==="click"||b.mode==="drag") && !b.generated;
+    if(aFree && bFree && a.points.length && b.points.length){
+      const pa=a.points[a.points.length-1], pb=b.points[0];
+      conns.push([[+pa.lat.toFixed(6),+pa.lng.toFixed(6)],[+pb.lat.toFixed(6),+pb.lng.toFixed(6)]]);
+    }
+  }
+  const data={ name:name2, createdAt:new Date().toISOString(), totalKm:+totalDistanceKm().toFixed(3), segments:segs, connections:conns };
+  let html = fill(STANDALONE_TPL, "__NAME__", escapeHtml(name2));
+  html = fill(html, "__DATA__", JSON.stringify(data));
+  html = fill(html, "__KEY__", MAP_KEY);
+  html = fill(html, "__TOTALKM__", data.totalKm.toFixed(2));
+  html = fill(html, "__SEGCOUNT__", tracks.length);
+  return html;
+}
+function openSaveModal(){
+  if(tracks.length===0){ toast("还没有轨迹可保存，请先绘制", true); return; }
+  $("#saveName").value = defaultMapName();
+  $("#saveModal").classList.add("show");
+  setTimeout(()=>{ try{ $("#saveName").focus(); $("#saveName").select(); }catch(e){} }, 50);
+}
+function doSaveMap(){
+  const name = ($("#saveName").value||"").trim() || defaultMapName();
+  const html = buildStandaloneHtml(name);
+  const blob = new Blob([html], { type:"text/html;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = name + ".html";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+  $("#saveModal").classList.remove("show");
+  toast("已生成地图文件，请在下载框选择「桌面」保存");
+}
+
+// ===== 地图事件绑定 =====
+function bindMapEvents(){
+  map.on("click",(evt)=>{
+    if(!drawingEnabled||mode==="drag"||mode==="rect")return;  // 矩形模式用框选，不靠点击
+    const t=activeTrack(); if(!t) return;
+    if(t.mode==="track"){
+      if(t.generated){ toast("该跑道已生成，重新开始时请清空或切换模式"); return; }
+      if(t.points.length>=4){ toast("已采满 4 个角点，点「生成轨迹」完成"); return; }
+    }
+    ensureStroke();
+    activeTrack().points.push(evtToPoint(evt)); render();
+  });
+  map.on("mousedown",(evt)=>{
+    if(!drawingEnabled) return;
+    if(mode==="drag"){
+      const t=activeTrack(); if(!t) return;
+      ensureStroke();
+      dragging=true; lastDragTime=0;
+      const p=evtToPoint(evt); activeTrack().points.push(p); lastDragPoint=p; render();
+    } else if(mode==="rect"){
+      // 开始框选
+      boxSelecting=true; boxStart=evtToPoint(evt); boxEnd=boxStart; showSelBox();
+    }
+  });
+  map.on("mousemove",(evt)=>{
+    if(!drawingEnabled) return;
+    if(mode==="drag" && dragging){
+      const t=activeTrack(); if(!t) return;
+      const now=Date.now();
+      if(now-lastDragTime<DRAG_MIN_MS)return;
+      const p=evtToPoint(evt);
+      if(lastDragPoint&&distM(lastDragPoint,p)<DRAG_MIN_DIST)return;
+      lastDragTime=now;lastDragPoint=p;t.points.push(p);
+      openStroke();   // 拖动中持续保活，避免空闲计时误收笔
+      render();
+    } else if(mode==="rect" && boxSelecting){
+      boxEnd=evtToPoint(evt); showSelBox();
+    }
+  });
+  map.on("mouseup",()=>{
+    if(dragging){ dragging=false; closeStroke(); toast("本段拖拽完成，可继续拖拽"); }
+    if(boxSelecting){
+      boxSelecting=false;
+      const b=boxStart, e=boxEnd;
+      hideSelBox();
+      if(b&&e) generateRectRoute(b,e);
+    }
+  });
+  window.addEventListener("mouseup",()=>{ if(dragging) dragging=false; });
+}
+
+// ===== 模式切换 =====
+document.querySelectorAll(".mode-btn").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll(".mode-btn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    mode=btn.dataset.mode;
+    // 切换模式：停止当前绘制，但已画轨迹全部保留在地图上
+    drawingEnabled=false; activeIdx=-1;
+    startBtn.classList.remove("active");
+    endBtn.classList.remove("active");
+    updateDraggable(); render();
+  });
+});
+
+function setDrawing(on){
+  if(on){
+    if(!drawingEnabled){
+      // 开始新的一段（沿用当前模式），旧段保留
+      tracks.push({ mode, points:[], generated:false });
+      activeIdx = tracks.length-1;
+      drawingEnabled=true;
+    }
+  } else {
+    drawingEnabled=false; activeIdx=-1;
+  }
+  startBtn.classList.toggle("active",drawingEnabled);
+  endBtn.classList.remove("active");
+  updateStatus();
+}
+
+startBtn.onclick=()=>setDrawing(true);
+endBtn.onclick=()=>setDrawing(false);
+$("#undoBtn").onclick=()=>{
+  // 撤销 = 删除整段轨迹（一笔=一段，原子操作；不再逐点删）
+  if(drawingEnabled && activeIdx>=0){
+    tracks.splice(activeIdx,1);
+    activeIdx=-1; drawingEnabled=false; dragging=false;
+    startBtn.classList.remove("active"); endBtn.classList.remove("active");
+  } else if(tracks.length){
+    tracks.pop();
+  } else { return; }
+  render();
+};
+$("#clearBtn").onclick=()=>{
+  tracks=[]; activeIdx=-1; drawingEnabled=false; window._lastTrack=null;
+  startBtn.classList.remove("active"); endBtn.classList.remove("active");
+  render();
+};
+$("#genBtn").onclick=generateTrack;
+$("#exportBtn").onclick=exportJSON;
+$("#closeModal").onclick=()=>$("#modalMask").classList.remove("show");
+// ===== 保存地图 =====
+$("#saveMapBtn").onclick=openSaveModal;
+$("#saveConfirm").onclick=doSaveMap;
+$("#saveCancel").onclick=()=>$("#saveModal").classList.remove("show");
+$("#saveName").addEventListener("keydown",(e)=>{ if(e.key==="Enter") doSaveMap(); });
+$("#saveModal").addEventListener("click",(e)=>{ if(e.target.id==="saveModal") $("#saveModal").classList.remove("show"); });
+
+// ===== 定位（回到当前中心） =====
+$("#locateBtn").onclick=()=>{
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition(
+      pos=>{
+        const ll=new TMap.LatLng(pos.coords.latitude,pos.coords.longitude);
+        map.setCenter(ll);map.setZoom(17);
+        toast("已定位到当前位置");
+      },
+      ()=>toast("无法获取位置",true)
+    );
+  } else {
+    toast("浏览器不支持定位",true);
+  }
+};
+
+// ===== 卫星图切换 =====
+// TMap GL JS 切换底图用 setBaseMap({type:'satellite'|'vector'})
+// （setMapTypeId / 'roadmap' 是旧版 JS API 的，GL JS 不生效）
+$("#satelliteBtn").onclick=function(){
+  isSatellite=!isSatellite;
+  this.classList.toggle("on",isSatellite);
+  this.textContent=isSatellite?"🗺 普通地图":"🛰 卫星图";
+  try{
+    map.setBaseMap({ type: isSatellite ? "satellite" : "vector" });
+    toast(isSatellite?"已切换到卫星图":"已切换到普通地图");
+  }catch(e){
+    toast("卫星图切换失败："+e.message,true);
+  }
+};
+
+// ===== 搜索地点 =====
+const searchInput=$("#searchInput");
+const searchResults=$("#searchResults");
+const searchBtn=$("#searchBtn");
+
+// JSONP 请求：绕开浏览器 fetch 的 CORS 限制（腾讯 WebService 不支持跨域 fetch）
+function jsonpRequest(url){
+  return new Promise((resolve,reject)=>{
+    const cb="tmap_cb_"+Date.now()+"_"+Math.floor(Math.random()*1e6);
+    const script=document.createElement("script");
+    const cleanup=()=>{ try{ delete window[cb]; }catch(e){} try{ script.remove(); }catch(e){} };
+    window[cb]=(data)=>{ cleanup(); resolve(data); };
+    script.onerror=()=>{ cleanup(); reject(new Error("请求失败，请检查网络或 Key 配置")); };
+    script.src=url+(url.indexOf("?")>=0?"&":"?")+"output=jsonp&callback="+cb;
+    document.head.appendChild(script);
+  });
+}
+
+async function doSearch(keyword){
+  if(!keyword||!keyword.trim()){toast("请输入搜索关键词",true);return;}
+  keyword=keyword.trim();
+  searchResults.innerHTML='<div class="sr-item">搜索中...</div>';
+  searchResults.classList.add("show");
+  try{
+    // 腾讯地图 PlaceSearch WebService API（JSONP 方式，避免 CORS）
+    const c=map.getCenter();
+    const url=`https://apis.map.qq.com/ws/place/v1/search?boundary=nearby(${c.lat},${c.lng},50000)&keyword=${encodeURIComponent(keyword)}&key=${MAP_KEY}&page_size=8`;
+    const json=await jsonpRequest(url);
+    if(json.status!==0){
+      searchResults.innerHTML=`<div class="sr-item">搜索失败：${json.message||"未知错误"}</div>`;
+      return;
+    }
+    const list=json.data||[];
+    if(list.length===0){
+      searchResults.innerHTML='<div class="sr-item">未找到相关地点</div>';
+      return;
+    }
+    searchResults.innerHTML=list.map((item,i)=>`
+      <div class="sr-item" data-i="${i}" data-lat="${item.location.lat}" data-lng="${item.location.lng}">
+        <strong>${item.title}</strong><span class="addr">${item.address||""}</span>
+      </div>
+    `).join("");
+    // 点击搜索结果 → 定位并打标
+    searchResults.querySelectorAll(".sr-item").forEach(el=>{
+      el.addEventListener("click",()=>{
+        const lat=parseFloat(el.dataset.lat),lng=parseFloat(el.dataset.lng);
+        flyTo(lat,lng);
+        searchResults.classList.remove("show");
+        searchInput.value=el.querySelector("strong").textContent.trim();
+      });
+    });
+  } catch(e){
+    searchResults.innerHTML=`<div class="sr-item">网络错误：${e.message}</div>`;
+  }
+}
+
+// 飞到目标位置 + 打标记
+function flyTo(lat,lng){
+  const ll=new TMap.LatLng(lat,lng);
+  map.setCenter(ll);map.setZoom(17);
+  // 放置搜索标记（GL JS 用 MultiMarker，不支持单例 TMap.Marker）
+  if(searchMarker){try{searchMarker.setMap(null);}catch(e){} searchMarker=null;}
+  searchMarker=new TMap.MultiMarker({
+    map,
+    geometries:[{
+      id:"searchPin",
+      styleId:"pin",
+      position:ll
+    }],
+    styles:{
+      pin:new TMap.MarkerStyle({width:32,height:40,anchor:{x:16,y:40},src:PIN})
+    }
+  });
+  window._searchPos={lat,lng};
+  toast(`已定位：${searchInput.value}`);
+}
+
+// ===== 搜索交互：输入防抖自动搜 + 回车 + 按钮 =====
+let searchTimer=null;
+const SEARCH_DEBOUNCE=400;
+function triggerSearch(){
+  clearTimeout(searchTimer);
+  const kw=searchInput.value.trim();
+  if(!kw){searchResults.classList.remove("show");return;}
+  searchTimer=setTimeout(()=>doSearch(kw),SEARCH_DEBOUNCE);
+}
+searchInput.addEventListener("input",triggerSearch);
+searchInput.addEventListener("keydown",(e)=>{
+  if(e.key==="Enter"){clearTimeout(searchTimer);doSearch(searchInput.value);}
+});
+searchBtn.onclick=()=>{clearTimeout(searchTimer);doSearch(searchInput.value);};
+// 点击其他区域关闭下拉
+document.addEventListener("click",(e)=>{
+  if(!e.target.closest(".search-row")){searchResults.classList.remove("show");}
+});
+
+// ===== 全局错误兜底 =====
+window.onerror=(msg)=>{toast("出错："+msg,true);};
+
+// ===== 加载 SDK 并初始化 =====
+function loadMapScript(key){
+  return new Promise((resolve,reject)=>{
+    const s=document.createElement("script");
+    s.src=`https://map.qq.com/api/gljs?v=1.8.0.2&key=${key}`;
+    s.onload=resolve;s.onerror=()=>reject(new Error("地图SDK加载失败"));
+    document.head.appendChild(s);
+  });
+}
+
+(async function init(){
+  try{
+    await loadMapScript(MAP_KEY);
+    map=new TMap.Map("map",{center:new TMap.LatLng(29.563,106.551),zoom:13});
+    bindMapEvents();updateDraggable();updateStatus();
+    console.log("[map] init OK");
+  } catch(err){
+    document.getElementById("map").innerHTML=
+      `<div style="padding:50px;color:#dc2626;font-size:14px;text-align:center;">
+        地图加载失败：${err.message}<br/><br/>请确认 Key 已启用 JavaScriptAPI(GLMap)
+      </div>`;
+  }
+})();
+</script>
+</body>
+</html>
