@@ -89,9 +89,8 @@
   .btn-sm.danger:hover { background: #fee2e2; }
   .btn-sm.satellite { background: #1e293b; color: #fff; border-color: #1e293b; }
   .btn-sm.satellite.on { background: #f59e0b; color: #000; border-color: #f59e0b; }
-  /* 嵌入 TCX 生成器时显示：把轨迹回传给父页面 */
-  .btn-sm.use-track { background: #16a34a; color: #fff; border-color: #16a34a; font-weight: 600; }
-  .btn-sm.use-track:hover { background: #12833f; }
+  .btn-sm.usetrack { background: #16a34a; color: #fff; border-color: #16a34a; font-weight: 700; box-shadow: 0 2px 8px rgba(22,163,74,.35); }
+  .btn-sm.usetrack:hover { background: #15803d; border-color: #15803d; }
   .sep { width: 1px; height: 20px; background: #e5e7eb; margin: 0 2px; }
 
   /* 状态提示条 */
@@ -192,7 +191,21 @@
     <button class="btn-sm satellite" id="satelliteBtn">🛰 卫星图</button>
     <button class="btn-sm primary" id="saveMapBtn">💾 保存地图</button>
     <button class="btn-sm" id="exportBtn">导出 JSON</button>
-    <button class="btn-sm use-track" id="useTrackBtn" style="display:none;">✔ 用此轨迹</button>
+    <span class="sep" id="useTrackSep" style="display:none"></span>
+    <button class="btn-sm usetrack" id="useTrackBtn" style="display:none">✔ 用此轨迹（回传生成器）</button>
+  </div>
+
+  <!-- 跑道模式规则说明 -->
+  <div id="trackRule" style="display:none; max-width:560px; margin-top:8px; padding:10px 12px; background:#fff8e1; border:1px solid #ffe082; border-radius:8px; font-size:12px; line-height:1.75; color:#5d4037;">
+    <strong style="color:#8d6e00;">跑道生成规则（操场轨迹）</strong>
+    <ol style="margin:6px 0 4px; padding-left:20px;">
+      <li>按 <b>1 → 2 → 3 → 4</b> 的顺序，在操场四个转弯角各点一点（共 4 点）。</li>
+      <li>第 1、2 点之间 <b>直线</b> 相连（一条直边）。</li>
+      <li>第 3、4 点之间 <b>直线</b> 相连（另一条直边）。</li>
+      <li>第 2、3 点之间用 <b>半圆弧</b> 连接（一侧弯道）。</li>
+      <li>第 1、4 点之间用 <b>半圆弧</b> 连接（另一侧弯道）。</li>
+    </ol>
+    <span style="color:#8d6e00;">点满 4 点后点「生成轨迹」，即按以上规则形成标准操场跑道。</span>
   </div>
 
   <!-- 状态栏 -->
@@ -308,11 +321,11 @@ function finalPoints(t){
 const HINTS = {
   click: "点击地图添加途经点，点与点之间自动连线",
   drag:  "在地图上按住鼠标左键拖动，松手即生成一段轨迹",
-  track: "跑道模式：在操场四个转弯角各点一点（共 4 点），点「生成轨迹」",
+  track: "跑道模式：按 1→2→3→4 顺序点操场四角，点「生成轨迹」。规则：1-2、3-4 为直线，2-3、4-1 为半圆弧",
   rect:  "图形快速模式：在地图上按住左键拖拽框选一个区域，松手后自动匹配附近道路生成轨迹"
 };
 
-let map = null, polyline = null, markerLayer = null, searchMarker = null;
+let map = null, polyline = null, fadePolyline = null, markerLayer = null, searchMarker = null;
 let mode = "click";
 // 多段轨迹模型：每段独立保留在地图上，跨模式/结束绘制都不清空，除非点「清空」
 let tracks = [];          // [{ mode, points:[{lat,lng}], generated:bool }]
@@ -423,6 +436,7 @@ function render() {
   if (!map) return;
   // 把所有段渲染为独立的多条线（每段一个 geometry，跨模式都保留）
   const lineGeo = [];
+  const fadeGeo = [];   // 叠加显示圈（半透明细线）
   const dotGeos = [];
   tracks.forEach((t, idx) => {
     const drawPts = t.points;
@@ -433,6 +447,12 @@ function render() {
     }
     // 其余模式：>=2 点即连线
     if (drawPts.length >= 2) {
+      // 跑道模式生成后：叠加显示圈用半透明细线，基准圈用实线
+      if (t.mode === "track" && t.displayLaps && t.displayLaps.length) {
+        t.displayLaps.forEach((lp, li) => {
+          if (lp.length >= 2) fadeGeo.push({ id: "fade"+idx+"_"+li, styleId: "fadeLine", paths: [lp.map(LL)] });
+        });
+      }
       lineGeo.push({ id: "seg"+idx, styleId: "line", paths: [drawPts.map(LL)] });
     }
   });
@@ -445,6 +465,22 @@ function render() {
     if (aFree && bFree && a.points.length && b.points.length) {
       lineGeo.push({ id:"conn"+(i-1), styleId:"line", paths:[ [LL(a.points[a.points.length-1]), LL(b.points[0])] ] });
     }
+  }
+
+  // 叠加显示圈（半透明细线）：独立层渲染在基准线下面
+  if (fadeGeo.length > 0) {
+    if (fadePolyline) fadePolyline.setGeometries(fadeGeo);
+    else fadePolyline = new TMap.MultiPolyline({
+      map,
+      geometries: fadeGeo,
+      styles: {
+        fadeLine: new TMap.PolylineStyle({
+          color: "rgba(30,144,255,0.35)", width: 3, borderWidth: 0, lineCap: "round"
+        })
+      }
+    });
+  } else if (fadePolyline) {
+    fadePolyline.setGeometries([]);
   }
 
   if (polyline) {
@@ -475,28 +511,144 @@ function render() {
   updateStatus();
 }
 
-// ===== 跑道 stadium 算法 =====
-function buildTrackPath(corners) {
-  const lats=corners.map(p=>p.lat), lngs=corners.map(p=>p.lng);
-  const latMin=Math.min(...lats), latMax=Math.max(...lats), lngMin=Math.min(...lngs), lngMax=Math.max(...lngs);
-  const cLat=(latMin+latMax)/2, cLng=(lngMin+lngMax)/2;
-  const hLat=latMax-latMin, hLng=lngMax-lngMin; const N=24; const out=[];
-  if(hLng>=hLat){
-    const b=hLat/2;
-    out.push({lat:latMax,lng:lngMin}); out.push({lat:latMax,lng:lngMax});
-    for(let i=1;i<N;i++){const a=Math.PI/2-Math.PI*(i/N);out.push({lat:cLat+b*Math.sin(a),lng:lngMax+b*Math.cos(a)});}
-    out.push({lat:latMin,lng:lngMax}); out.push({lat:latMin,lng:lngMin});
-    for(let i=1;i<N;i++){const a=-Math.PI/2-Math.PI*(i/N);out.push({lat:cLat+b*Math.sin(a),lng:lngMin+b*Math.cos(a)});}
-    out.push({lat:latMax,lng:lngMin});
-  } else {
-    const b=hLng/2;
-    out.push({lat:latMin,lng:lngMin}); out.push({lat:latMax,lng:lngMin});
-    for(let i=1;i<N;i++){const a=Math.PI-Math.PI*(i/N);out.push({lat:latMax+b*Math.sin(a),lng:cLng+b*Math.cos(a)});}
-    out.push({lat:latMax,lng:lngMax}); out.push({lat:latMin,lng:lngMax});
-    for(let i=1;i<N;i++){const a=0-Math.PI*(i/N);out.push({lat:latMin+b*Math.sin(a),lng:cLng+b*Math.cos(a)});}
-    out.push({lat:latMin,lng:lngMin});
+// 局部平面坐标（米）转换：以 origin 为原点，避免经纬度不等距导致弧线变形
+function toLocal(p, origin){
+  const mPerDegLat = 110540;
+  const mPerDegLng = 110540 * Math.cos(origin.lat * Math.PI/180);
+  return { x:(p.lng-origin.lng)*mPerDegLng, y:(p.lat-origin.lat)*mPerDegLat };
+}
+function toLatLng(c, origin){
+  const mPerDegLat = 110540;
+  const mPerDegLng = 110540 * Math.cos(origin.lat * Math.PI/180);
+  return { lat: origin.lat + c.y/mPerDegLat, lng: origin.lng + c.x/mPerDegLng };
+}
+
+// ===== 跑道真实化处理：把标准几何跑道转成"人跑出来的"GPS 轨迹 =====
+// 思路：保持整体沿跑道方向（绕圈轮廓不变），但
+//   1. 直道段加轻微左右摆动（小幅正弦 + 随机扰动）
+//   2. 弯道段加半径/角度扰动（不完全规则圆弧）
+//   3. 全程加 GPS 级小抖动（1~3 米随机偏移，平滑过滤去掉跳点）
+function mulberry32(seed){
+  return function(){
+    seed|=0; seed=(seed+0x6D2B79F5)|0;
+    let t=Math.imul(seed^(seed>>>15), 1|seed);
+    t=(t+Math.imul(t^(t>>>7), 61|t))^t;
+    return ((t^(t>>>14))>>>0)/4294967296;
+  };
+}
+// 一阶低通平滑（去跳点）：out[i] = out[i-1]*k + raw*(1-k)
+function smoothPoints(pts, k){
+  const out=[pts[0]];
+  for(let i=1;i<pts.length;i++){
+    out.push({ lat: out[i-1].lat*k + pts[i].lat*(1-k), lng: out[i-1].lng*k + pts[i].lng*(1-k) });
   }
   return out;
+}
+// 对一条轨迹（lat/lng 数组）做真实化：返回新数组
+function humanizeTrack(pts, seed){
+  if(!pts || pts.length<4) return pts;
+  const rand = mulberry32(seed || 20260807);
+  const origin = {
+    lat:(pts.reduce((s,p)=>s+p.lat,0))/pts.length,
+    lng:(pts.reduce((s,p)=>s+p.lng,0))/pts.length
+  };
+  const mPerDegLat = 110540;
+  const mPerDegLng = 110540 * Math.cos(origin.lat*Math.PI/180);
+  const toLocal = p => ({ x:(p.lng-origin.lng)*mPerDegLng, y:(p.lat-origin.lat)*mPerDegLat });
+  const toLatLng = c => ({ lat: origin.lat + c.y/mPerDegLat, lng: origin.lng + c.x/mPerDegLng });
+
+  let loc = pts.map(toLocal);
+  // 弧长参数
+  const cum=[0];
+  for(let i=1;i<loc.length;i++) cum.push(cum[i-1]+Math.hypot(loc[i].x-loc[i-1].x, loc[i].y-loc[i-1].y));
+  const total=cum[cum.length-1]||1;
+  // 低频摆动幅度 2~5 米，频率约 0.25~0.6 圈一个完整周期
+  const amp = 2.5 + rand()*2.5;
+  const w1 = (Math.PI*2)/(total*(0.25+rand()*0.35));
+  const w2 = w1*(1.7+rand()*1.3);
+  const ph1 = rand()*Math.PI*2, ph2 = rand()*Math.PI*2;
+  // 高频 GPS 抖动（随机游走 + 低通，平滑无跳点）
+  const jamp = 0.6 + rand()*0.8;
+  let jx=0, jy=0;
+  const res=[];
+  for(let i=0;i<loc.length;i++){
+    const s=cum[i];
+    const wobX = amp*(0.7*Math.sin(w1*s+ph1) + 0.3*Math.sin(w2*s+ph2));
+    const wobY = amp*(0.6*Math.cos(w1*s*1.1+ph2) + 0.4*Math.sin(w2*s*0.9+ph1));
+    jx = jx*0.82 + (rand()-0.5)*2*jamp;
+    jy = jy*0.82 + (rand()-0.5)*2*jamp;
+    const di = Math.max(0, Math.min(loc.length-2, i));
+    let dx = loc[Math.min(loc.length-1,di+1)].x - loc[di].x;
+    let dy = loc[Math.min(loc.length-1,di+1)].y - loc[di].y;
+    const dl = Math.hypot(dx,dy)||1; dx/=dl; dy/=dl;
+    const nx=-dy, ny=dx;
+    res.push(toLatLng({
+      x: loc[i].x + nx*wobX + ny*wobY + nx*jx + ny*jy,
+      y: loc[i].y + ny*wobX - nx*wobY + ny*jx - nx*jy
+    }));
+  }
+  return smoothPoints(res, 0.72);
+}
+// 跑道生成入口：标准几何跑道 → 真实化
+function buildTrackPathReal(corners){
+  const geo = buildTrackPath(corners);
+  return humanizeTrack(geo, ((corners[0].lat*1e7)|0) ^ ((corners[2].lng*1e7)|0));
+}
+
+// ===== 跑道生成算法（严格按用户规则）=====
+// 顺序 4 个点 P0,P1,P2,P3（即第 1~4 点）：
+//   线段 P0→P1（直）    线段 P2→P3（直）
+//   半圆弧 P1→P2        半圆弧 P3→P0
+// 两段半圆弧分别向矩形外侧凸出（镜像对称），形成标准操场
+function buildTrackPath(corners) {
+  const P = corners.slice(0,4);
+  const origin = {
+    lat:(P[0].lat+P[1].lat+P[2].lat+P[3].lat)/4,
+    lng:(P[0].lng+P[1].lng+P[2].lng+P[3].lng)/4
+  };
+  const C = P.map(p=>toLocal(p,origin));
+  const conv = c => toLatLng(c, origin);
+  const out = [];
+  // 第 1 段：P0 → P1 直线
+  out.push(conv(C[0])); addLine(out, C[0], C[1], conv); out.push(conv(C[1]));
+  // 第 2 段：P1 → P2 半圆弧，参考点取对边中点(P0+P3)/2，弧凸向远离参考点一侧
+  addArc(out, C[1], C[2], { x:(C[0].x+C[3].x)/2, y:(C[0].y+C[3].y)/2 }, conv); out.push(conv(C[2]));
+  // 第 3 段：P2 → P3 直线
+  addLine(out, C[2], C[3], conv); out.push(conv(C[3]));
+  // 第 4 段：P3 → P0 半圆弧，参考点取对边中点(P1+P2)/2
+  addArc(out, C[3], C[0], { x:(C[1].x+C[2].x)/2, y:(C[1].y+C[2].y)/2 }, conv); out.push(conv(C[0]));
+  return out;
+}
+// 直线插值（不含终点，避免重复）
+function addLine(out, a, b, conv){
+  const d = Math.hypot(b.x-a.x, b.y-a.y);
+  const n = Math.max(1, Math.round(d/5));
+  for(let i=1;i<n;i++){ const t=i/n; out.push(conv({ x:a.x+(b.x-a.x)*t, y:a.y+(b.y-a.y)*t })); }
+}
+// 半圆弧：以 s-e 连线为直径，圆心在中点，半径 |s-e|/2
+// ref = 对边中点（弧向远离 ref 的方向凸出）
+function addArc(out, s, e, ref, conv){
+  const mx=(s.x+e.x)/2, my=(s.y+e.y)/2;
+  const r = Math.hypot(e.x-s.x, e.y-s.y)/2;
+  if(r < 1e-6) return;
+  const ulen = Math.hypot(e.x-s.x, e.y-s.y);
+  const ux=(e.x-s.x)/ulen, uy=(e.y-s.y)/ulen;
+  // 两个法向候选
+  const nLx=-uy, nLy=ux;    // 左法向（u 左转90°）
+  const nRx=uy, nRy=-ux;     // 右法向（u 右转90°）
+  // 取与 (ref-M) 反向的那个 → 弧凸向远离 ref 一侧（即矩形外侧）
+  const rfx=ref.x-mx, rfy=ref.y-my;
+  const useLeft = (nLx*rfx + nLy*rfy) < 0;
+  const nx = useLeft ? nLx : nRx;
+  const ny = useLeft ? nLy : nRy;
+  // 弧长 = π*r，按每段约 3m 采样（旧写法 round(r/5) 实际步长达 5π≈15.7m，弧会有棱角）
+  const N = Math.max(36, Math.round(Math.PI*r/3));
+  // 参数化：th 从 π 递减到 0，起点=s(th=π)，终点=e(th=0)，保证弧点顺序 s→e
+  // （若写成 th 从 0 到 π，点序会变成 e→s，导致轨迹先斜跨过去再倒着画回来）
+  for(let i=1;i<N;i++){
+    const th=Math.PI*(1 - i/N), cosT=Math.cos(th), sinT=Math.sin(th);
+    out.push(conv({ x:mx + r*(cosT*ux + sinT*nx), y:my + r*(cosT*uy + sinT*ny) }));
+  }
 }
 
 // ===== 矩形 =====
@@ -614,6 +766,7 @@ async function generateRectRoute(b,e){
 }
 
 // ===== 生成轨迹（跑道模式专用；图形模式框选后自动生成） =====
+// 设计：第一圈=标准几何跑道（基准/保存/缩略图）；叠加显示 5 圈自然偏移轨迹
 function generateTrack(){
   if(mode==="rect"){ toast("图形模式：框选区域后自动匹配道路生成，无需点此按钮"); return; }
   let t = activeTrack();
@@ -622,11 +775,51 @@ function generateTrack(){
   }
   if(!t || t.mode!=="track"){ toast("跑道模式：点满 4 个角点后点「生成轨迹」"); return; }
   if(t.points.length<4){ toast("跑道需先点满 4 个角点"); return; }
-  t.points = buildTrackPath(t.points.slice(0,4));
+  // 第一圈：标准几何跑道（直道笔直、弯道圆滑）——基准/保存/缩略图都用它
+  const base = buildTrackPath(t.points.slice(0,4));
+  t.points = base;
   t.generated = true;
+  // 叠加显示圈：以第一圈为模板生成 5 圈自然偏移轨迹（±0.5~1.5m 法向），仅用于显示真实感
+  t.displayLaps = buildDisplayLaps(base, 5, t.points.slice(0,4));
   window._lastTrack={ mode:"track", generatedAt:new Date().toISOString(), pointCount:t.points.length, distanceKm:+trackDistanceKm(t).toFixed(3), path:t.points.map(p=>[+p.lat.toFixed(6),+p.lng.toFixed(6)]) };
-  toast("跑道轨迹生成完成");
+  toast("跑道轨迹生成完成（基准圈 + 5 圈叠加显示）");
   render();
+}
+
+// 以基准轨迹为模板生成 N 条偏移轨迹（法向 ±0.5~1.5m 随机游走，锚定第一圈方向）
+function buildDisplayLaps(base, n, corners){
+  const laps=[];
+  if(!base || base.length<4) return laps;
+  const origin = {
+    lat:(base.reduce((s,p)=>s+p.lat,0))/base.length,
+    lng:(base.reduce((s,p)=>s+p.lng,0))/base.length
+  };
+  const mPerDegLat=110540, mPerDegLng=110540*Math.cos(origin.lat*Math.PI/180);
+  const toLocal=p=>({ x:(p.lng-origin.lng)*mPerDegLng, y:(p.lat-origin.lat)*mPerDegLat });
+  const toLatLng=c=>({ lat:origin.lat+c.y/mPerDegLat, lng:origin.lng+c.x/mPerDegLng });
+  const loc = base.map(toLocal);
+  const seed = ((corners[0].lat*1e7)|0) ^ ((corners[2].lng*1e7)|0);
+  const rand = mulberry32(seed);
+  for(let lap=0; lap<n; lap++){
+    // 每圈一个独立的低频偏移场（±0.5~1.5m）
+    const amp = 0.5 + rand()*1.0;
+    const w1 = rand()*0.02 + 0.004, w2 = rand()*0.03 + 0.01;   // 每米弧度（低频）
+    const ph1 = rand()*Math.PI*2, ph2 = rand()*Math.PI*2;
+    const out=[];
+    for(let i=0;i<loc.length;i++){
+      // 法向偏移：用局部切向求法向量
+      const di = Math.max(0, Math.min(loc.length-2, i));
+      let dx = loc[Math.min(loc.length-1,di+1)].x - loc[di].x;
+      let dy = loc[Math.min(loc.length-1,di+1)].y - loc[di].y;
+      const dl = Math.hypot(dx,dy)||1; dx/=dl; dy/=dl;
+      const nx=-dy, ny=dx;
+      // 沿弧长的低频偏移（自然、连续）
+      const off = amp*(0.6*Math.sin(loc[i].x*w1 + ph1) + 0.4*Math.sin(loc[i].y*w2 + ph2));
+      out.push(toLatLng({ x: loc[i].x + nx*off, y: loc[i].y + ny*off }));
+    }
+    laps.push(out);
+  }
+  return laps;
 }
 
 function exportJSON(){
@@ -748,6 +941,9 @@ document.querySelectorAll(".mode-btn").forEach(btn=>{
     document.querySelectorAll(".mode-btn").forEach(b=>b.classList.remove("active"));
     btn.classList.add("active");
     mode=btn.dataset.mode;
+    // 跑道模式显示生成规则说明，其他模式隐藏
+    const ruleEl=document.getElementById("trackRule");
+    if(ruleEl) ruleEl.style.display = (mode==="track") ? "block" : "none";
     // 切换模式：停止当前绘制，但已画轨迹全部保留在地图上
     drawingEnabled=false; activeIdx=-1;
     startBtn.classList.remove("active");
@@ -788,6 +984,7 @@ $("#undoBtn").onclick=()=>{
 $("#clearBtn").onclick=()=>{
   tracks=[]; activeIdx=-1; drawingEnabled=false; window._lastTrack=null;
   startBtn.classList.remove("active"); endBtn.classList.remove("active");
+  if (fadePolyline) { fadePolyline.setGeometries([]); }
   render();
 };
 $("#genBtn").onclick=generateTrack;
@@ -799,38 +996,6 @@ $("#saveConfirm").onclick=doSaveMap;
 $("#saveCancel").onclick=()=>$("#saveModal").classList.remove("show");
 $("#saveName").addEventListener("keydown",(e)=>{ if(e.key==="Enter") doSaveMap(); });
 $("#saveModal").addEventListener("click",(e)=>{ if(e.target.id==="saveModal") $("#saveModal").classList.remove("show"); });
-
-// ===== 嵌入模式：把轨迹回传给父页面（TCX 生成器） =====
-// 把所有段按绘制顺序拼成一条连续路径（段与段之间直连），坐标为腾讯 GCJ-02，
-// 由父页面负责转成 WGS-84 再写入 TCX。
-function collectFlatPath(){
-  const out=[];
-  tracks.forEach(t=>{
-    finalPoints(t).forEach(p=>{
-      const lat=+p.lat.toFixed(6), lng=+p.lng.toFixed(6);
-      const last=out[out.length-1];
-      if(!last || last[0]!==lat || last[1]!==lng) out.push([lat,lng]);
-    });
-  });
-  return out;
-}
-const IS_EMBED = (function(){ try{ return window.parent && window.parent!==window; }catch(e){ return false; } })();
-if(IS_EMBED){
-  const ub=$("#useTrackBtn");
-  ub.style.display="";
-  ub.onclick=()=>{
-    const path=collectFlatPath();
-    if(path.length<2){ toast("还没有轨迹，请先绘制",true); return; }
-    window.parent.postMessage({
-      type:"TCX_TRACK",
-      coordSystem:"gcj02",
-      points:path,
-      totalKm:+totalDistanceKm().toFixed(3),
-      segmentCount:tracks.length
-    },"*");
-    toast(`已回传 ${path.length} 个轨迹点 / ${totalDistanceKm().toFixed(2)} 公里`);
-  };
-}
 
 // ===== 定位（回到当前中心） =====
 $("#locateBtn").onclick=()=>{
@@ -984,6 +1149,59 @@ function loadMapScript(key){
         地图加载失败：${err.message}<br/><br/>请确认 Key 已启用 JavaScriptAPI(GLMap)
       </div>`;
   }
+})();
+
+/* ===== 与 TCX 生成器联动：被 iframe 嵌入时显示「用此轨迹」回传按钮 ===== */
+(function(){
+  var embedded = false;
+  try { embedded = (window.parent && window.parent !== window); } catch(e) { embedded = true; }
+  if(!embedded) return;
+
+  var btn = document.getElementById("useTrackBtn");
+  var sep = document.getElementById("useTrackSep");
+  if(!btn) return;
+  btn.style.display = "";
+  if(sep) sep.style.display = "";
+
+  // 把所有轨迹段串成一条连续路径 [{lat,lon}]
+  function collectPath(){
+    var out = [];
+    for(var i=0;i<tracks.length;i++){
+      var pts = finalPoints(tracks[i]) || [];
+      for(var j=0;j<pts.length;j++){
+        var p = pts[j];
+        if(p && isFinite(p.lat) && isFinite(p.lng)){
+          // 去掉与上一点完全重合的点
+          var last = out[out.length-1];
+          if(last && Math.abs(last.lat-p.lat)<1e-9 && Math.abs(last.lon-p.lng)<1e-9) continue;
+          out.push({ lat:+p.lat, lon:+p.lng });
+        }
+      }
+    }
+    return out;
+  }
+
+  btn.onclick = function(){
+    var path = collectPath();
+    if(path.length < 2){
+      toast("还没有轨迹，请先绘制并生成", true);
+      return;
+    }
+    var km = 0;
+    try { km = +totalDistanceKm().toFixed(3); } catch(e) { km = 0; }
+    try {
+      window.parent.postMessage({
+        type: "MAP_TRACK",
+        source: "map.html",
+        points: path,
+        km: km,
+        segmentCount: tracks.length
+      }, "*");
+      toast("已回传 " + path.length + " 个轨迹点（" + km.toFixed(2) + " km）");
+    } catch(e) {
+      toast("回传失败：" + e.message, true);
+    }
+  };
 })();
 </script>
 </body>

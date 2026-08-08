@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<!-- force 360/qq/sogou browsers to use webkit/blink kernel -->
+<meta name="renderer" content="webkit">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FIT → TCX 转换器（本地单文件版）</title>
+<style>
+  :root { --bg:#f5f7fa; --card:#fff; --line:#e3e8ef; --main:#2b6cb0; --ok:#2f855a; --err:#c53030; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif; background:var(--bg); color:#1a202c; padding:24px; }
+  .wrap { max-width:760px; margin:0 auto; }
+  h1 { font-size:20px; margin:0 0 6px; }
+  .sub { color:#5a6573; font-size:13px; margin:0 0 18px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:20px; box-shadow:0 1px 2px rgba(0,0,0,.04); }
+  .drop { border:2px dashed var(--line); border-radius:10px; padding:22px; text-align:center; cursor:pointer; transition:.15s; }
+  .drop:hover { border-color:var(--main); background:#f0f6ff; }
+  input[type=file] { display:none; }
+  .btn { margin-top:14px; background:var(--main); color:#fff; border:none; border-radius:8px; padding:10px 18px; font-size:14px; cursor:pointer; }
+  .btn:hover { opacity:.92; }
+  .btn:disabled { opacity:.5; cursor:not-allowed; }
+  #log { margin-top:16px; white-space:pre-wrap; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:12px; max-height:280px; overflow:auto; color:#2d3748; }
+  .ok { color:var(--ok); } .err { color:var(--err); }
+  .note { margin-top:14px; font-size:12px; color:#718096; }
+  .warn { background:#fff5f5; border:1px solid #fc8181; color:#c53030; border-radius:8px; padding:10px 14px; margin-bottom:12px; font-size:13px; display:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>FIT → TCX 转换器</h1>
+  <p class="sub">纯本地转换，文件不会上传到任何服务器。支持多选批量转换。</p>
+  <div class="card">
+    <div class="warn" id="warn">浏览器内核不支持或脚本未加载，请切换到<strong>极速模式</strong>，或用 Chrome/Edge 打开本文件。</div>
+    <label class="drop" id="drop">
+      <div>点击选择 .fit 文件（可多选）</div>
+      <input type="file" id="file" accept=".fit" multiple>
+    </label>
+    <button class="btn" id="btn">转换并下载</button>
+    <div id="log"></div>
+    <div class="note">若转换失败，请检查浏览器是否处于极速/兼容模式。单文件版无需额外 js 文件。</div>
+  </div>
+</div>
+
+<script>
+// Auto-generated from python fitparse — message# -> field# -> {name, scale, offset, semi}
+const FIT_PROFILE = {"18": {"name": "session", "fields": {"0": {"name": "event", "scale": 1, "offset": 0, "semi": false}, "1": {"name": "event_type", "scale": 1, "offset": 0, "semi": false}, "2": {"name": "start_time", "scale": 1, "offset": 0, "semi": false}, "3": {"name": "start_position_lat", "scale": 1, "offset": 0, "semi": true}, "4": {"name": "start_position_long", "scale": 1, "offset": 0, "semi": true}, "5": {"name": "sport", "scale": 1, "offset": 0, "semi": false}, "6": {"name": "sub_sport", "scale": 1, "offset": 0, "semi": false}, "7": {"name": "total_elapsed_time", "scale": 1000, "offset": 0, "semi": false}, "8": {"name": "total_timer_time", "scale": 1000, "offset": 0, "semi": false}, "9": {"name": "total_distance", "scale": 100, "offset": 0, "semi": false}, "10": {"name": "total_cycles", "scale": 1, "offset": 0, "semi": false}, "11": {"name": "total_calories", "scale": 1, "offset": 0, "semi": false}, "13": {"name": "total_fat_calories", "scale": 1, "offset": 0, "semi": false}, "14": {"name": "avg_speed", "scale": 1000, "offset": 0, "semi": false}, "15": {"name": "max_speed", "scale": 1000, "offset": 0, "semi": false}, "16": {"name": "avg_heart_rate", "scale": 1, "offset": 0, "semi": false}, "17": {"name": "max_heart_rate", "scale": 1, "offset": 0, "semi": false}, "18": {"name": "avg_cadence", "scale": 1, "offset": 0, "semi": false}, "19": {"name": "max_cadence", "scale": 1, "offset": 0, "semi": false}, "20": {"name": "avg_power", "scale": 1, "offset": 0, "semi": false}, "21": {"name": "max_power", "scale": 1, "offset": 0, "semi": false}, "22": {"name": "total_ascent", "scale": 1, "offset": 0, "semi": false}, "23": {"name": "total_descent", "scale": 1, "offset": 0, "semi": false}, "24": {"name": "total_training_effect", "scale": 10, "offset": 0, "semi": false}, "25": {"name": "first_lap_index", "scale": 1, "offset": 0, "semi": false}, "26": {"name": "num_laps", "scale": 1, "offset": 0, "semi": false}, "27": {"name": "event_group", "scale": 1, "offset": 0, "semi": false}, "28": {"name": "trigger", "scale": 1, "offset": 0, "semi": false}, "29": {"name": "nec_lat", "scale": 1, "offset": 0, "semi": true}, "30": {"name": "nec_long", "scale": 1, "offset": 0, "semi": true}, "31": {"name": "swc_lat", "scale": 1, "offset": 0, "semi": true}, "32": {"name": "swc_long", "scale": 1, "offset": 0, "semi": true}, "34": {"name": "normalized_power", "scale": 1, "offset": 0, "semi": false}, "35": {"name": "training_stress_score", "scale": 10, "offset": 0, "semi": false}, "36": {"name": "intensity_factor", "scale": 1000, "offset": 0, "semi": false}, "37": {"name": "left_right_balance", "scale": 1, "offset": 0, "semi": false}, "41": {"name": "avg_stroke_count", "scale": 10, "offset": 0, "semi": false}, "42": {"name": "avg_stroke_distance", "scale": 100, "offset": 0, "semi": false}, "43": {"name": "swim_stroke", "scale": 1, "offset": 0, "semi": false}, "44": {"name": "pool_length", "scale": 100, "offset": 0, "semi": false}, "45": {"name": "threshold_power", "scale": 1, "offset": 0, "semi": false}, "46": {"name": "pool_length_unit", "scale": 1, "offset": 0, "semi": false}, "47": {"name": "num_active_lengths", "scale": 1, "offset": 0, "semi": false}, "48": {"name": "total_work", "scale": 1, "offset": 0, "semi": false}, "49": {"name": "avg_altitude", "scale": 5, "offset": 500, "semi": false}, "50": {"name": "max_altitude", "scale": 5, "offset": 500, "semi": false}, "51": {"name": "gps_accuracy", "scale": 1, "offset": 0, "semi": false}, "52": {"name": "avg_grade", "scale": 100, "offset": 0, "semi": false}, "53": {"name": "avg_pos_grade", "scale": 100, "offset": 0, "semi": false}, "54": {"name": "avg_neg_grade", "scale": 100, "offset": 0, "semi": false}, "55": {"name": "max_pos_grade", "scale": 100, "offset": 0, "semi": false}, "56": {"name": "max_neg_grade", "scale": 100, "offset": 0, "semi": false}, "57": {"name": "avg_temperature", "scale": 1, "offset": 0, "semi": false}, "58": {"name": "max_temperature", "scale": 1, "offset": 0, "semi": false}, "59": {"name": "total_moving_time", "scale": 1000, "offset": 0, "semi": false}, "60": {"name": "avg_pos_vertical_speed", "scale": 1000, "offset": 0, "semi": false}, "61": {"name": "avg_neg_vertical_speed", "scale": 1000, "offset": 0, "semi": false}, "62": {"name": "max_pos_vertical_speed", "scale": 1000, "offset": 0, "semi": false}, "63": {"name": "max_neg_vertical_speed", "scale": 1000, "offset": 0, "semi": false}, "64": {"name": "min_heart_rate", "scale": 1, "offset": 0, "semi": false}, "65": {"name": "time_in_hr_zone", "scale": 1000, "offset": 0, "semi": false}, "66": {"name": "time_in_speed_zone", "scale": 1000, "offset": 0, "semi": false}, "67": {"name": "time_in_cadence_zone", "scale": 1000, "offset": 0, "semi": false}, "68": {"name": "time_in_power_zone", "scale": 1000, "offset": 0, "semi": false}, "69": {"name": "avg_lap_time", "scale": 1000, "offset": 0, "semi": false}, "70": {"name": "best_lap_index", "scale": 1, "offset": 0, "semi": false}, "71": {"name": "min_altitude", "scale": 5, "offset": 500, "semi": false}, "82": {"name": "player_score", "scale": 1, "offset": 0, "semi": false}, "83": {"name": "opponent_score", "scale": 1, "offset": 0, "semi": false}, "84": {"name": "opponent_name", "scale": 1, "offset": 0, "semi": false}, "85": {"name": "stroke_count", "scale": 1, "offset": 0, "semi": false}, "86": {"name": "zone_count", "scale": 1, "offset": 0, "semi": false}, "87": {"name": "max_ball_speed", "scale": 100, "offset": 0, "semi": false}, "88": {"name": "avg_ball_speed", "scale": 100, "offset": 0, "semi": false}, "89": {"name": "avg_vertical_oscillation", "scale": 10, "offset": 0, "semi": false}, "90": {"name": "avg_stance_time_percent", "scale": 100, "offset": 0, "semi": false}, "91": {"name": "avg_stance_time", "scale": 10, "offset": 0, "semi": false}, "92": {"name": "avg_fractional_cadence", "scale": 128, "offset": 0, "semi": false}, "93": {"name": "max_fractional_cadence", "scale": 128, "offset": 0, "semi": false}, "94": {"name": "total_fractional_cycles", "scale": 128, "offset": 0, "semi": false}, "95": {"name": "avg_total_hemoglobin_conc", "scale": 100, "offset": 0, "semi": false}, "96": {"name": "min_total_hemoglobin_conc", "scale": 100, "offset": 0, "semi": false}, "97": {"name": "max_total_hemoglobin_conc", "scale": 100, "offset": 0, "semi": false}, "98": {"name": "avg_saturated_hemoglobin_percent", "scale": 10, "offset": 0, "semi": false}, "99": {"name": "min_saturated_hemoglobin_percent", "scale": 10, "offset": 0, "semi": false}, "100": {"name": "max_saturated_hemoglobin_percent", "scale": 10, "offset": 0, "semi": false}, "101": {"name": "avg_left_torque_effectiveness", "scale": 2, "offset": 0, "semi": false}, "102": {"name": "avg_right_torque_effectiveness", "scale": 2, "offset": 0, "semi": false}, "103": {"name": "avg_left_pedal_smoothness", "scale": 2, "offset": 0, "semi": false}, "104": {"name": "avg_right_pedal_smoothness", "scale": 2, "offset": 0, "semi": false}, "105": {"name": "avg_combined_pedal_smoothness", "scale": 2, "offset": 0, "semi": false}, "111": {"name": "sport_index", "scale": 1, "offset": 0, "semi": false}, "112": {"name": "time_standing", "scale": 1000, "offset": 0, "semi": false}, "113": {"name": "stand_count", "scale": 1, "offset": 0, "semi": false}, "114": {"name": "avg_left_pco", "scale": 1, "offset": 0, "semi": false}, "115": {"name": "avg_right_pco", "scale": 1, "offset": 0, "semi": false}, "116": {"name": "avg_left_power_phase", "scale": 0.7111111, "offset": 0, "semi": false}, "117": {"name": "avg_left_power_phase_peak", "scale": 0.7111111, "offset": 0, "semi": false}, "118": {"name": "avg_right_power_phase", "scale": 0.7111111, "offset": 0, "semi": false}, "119": {"name": "avg_right_power_phase_peak", "scale": 0.7111111, "offset": 0, "semi": false}, "120": {"name": "avg_power_position", "scale": 1, "offset": 0, "semi": false}, "121": {"name": "max_power_position", "scale": 1, "offset": 0, "semi": false}, "122": {"name": "avg_cadence_position", "scale": 1, "offset": 0, "semi": false}, "123": {"name": "max_cadence_position", "scale": 1, "offset": 0, "semi": false}, "124": {"name": "enhanced_avg_speed", "scale": 1000, "offset": 0, "semi": false}, "125": {"name": "enhanced_max_speed", "scale": 1000, "offset": 0, "semi": false}, "126": {"name": "enhanced_avg_altitude", "scale": 5, "offset": 500, "semi": false}, "127": {"name": "enhanced_min_altitude", "scale": 5, "offset": 500, "semi": false}, "128": {"name": "enhanced_max_altitude", "scale": 5, "offset": 500, "semi": false}, "129": {"name": "avg_lev_motor_power", "scale": 1, "offset": 0, "semi": false}, "130": {"name": "max_lev_motor_power", "scale": 1, "offset": 0, "semi": false}, "131": {"name": "lev_battery_consumption", "scale": 2, "offset": 0, "semi": false}, "132": {"name": "avg_vertical_ratio", "scale": 100, "offset": 0, "semi": false}, "133": {"name": "avg_stance_time_balance", "scale": 100, "offset": 0, "semi": false}, "134": {"name": "avg_step_length", "scale": 10, "offset": 0, "semi": false}, "137": {"name": "total_anaerobic_training_effect", "scale": 10, "offset": 0, "semi": false}, "139": {"name": "avg_vam", "scale": 1000, "offset": 0, "semi": false}, "253": {"name": "timestamp", "scale": 1, "offset": 0, "semi": false}, "254": {"name": "message_index", "scale": 1, "offset": 0, "semi": false}}}, "19": {"name": "lap", "fields": {"0": {"name": "event", "scale": 1, "offset": 0, "semi": false}, "1": {"name": "event_type", "scale": 1, "offset": 0, "semi": false}, "2": {"name": "start_time", "scale": 1, "offset": 0, "semi": false}, "3": {"name": "start_position_lat", "scale": 1, "offset": 0, "semi": true}, "4": {"name": "start_position_long", "scale": 1, "offset": 0, "semi": true}, "5": {"name": "end_position_lat", "scale": 1, "offset": 0, "semi": true}, "6": {"name": "end_position_long", "scale": 1, "offset": 0, "semi": true}, "7": {"name": "total_elapsed_time", "scale": 1000, "offset": 0, "semi": false}, "8": {"name": "total_timer_time", "scale": 1000, "offset": 0, "semi": false}, "9": {"name": "total_distance", "scale": 100, "offset": 0, "semi": false}, "10": {"name": "total_cycles", "scale": 1, "offset": 0, "semi": false}, "11": {"name": "total_calories", "scale": 1, "offset": 0, "semi": false}, "12": {"name": "total_fat_calories", "scale": 1, "offset": 0, "semi": false}, "13": {"name": "avg_speed", "scale": 1000, "offset": 0, "semi": false}, "14": {"name": "max_speed", "scale": 1000, "offset": 0, "semi": false}, "15": {"name": "avg_heart_rate", "scale": 1, "offset": 0, "semi": false}, "16": {"name": "max_heart_rate", "scale": 1, "offset": 0, "semi": false}, "17": {"name": "avg_cadence", "scale": 1, "offset": 0, "semi": false}, "18": {"name": "max_cadence", "scale": 1, "offset": 0, "semi": false}, "19": {"name": "avg_power", "scale": 1, "offset": 0, "semi": false}, "20": {"name": "max_power", "scale": 1, "offset": 0, "semi": false}, "21": {"name": "total_ascent", "scale": 1, "offset": 0, "semi": false}, "22": {"name": "total_descent", "scale": 1, "offset": 0, "semi": false}, "23": {"name": "intensity", "scale": 1, "offset": 0, "semi": false}, "24": {"name": "lap_trigger", "scale": 1, "offset": 0, "semi": false}, "25": {"name": "sport", "scale": 1, "offset": 0, "semi": false}, "26": {"name": "event_group", "scale": 1, "offset": 0, "semi": false}, "32": {"name": "num_lengths", "scale": 1, "offset": 0, "semi": false}, "33": {"name": "normalized_power", "scale": 1, "offset": 0, "semi": false}, "34": {"name": "left_right_balance", "scale": 1, "offset": 0, "semi": false}, "35": {"name": "first_length_index", "scale": 1, "offset": 0, "semi": false}, "37": {"name": "avg_stroke_distance", "scale": 100, "offset": 0, "semi": false}, "38": {"name": "swim_stroke", "scale": 1, "offset": 0, "semi": false}, "39": {"name": "sub_sport", "scale": 1, "offset": 0, "semi": false}, "40": {"name": "num_active_lengths", "scale": 1, "offset": 0, "semi": false}, "41": {"name": "total_work", "scale": 1, "offset": 0, "semi": false}, "42": {"name": "avg_altitude", "scale": 5, "offset": 500, "semi": false}, "43": {"name": "max_altitude", "scale": 5, "offset": 500, "semi": false}, "44": {"name": "gps_accuracy", "scale": 1, "offset": 0, "semi": false}, "45": {"name": "avg_grade", "scale": 100, "offset": 0, "semi": false}, "46": {"name": "avg_pos_grade", "scale": 100, "offset": 0, "semi": false}, "47": {"name": "avg_neg_grade", "scale": 100, "offset": 0, "semi": false}, "48": {"name": "max_pos_grade", "scale": 100, "offset": 0, "semi": false}, "49": {"name": "max_neg_grade", "scale": 100, "offset": 0, "semi": false}, "50": {"name": "avg_temperature", "scale": 1, "offset": 0, "semi": false}, "51": {"name": "max_temperature", "scale": 1, "offset": 0, "semi": false}, "52": {"name": "total_moving_time", "scale": 1000, "offset": 0, "semi": false}, "53": {"name": "avg_pos_vertical_speed", "scale": 1000, "offset": 0, "semi": false}, "54": {"name": "avg_neg_vertical_speed", "scale": 1000, "offset": 0, "semi": false}, "55": {"name": "max_pos_vertical_speed", "scale": 1000, "offset": 0, "semi": false}, "56": {"name": "max_neg_vertical_speed", "scale": 1000, "offset": 0, "semi": false}, "57": {"name": "time_in_hr_zone", "scale": 1000, "offset": 0, "semi": false}, "58": {"name": "time_in_speed_zone", "scale": 1000, "offset": 0, "semi": false}, "59": {"name": "time_in_cadence_zone", "scale": 1000, "offset": 0, "semi": false}, "60": {"name": "time_in_power_zone", "scale": 1000, "offset": 0, "semi": false}, "61": {"name": "repetition_num", "scale": 1, "offset": 0, "semi": false}, "62": {"name": "min_altitude", "scale": 5, "offset": 500, "semi": false}, "63": {"name": "min_heart_rate", "scale": 1, "offset": 0, "semi": false}, "71": {"name": "wkt_step_index", "scale": 1, "offset": 0, "semi": false}, "74": {"name": "opponent_score", "scale": 1, "offset": 0, "semi": false}, "75": {"name": "stroke_count", "scale": 1, "offset": 0, "semi": false}, "76": {"name": "zone_count", "scale": 1, "offset": 0, "semi": false}, "77": {"name": "avg_vertical_oscillation", "scale": 10, "offset": 0, "semi": false}, "78": {"name": "avg_stance_time_percent", "scale": 100, "offset": 0, "semi": false}, "79": {"name": "avg_stance_time", "scale": 10, "offset": 0, "semi": false}, "80": {"name": "avg_fractional_cadence", "scale": 128, "offset": 0, "semi": false}, "81": {"name": "max_fractional_cadence", "scale": 128, "offset": 0, "semi": false}, "82": {"name": "total_fractional_cycles", "scale": 128, "offset": 0, "semi": false}, "83": {"name": "player_score", "scale": 1, "offset": 0, "semi": false}, "84": {"name": "avg_total_hemoglobin_conc", "scale": 100, "offset": 0, "semi": false}, "85": {"name": "min_total_hemoglobin_conc", "scale": 100, "offset": 0, "semi": false}, "86": {"name": "max_total_hemoglobin_conc", "scale": 100, "offset": 0, "semi": false}, "87": {"name": "avg_saturated_hemoglobin_percent", "scale": 10, "offset": 0, "semi": false}, "88": {"name": "min_saturated_hemoglobin_percent", "scale": 10, "offset": 0, "semi": false}, "89": {"name": "max_saturated_hemoglobin_percent", "scale": 10, "offset": 0, "semi": false}, "91": {"name": "avg_left_torque_effectiveness", "scale": 2, "offset": 0, "semi": false}, "92": {"name": "avg_right_torque_effectiveness", "scale": 2, "offset": 0, "semi": false}, "93": {"name": "avg_left_pedal_smoothness", "scale": 2, "offset": 0, "semi": false}, "94": {"name": "avg_right_pedal_smoothness", "scale": 2, "offset": 0, "semi": false}, "95": {"name": "avg_combined_pedal_smoothness", "scale": 2, "offset": 0, "semi": false}, "98": {"name": "time_standing", "scale": 1000, "offset": 0, "semi": false}, "99": {"name": "stand_count", "scale": 1, "offset": 0, "semi": false}, "100": {"name": "avg_left_pco", "scale": 1, "offset": 0, "semi": false}, "101": {"name": "avg_right_pco", "scale": 1, "offset": 0, "semi": false}, "102": {"name": "avg_left_power_phase", "scale": 0.7111111, "offset": 0, "semi": false}, "103": {"name": "avg_left_power_phase_peak", "scale": 0.7111111, "offset": 0, "semi": false}, "104": {"name": "avg_right_power_phase", "scale": 0.7111111, "offset": 0, "semi": false}, "105": {"name": "avg_right_power_phase_peak", "scale": 0.7111111, "offset": 0, "semi": false}, "106": {"name": "avg_power_position", "scale": 1, "offset": 0, "semi": false}, "107": {"name": "max_power_position", "scale": 1, "offset": 0, "semi": false}, "108": {"name": "avg_cadence_position", "scale": 1, "offset": 0, "semi": false}, "109": {"name": "max_cadence_position", "scale": 1, "offset": 0, "semi": false}, "110": {"name": "enhanced_avg_speed", "scale": 1000, "offset": 0, "semi": false}, "111": {"name": "enhanced_max_speed", "scale": 1000, "offset": 0, "semi": false}, "112": {"name": "enhanced_avg_altitude", "scale": 5, "offset": 500, "semi": false}, "113": {"name": "enhanced_min_altitude", "scale": 5, "offset": 500, "semi": false}, "114": {"name": "enhanced_max_altitude", "scale": 5, "offset": 500, "semi": false}, "115": {"name": "avg_lev_motor_power", "scale": 1, "offset": 0, "semi": false}, "116": {"name": "max_lev_motor_power", "scale": 1, "offset": 0, "semi": false}, "117": {"name": "lev_battery_consumption", "scale": 2, "offset": 0, "semi": false}, "118": {"name": "avg_vertical_ratio", "scale": 100, "offset": 0, "semi": false}, "119": {"name": "avg_stance_time_balance", "scale": 100, "offset": 0, "semi": false}, "120": {"name": "avg_step_length", "scale": 10, "offset": 0, "semi": false}, "121": {"name": "avg_vam", "scale": 1000, "offset": 0, "semi": false}, "253": {"name": "timestamp", "scale": 1, "offset": 0, "semi": false}, "254": {"name": "message_index", "scale": 1, "offset": 0, "semi": false}}}, "20": {"name": "record", "fields": {"0": {"name": "position_lat", "scale": 1, "offset": 0, "semi": true}, "1": {"name": "position_long", "scale": 1, "offset": 0, "semi": true}, "2": {"name": "altitude", "scale": 5, "offset": 500, "semi": false}, "3": {"name": "heart_rate", "scale": 1, "offset": 0, "semi": false}, "4": {"name": "cadence", "scale": 1, "offset": 0, "semi": false}, "5": {"name": "distance", "scale": 100, "offset": 0, "semi": false}, "6": {"name": "speed", "scale": 1000, "offset": 0, "semi": false}, "7": {"name": "power", "scale": 1, "offset": 0, "semi": false}, "8": {"name": "compressed_speed_distance", "scale": 1, "offset": 0, "semi": false}, "9": {"name": "grade", "scale": 100, "offset": 0, "semi": false}, "10": {"name": "resistance", "scale": 1, "offset": 0, "semi": false}, "11": {"name": "time_from_course", "scale": 1000, "offset": 0, "semi": false}, "12": {"name": "cycle_length", "scale": 100, "offset": 0, "semi": false}, "13": {"name": "temperature", "scale": 1, "offset": 0, "semi": false}, "17": {"name": "speed_1s", "scale": 16, "offset": 0, "semi": false}, "18": {"name": "cycles", "scale": 1, "offset": 0, "semi": false}, "19": {"name": "total_cycles", "scale": 1, "offset": 0, "semi": false}, "28": {"name": "compressed_accumulated_power", "scale": 1, "offset": 0, "semi": false}, "29": {"name": "accumulated_power", "scale": 1, "offset": 0, "semi": false}, "30": {"name": "left_right_balance", "scale": 1, "offset": 0, "semi": false}, "31": {"name": "gps_accuracy", "scale": 1, "offset": 0, "semi": false}, "32": {"name": "vertical_speed", "scale": 1000, "offset": 0, "semi": false}, "33": {"name": "calories", "scale": 1, "offset": 0, "semi": false}, "39": {"name": "vertical_oscillation", "scale": 10, "offset": 0, "semi": false}, "40": {"name": "stance_time_percent", "scale": 100, "offset": 0, "semi": false}, "41": {"name": "stance_time", "scale": 10, "offset": 0, "semi": false}, "42": {"name": "activity_type", "scale": 1, "offset": 0, "semi": false}, "43": {"name": "left_torque_effectiveness", "scale": 2, "offset": 0, "semi": false}, "44": {"name": "right_torque_effectiveness", "scale": 2, "offset": 0, "semi": false}, "45": {"name": "left_pedal_smoothness", "scale": 2, "offset": 0, "semi": false}, "46": {"name": "right_pedal_smoothness", "scale": 2, "offset": 0, "semi": false}, "47": {"name": "combined_pedal_smoothness", "scale": 2, "offset": 0, "semi": false}, "48": {"name": "time128", "scale": 128, "offset": 0, "semi": false}, "49": {"name": "stroke_type", "scale": 1, "offset": 0, "semi": false}, "50": {"name": "zone", "scale": 1, "offset": 0, "semi": false}, "51": {"name": "ball_speed", "scale": 100, "offset": 0, "semi": false}, "52": {"name": "cadence256", "scale": 256, "offset": 0, "semi": false}, "53": {"name": "fractional_cadence", "scale": 128, "offset": 0, "semi": false}, "54": {"name": "total_hemoglobin_conc", "scale": 100, "offset": 0, "semi": false}, "55": {"name": "total_hemoglobin_conc_min", "scale": 100, "offset": 0, "semi": false}, "56": {"name": "total_hemoglobin_conc_max", "scale": 100, "offset": 0, "semi": false}, "57": {"name": "saturated_hemoglobin_percent", "scale": 10, "offset": 0, "semi": false}, "58": {"name": "saturated_hemoglobin_percent_min", "scale": 10, "offset": 0, "semi": false}, "59": {"name": "saturated_hemoglobin_percent_max", "scale": 10, "offset": 0, "semi": false}, "62": {"name": "device_index", "scale": 1, "offset": 0, "semi": false}, "67": {"name": "left_pco", "scale": 1, "offset": 0, "semi": false}, "68": {"name": "right_pco", "scale": 1, "offset": 0, "semi": false}, "69": {"name": "left_power_phase", "scale": 0.7111111, "offset": 0, "semi": false}, "70": {"name": "left_power_phase_peak", "scale": 0.7111111, "offset": 0, "semi": false}, "71": {"name": "right_power_phase", "scale": 0.7111111, "offset": 0, "semi": false}, "72": {"name": "right_power_phase_peak", "scale": 0.7111111, "offset": 0, "semi": false}, "73": {"name": "enhanced_speed", "scale": 1000, "offset": 0, "semi": false}, "78": {"name": "enhanced_altitude", "scale": 5, "offset": 500, "semi": false}, "81": {"name": "battery_soc", "scale": 2, "offset": 0, "semi": false}, "82": {"name": "motor_power", "scale": 1, "offset": 0, "semi": false}, "83": {"name": "vertical_ratio", "scale": 100, "offset": 0, "semi": false}, "84": {"name": "stance_time_balance", "scale": 100, "offset": 0, "semi": false}, "85": {"name": "step_length", "scale": 10, "offset": 0, "semi": false}, "91": {"name": "absolute_pressure", "scale": 1, "offset": 0, "semi": false}, "92": {"name": "depth", "scale": 1000, "offset": 0, "semi": false}, "93": {"name": "next_stop_depth", "scale": 1000, "offset": 0, "semi": false}, "94": {"name": "next_stop_time", "scale": 1, "offset": 0, "semi": false}, "95": {"name": "time_to_surface", "scale": 1, "offset": 0, "semi": false}, "96": {"name": "ndl_time", "scale": 1, "offset": 0, "semi": false}, "97": {"name": "cns_load", "scale": 1, "offset": 0, "semi": false}, "98": {"name": "n2_load", "scale": 1, "offset": 0, "semi": false}, "253": {"name": "timestamp", "scale": 1, "offset": 0, "semi": false}}}, "34": {"name": "activity", "fields": {"0": {"name": "total_timer_time", "scale": 1000, "offset": 0, "semi": false}, "1": {"name": "num_sessions", "scale": 1, "offset": 0, "semi": false}, "2": {"name": "type", "scale": 1, "offset": 0, "semi": false}, "3": {"name": "event", "scale": 1, "offset": 0, "semi": false}, "4": {"name": "event_type", "scale": 1, "offset": 0, "semi": false}, "5": {"name": "local_timestamp", "scale": 1, "offset": 0, "semi": false}, "6": {"name": "event_group", "scale": 1, "offset": 0, "semi": false}, "253": {"name": "timestamp", "scale": 1, "offset": 0, "semi": false}}}};
+
+</script>
+<script>
+// FIT -> TCX parser. Browser + Node compatible.
+// Depends on global FIT_PROFILE (generated from python fitparse).
+const FIT_EPOCH_MS = Date.UTC(1989, 11, 31, 0, 0, 0);
+
+// FIT base types: index -> {size, signed, str}
+const BASE_TYPES = {
+  0: { size: 1, signed: false },        // enum
+  1: { size: 1, signed: true },         // sint8
+  2: { size: 1, signed: false },        // uint8
+  3: { size: 2, signed: true },         // sint16
+  4: { size: 2, signed: false },        // uint16
+  5: { size: 4, signed: true },         // sint32
+  6: { size: 4, signed: false },        // uint32
+  7: { size: 1, signed: false, str: true }, // string
+  8: { size: 4, signed: false },        // float32
+  9: { size: 8, signed: false },        // float64
+  10: { size: 1, signed: false },       // uint8z
+  11: { size: 2, signed: false },       // uint16z
+  12: { size: 4, signed: false },       // uint32z
+  13: { size: 1, signed: false }         // byte
+};
+
+// global message number -> local name we care about
+const MSG_NAMES = { 18: 'session', 19: 'lap', 20: 'record', 34: 'activity' };
+
+// FIT sport enum (subset) -> TCX-compatible name
+const SPORT_ENUM = {
+  0: 'Other', 1: 'Running', 2: 'Biking', 3: 'Transition', 4: 'FitnessEquipment',
+  5: 'Swimming', 6: 'Basketball', 7: 'Soccer', 8: 'Tennis', 9: 'Football',
+  10: 'Training', 11: 'Walking', 12: 'CrossCountrySkiing', 13: 'AlpineSkiing',
+  14: 'Snowboarding', 15: 'Rowing', 16: 'Mountaineering', 17: 'Hiking',
+  18: 'Multisport', 19: 'Paddling', 20: 'Flying', 21: 'Cycling', 22: 'Running',
+  23: 'Walking', 24: 'Diving', 25: 'Elliptical', 26: 'RollerSkiing',
+  27: 'InlineSkating', 28: 'DownhillSkiing'
+};
+
+// Port of fitparse._apply_compressed_accumulation (num_bits=5 for timestamps)
+function applyCompressedAccumulation(rawValue, accumulation, numBits) {
+  const maxValue = (1 << numBits);
+  const maxMask = maxValue - 1;
+  // Keep the high bits of the accumulator; add the raw (low) value.
+  // If raw wrapped below the previous low bits, roll over by maxValue.
+  let baseValue = rawValue + (accumulation - (accumulation & maxMask));
+  if (rawValue < (accumulation & maxMask)) baseValue += maxValue;
+  return baseValue;
+}
+
+function parseFit(arrayBuffer) {
+  const dv = new DataView(arrayBuffer);
+  const headerSize = dv.getUint8(0);
+  let dataSize = 0;
+  if (headerSize >= 12) dataSize = dv.getUint32(4, true);
+  const dataEnd = dataSize > 0 ? headerSize + dataSize : dv.byteLength;
+
+  const definitions = {};
+  const messages = { record: [], lap: [], session: [], activity: [] };
+  let off = headerSize;
+  let compressedTs = 0; // running compressed-timestamp accumulator (seconds since FIT epoch)
+
+  while (off < dataEnd) {
+    const header = dv.getUint8(off); off++;
+    let localNum, isDefinition, isDeveloperData, timeOffset;
+
+    if (header & 0x80) {
+      // Compressed timestamp header (bit7 set): a data message with implicit timestamp
+      localNum = (header >> 5) & 0x3;     // bits 5-6
+      timeOffset = header & 0x1F;         // bits 0-4
+      isDefinition = false;
+      isDeveloperData = false;
+    } else {
+      isDefinition = (header & 0x40) !== 0;    // bit 6
+      isDeveloperData = (header & 0x20) !== 0; // bit 5
+      localNum = header & 0xF;                 // bits 0-3
+      timeOffset = null;
+    }
+
+    if (isDefinition) {
+      off++; // reserved byte
+      const arch = dv.getUint8(off); off++;
+      const le = (arch === 0); // 0 = little endian, 1 = big endian
+      const global = le ? dv.getUint16(off, true) : dv.getUint16(off, false); off += 2;
+      const numFields = dv.getUint8(off); off++;
+      const fields = [];
+      for (let i = 0; i < numFields; i++) {
+        const fnum = dv.getUint8(off); off++;
+        const fsize = dv.getUint8(off); off++;
+        const ftype = dv.getUint8(off); off++;
+        const bt = BASE_TYPES[ftype & 0x1F] || { size: fsize, signed: false };
+        fields.push({ num: fnum, size: fsize, signed: !!bt.signed, str: !!bt.str, dev: false });
+      }
+      // Developer fields: 1 count byte + 3 bytes each, only present when isDeveloperData
+      if (isDeveloperData) {
+        const numDev = dv.getUint8(off); off++;
+        for (let i = 0; i < numDev; i++) {
+          const fnum = dv.getUint8(off); off++;
+          const fsize = dv.getUint8(off); off++;
+          const ftype = dv.getUint8(off); off++; // 3rd byte is dev_data_index, ignored for skipping
+          const bt = BASE_TYPES[ftype & 0x1F] || { size: fsize, signed: false };
+          fields.push({ num: fnum, size: fsize, signed: !!bt.signed, str: !!bt.str, dev: true });
+        }
+      }
+      definitions[localNum] = { global, fields, le };
+    } else {
+      const def = definitions[localNum];
+      if (!def) break; // unknown data message, cannot decode further
+      const vals = {};
+      for (const f of def.fields) {
+        let rawVal;
+        if (f.str) {
+          let s = '';
+          for (let i = 0; i < f.size; i++) {
+            const c = dv.getUint8(off + i);
+            if (c === 0) break;
+            s += String.fromCharCode(c);
+          }
+          off += f.size; rawVal = s;
+        } else {
+          let v = null;
+          if (f.size === 1) v = f.signed ? dv.getInt8(off) : dv.getUint8(off);
+          else if (f.size === 2) v = f.signed ? dv.getInt16(off, def.le) : dv.getUint16(off, def.le);
+          else if (f.size === 4) v = f.signed ? dv.getInt32(off, def.le) : dv.getUint32(off, def.le);
+          else if (f.size === 8) v = Number(f.signed ? dv.getBigInt64(off, def.le) : dv.getBigUint64(off, def.le));
+          off += f.size; rawVal = v;
+        }
+        if (f.dev) continue; // developer data fields: skip (offset already advanced)
+        // A normal (non-compressed) timestamp field updates the accumulator
+        if (f.num === 253 && rawVal !== null) compressedTs = rawVal;
+        const prof = FIT_PROFILE[def.global];
+        if (prof && prof.fields[f.num]) {
+          const fd = prof.fields[f.num];
+          let value = rawVal;
+          if (rawVal !== null && !f.str) {
+            if (fd.semi) value = rawVal * (180 / Math.pow(2, 31));
+            else value = rawVal / fd.scale + fd.offset;
+            if (fd.name === 'timestamp') value = new Date(FIT_EPOCH_MS + rawVal * 1000);
+          }
+          vals[fd.name] = value;
+        } else {
+          vals['unknown_' + f.num] = rawVal;
+        }
+      }
+      // Compressed timestamp header: inject the accumulated timestamp
+      if (timeOffset !== null) {
+        compressedTs = applyCompressedAccumulation(timeOffset, compressedTs, 5);
+        vals['timestamp'] = new Date(FIT_EPOCH_MS + compressedTs * 1000);
+      }
+      const name = MSG_NAMES[def.global];
+      if (name) messages[name].push(vals);
+    }
+  }
+  return messages;
+}
+
+function esc(s) {
+  return ('' + s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function q(x) {
+  if (typeof x === 'number') { let s = x.toFixed(6); return s.replace(/0+$/, '').replace(/\.$/, ''); }
+  return x == null ? '' : '' + x;
+}
+function iso(d) {
+  if (d instanceof Date) return d.toISOString().replace(/\.\d{3}Z$/, 'Z');
+  if (typeof d === 'number') return new Date(FIT_EPOCH_MS + d * 1000).toISOString().replace(/\.\d{3}Z$/, 'Z');
+  return '' + d;
+}
+
+function trackpoint(r) {
+  if (!r || !r.timestamp) return '';
+  const L = ['          <Trackpoint>'];
+  L.push('            <Time>' + iso(r.timestamp) + '</Time>');
+  if (r.position_lat != null && r.position_long != null) {
+    L.push('            <Position>');
+    L.push('              <LatitudeDegrees>' + q(r.position_lat) + '</LatitudeDegrees>');
+    L.push('              <LongitudeDegrees>' + q(r.position_long) + '</LongitudeDegrees>');
+    L.push('            </Position>');
+  }
+  if (r.altitude != null) L.push('            <AltitudeMeters>' + q(r.altitude) + '</AltitudeMeters>');
+  if (r.heart_rate != null) L.push('            <HeartRateBpm><Value>' + Math.round(r.heart_rate) + '</Value></HeartRateBpm>');
+  if (r.cadence != null) L.push('            <Cadence>' + Math.round(r.cadence) + '</Cadence>');
+  let ext = '';
+  if (r.speed != null) ext += '              <ext:Speed>' + q(r.speed) + '</ext:Speed>\n';
+  if (r.power != null) ext += '              <ext:Watts>' + Math.round(r.power) + '</ext:Watts>\n';
+  if (ext) L.push('            <Extensions><ext:TPX>\n' + ext + '            </ext:TPX></Extensions>');
+  L.push('          </Trackpoint>');
+  return L.join('\n');
+}
+
+function buildTCX(messages) {
+  const recs = messages.record, laps = messages.lap, sess = messages.session[0];
+  let sport = 'Other';
+  if (sess && sess.sport != null) {
+    if (typeof sess.sport === 'string') { let s = sess.sport; sport = s.charAt(0).toUpperCase() + s.slice(1); }
+    else sport = SPORT_ENUM[sess.sport] || 'Other';
+  }
+  const L = [];
+  L.push("<?xml version='1.0' encoding='utf-8'?>");
+  L.push('<TrainingCenterDatabase xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2" xmlns:ext="http://www.garmin.com/xmlschemas/ActivityExtension/v2">');
+  L.push('  <Activities>');
+  L.push('    <Activity Sport="' + esc(sport) + '">');
+
+  let id = null;
+  if (recs.length) id = recs[0].timestamp;
+  else if (laps.length) id = laps[0].start_time;
+  else if (sess && sess.start_time) id = sess.start_time;
+  if (id) L.push('      <Id>' + iso(id) + '</Id>');
+
+  const emitLap = (lapv) => {
+    L.push('      <Lap StartTime="' + iso(lapv.start_time) + '">');
+    if (lapv.total_elapsed_time != null) L.push('        <TotalTimeSeconds>' + q(lapv.total_elapsed_time) + '</TotalTimeSeconds>');
+    if (lapv.total_distance != null) L.push('        <DistanceMeters>' + q(lapv.total_distance) + '</DistanceMeters>');
+    if (lapv.total_calories != null) L.push('        <Calories>' + Math.round(lapv.total_calories) + '</Calories>');
+    if (lapv.avg_heart_rate != null) L.push('        <AverageHeartRateBpm><Value>' + Math.round(lapv.avg_heart_rate) + '</Value></AverageHeartRateBpm>');
+    if (lapv.max_heart_rate != null) L.push('        <MaximumHeartRateBpm><Value>' + Math.round(lapv.max_heart_rate) + '</Value></MaximumHeartRateBpm>');
+    const start = lapv.start_time, end = lapv.timestamp;
+    const lapRecs = [];
+    for (const r of recs) {
+      if (!r.timestamp) continue;
+      if (start && r.timestamp < start) continue;
+      if (end && r.timestamp > end) continue;
+      lapRecs.push(r);
+    }
+    L.push('        <Track>');
+    for (const r of lapRecs) L.push(trackpoint(r));
+    L.push('        </Track>');
+    L.push('      </Lap>');
+  };
+
+  if (laps.length) {
+    for (const lv of laps) emitLap(lv);
+  } else {
+    const st = sess ? sess.start_time : (recs[0] ? recs[0].timestamp : new Date());
+    L.push('      <Lap StartTime="' + iso(st) + '">');
+    if (sess) {
+      if (sess.total_elapsed_time != null) L.push('        <TotalTimeSeconds>' + q(sess.total_elapsed_time) + '</TotalTimeSeconds>');
+      if (sess.total_distance != null) L.push('        <DistanceMeters>' + q(sess.total_distance) + '</DistanceMeters>');
+      if (sess.total_calories != null) L.push('        <Calories>' + Math.round(sess.total_calories) + '</Calories>');
+      if (sess.avg_heart_rate != null) L.push('        <AverageHeartRateBpm><Value>' + Math.round(sess.avg_heart_rate) + '</Value></AverageHeartRateBpm>');
+      if (sess.max_heart_rate != null) L.push('        <MaximumHeartRateBpm><Value>' + Math.round(sess.max_heart_rate) + '</Value></MaximumHeartRateBpm>');
+    }
+    L.push('        <Track>');
+    for (const r of recs) L.push(trackpoint(r));
+    L.push('        </Track>');
+    L.push('      </Lap>');
+  }
+
+  L.push('      <Creator><Name>fit2tcx-web</Name></Creator>');
+  L.push('    </Activity>');
+  L.push('  </Activities>');
+  L.push('</TrainingCenterDatabase>');
+  return L.join('\n');
+}
+
+if (typeof module !== 'undefined' && module.exports) module.exports = { parseFit, buildTCX };
+
+</script>
+<script>
+function logLine(text, cls) {
+  const el = document.getElementById('log');
+  const span = document.createElement('div');
+  if (cls) span.className = cls;
+  span.textContent = text;
+  el.appendChild(span);
+}
+if (typeof parseFit === 'undefined' || typeof buildTCX === 'undefined') {
+  document.getElementById('warn').style.display = 'block';
+}
+document.getElementById('btn').addEventListener('click', async () => {
+  if (typeof parseFit === 'undefined' || typeof buildTCX === 'undefined') {
+    logLine('脚本未加载，请切换浏览器极速模式后再试', 'err');
+    return;
+  }
+  const input = document.getElementById('file');
+  const files = input.files;
+  if (!files.length) { logLine('请先选择 .fit 文件', 'err'); return; }
+  for (const file of files) {
+    try {
+      const buf = await file.arrayBuffer();
+      const msgs = parseFit(buf);
+      const tcx = buildTCX(msgs);
+      const out = file.name.replace(/\.fit$/i, '') + '.tcx';
+      const blob = new Blob([tcx], { type: 'application/xml' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = out;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      const lapInfo = msgs.lap.length ? (' | ' + msgs.lap.length + ' 圈') : '';
+      logLine('OK  ' + file.name + ' → ' + out + '  (' + msgs.record.length + ' 轨迹点' + lapInfo + ')', 'ok');
+    } catch (e) {
+      logLine('FAIL  ' + file.name + ': ' + e.message, 'err');
+    }
+  }
+  logLine('—— 完成 ——');
+});
+</script>
+</body>
+</html>
